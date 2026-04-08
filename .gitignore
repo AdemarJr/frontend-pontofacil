@@ -1,0 +1,33 @@
+# Credenciais e ambiente (CRA embute REACT_APP_* no build)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependências
+node_modules/
+
+# Build de produção (npm run build)
+build/
+
+# Cache do webpack / eslint (CRA)
+.cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testes
+coverage/
+
+# SO / editor
+.DS_Store
+.idea/
+*.swp
+*~
+
+# Opcional: descomente se usar TypeScript local
+# *.tsbuildinfo
