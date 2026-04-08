@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/dashboard/Layout';
 import { usuarioService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Colaboradores() {
+  const { isAdmin } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [modal, setModal] = useState(null); // null | 'criar' | {usuario}
@@ -11,6 +13,8 @@ export default function Colaboradores() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
   const [busca, setBusca] = useState('');
+  const [pinsVisiveis, setPinsVisiveis] = useState(() => new Set());
+  const [pinsGerados, setPinsGerados] = useState(() => ({})); // { [usuarioId]: pinGerado }
 
   useEffect(() => { carregar(); }, []);
 
@@ -19,6 +23,28 @@ export default function Colaboradores() {
       const { data } = await usuarioService.listar();
       setUsuarios(data);
     } finally { setCarregando(false); }
+  }
+
+  function gerarPinAleatorio() {
+    // 4 dígitos numéricos
+    return String(Math.floor(1000 + Math.random() * 9000));
+  }
+
+  async function gerarEAplicarNovoPin(usuarioId) {
+    const novoPin = gerarPinAleatorio();
+    await usuarioService.atualizar(usuarioId, { pin: novoPin });
+    setPinsGerados((p) => ({ ...p, [usuarioId]: novoPin }));
+    setPinsVisiveis((prev) => new Set(prev).add(usuarioId));
+    carregar();
+  }
+
+  function togglePinVisivel(usuarioId) {
+    setPinsVisiveis((prev) => {
+      const next = new Set(prev);
+      if (next.has(usuarioId)) next.delete(usuarioId);
+      else next.add(usuarioId);
+      return next;
+    });
   }
 
   function abrirCriar() {
@@ -57,7 +83,8 @@ export default function Colaboradores() {
   const filtrados = usuarios.filter(u =>
     u.nome.toLowerCase().includes(busca.toLowerCase()) ||
     u.email.toLowerCase().includes(busca.toLowerCase()) ||
-    (u.cargo || '').toLowerCase().includes(busca.toLowerCase())
+    (u.cargo || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (u.departamento || '').toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
@@ -82,7 +109,7 @@ export default function Colaboradores() {
         ) : (
           <table className="tabela">
             <thead><tr>
-              <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Função</th><th>PIN</th><th>Status</th><th>Ações</th>
+              <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Departamento</th><th>Função</th><th>PIN</th><th>Status</th><th>Ações</th>
             </tr></thead>
             <tbody>
               {filtrados.map(u => (
@@ -90,13 +117,40 @@ export default function Colaboradores() {
                   <td style={{ fontWeight:'500' }}>{u.nome}</td>
                   <td style={{ color:'var(--cinza-400)', fontSize:'13px' }}>{u.email}</td>
                   <td>{u.cargo || '—'}</td>
+                  <td>{u.departamento || '—'}</td>
                   <td>
                     <span className={`badge ${u.role === 'ADMIN' ? 'badge-azul' : 'badge-cinza'}`}
                       style={u.role === 'ADMIN' ? { background:'var(--azul-claro)', color:'var(--azul)' } : {}}>
                       {u.role === 'ADMIN' ? 'Admin' : 'Colaborador'}
                     </span>
                   </td>
-                  <td style={{ fontFamily:'monospace', color:'var(--cinza-400)', fontSize:'13px' }}>••••</td>
+                  <td style={{ fontFamily:'monospace', color:'var(--cinza-400)', fontSize:'13px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+                      <span>
+                        {isAdmin && pinsVisiveis.has(u.id) ? (pinsGerados[u.id] || '—') : '••••'}
+                      </span>
+                      {isAdmin && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => togglePinVisivel(u.id)}
+                            title={pinsVisiveis.has(u.id) ? 'Ocultar PIN' : 'Mostrar PIN (somente se você acabou de gerar/alterar)'}
+                            style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'2px 8px', cursor:'pointer', fontSize:'12px' }}
+                          >
+                            {pinsVisiveis.has(u.id) ? '🙈' : '👁️'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => gerarEAplicarNovoPin(u.id)}
+                            title="Gerar e aplicar um novo PIN (o PIN atual não pode ser recuperado do hash)"
+                            style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'2px 8px', cursor:'pointer', fontSize:'12px' }}
+                          >
+                            Novo PIN
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                   <td>
                     <span className={`badge ${u.ativo ? 'badge-verde' : 'badge-vermelho'}`}>
                       {u.ativo ? 'Ativo' : 'Inativo'}

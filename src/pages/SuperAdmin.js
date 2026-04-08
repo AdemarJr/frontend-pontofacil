@@ -109,6 +109,19 @@ export default function SuperAdmin() {
     } finally { setSalvando(false); }
   }
 
+  async function resetSenhaAdmin(t, admin) {
+    if (!t?.id || !admin?.id) return;
+    if (!window.confirm(`Resetar a senha do admin ${admin.email}?`)) return;
+    try {
+      const { data } = await superAdminService.resetSenhaAdminTenant(t.id, admin.id);
+      alert(
+        `Senha temporária gerada:\n\n${data.senhaTemporaria}\n\nAdmin: ${data.usuario.email}\n\nCopie e envie para o cliente.`
+      );
+    } catch (e) {
+      alert(e.response?.data?.error || 'Erro ao resetar senha');
+    }
+  }
+
   function handleLogout() { logout(); navigate('/login'); }
 
   return (
@@ -178,6 +191,16 @@ export default function SuperAdmin() {
                           <>
                             <div style={{ fontWeight:'500' }}>{t.usuarios[0].nome}</div>
                             <div style={{ color:'var(--cinza-400)' }}>{t.usuarios[0].email}</div>
+                            <div style={{ marginTop:'6px' }}>
+                              <button
+                                type="button"
+                                onClick={() => resetSenhaAdmin(t, t.usuarios[0])}
+                                style={{ background:'none', border:'1px solid var(--vermelho)', color:'var(--vermelho)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}
+                                title="Gera uma senha temporária e aplica no admin"
+                              >
+                                Reset senha
+                              </button>
+                            </div>
                           </>
                         ) : (
                           <span style={{ color:'var(--cinza-400)' }}>—</span>

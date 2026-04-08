@@ -159,6 +159,8 @@ export const superAdminService = {
   listarTenants: () => api.get('/super-admin/tenants'),
   criarTenant: (dados) => api.post('/super-admin/tenants', dados),
   criarAdminTenant: (tenantId, dados) => api.post(`/super-admin/tenants/${tenantId}/admin`, dados),
+  resetSenhaAdminTenant: (tenantId, adminId) =>
+    api.post(`/super-admin/tenants/${tenantId}/admin/${adminId}/reset-senha`),
   atualizarTenant: (id, dados) => api.put(`/super-admin/tenants/${id}`, dados),
   atualizarStatus: (id, status) => api.put(`/super-admin/tenants/${id}/status`, { status }),
   stats: () => api.get('/super-admin/stats'),
