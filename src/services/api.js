@@ -1,8 +1,19 @@
 // src/services/api.js
 import axios from 'axios';
 
-// Base deve terminar em /api (rotas do Express: /api/auth, /api/ponto, …)
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+/**
+ * Base da API: deve apontar para o prefixo `/api` do backend (Express monta tudo em `/api/...`).
+ * Aceita tanto `https://host/api` quanto só `https://host` (acrescenta `/api` no fim).
+ */
+function normalizeApiBaseUrl(raw) {
+  const fallback = 'http://localhost:3001/api';
+  if (!raw || typeof raw !== 'string') return fallback;
+  let base = raw.trim().replace(/\/+$/, '');
+  if (!base.endsWith('/api')) base = `${base}/api`;
+  return base;
+}
+
+const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,

@@ -1,5 +1,5 @@
 // public/sw.js - Service Worker para PWA
-const CACHE = 'pontofacil-v1';
+const CACHE = 'pontofacil-v2';
 const ASSETS = ['/', '/index.html', '/static/js/main.chunk.js', '/static/css/main.chunk.css'];
 
 self.addEventListener('install', (e) => {
@@ -16,6 +16,14 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  // Cache API só aceita esquemas http(s); extensões do Chrome usam chrome-extension://
+  let url;
+  try {
+    url = new URL(e.request.url);
+  } catch {
+    return;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   if (e.request.url.includes('/api/')) return; // API sempre online
 
   e.respondWith(
