@@ -91,6 +91,49 @@ export const relatorioService = {
   espelhoPonto: (params) => api.get('/relatorios/espelho', { params }),
   resumoDia: () => api.get('/relatorios/resumo-dia'),
   ajustarPonto: (dados) => api.post('/relatorios/ajuste', dados),
+  /**
+   * Exporta espelho com colunas para contador (regras básicas no servidor).
+   * format: csv | xlsx | pdf
+   */
+  downloadEspelhoExport: async ({ mes, ano, usuarioId, format }) => {
+    try {
+      const res = await api.get('/relatorios/espelho/export', {
+        params: {
+          mes,
+          ano,
+          format,
+          ...(usuarioId ? { usuarioId } : {}),
+        },
+        responseType: 'blob',
+      });
+      const disposition = res.headers['content-disposition'];
+      const ext = format === 'xlsx' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv';
+      let filename = `espelho_ponto_${mes}_${ano}.${ext}`;
+      if (disposition && /filename=/i.test(disposition)) {
+        const m = /filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i.exec(disposition);
+        if (m && m[1]) filename = decodeURIComponent(m[1].trim());
+      }
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      const data = err.response?.data;
+      if (data instanceof Blob) {
+        const text = await data.text();
+        try {
+          const j = JSON.parse(text);
+          throw new Error(j.error || 'Erro ao exportar');
+        } catch (e) {
+          if (e instanceof SyntaxError) throw new Error(text || 'Erro ao exportar');
+          throw e;
+        }
+      }
+      throw err;
+    }
+  },
 };
 
 // ---- TENANT ----

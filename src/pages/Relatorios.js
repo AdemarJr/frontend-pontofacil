@@ -19,6 +19,7 @@ export default function Relatorios() {
   const [ajusteModal, setAjusteModal] = useState(null);
   const [ajusteForm, setAjusteForm] = useState({ dataHoraNova:'', motivo:'' });
   const [salvandoAjuste, setSalvandoAjuste] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     usuarioService.listar().then(({ data }) => setUsuarios(data));
@@ -51,28 +52,20 @@ export default function Relatorios() {
     } finally { setSalvandoAjuste(false); }
   }
 
-  function exportarCSV() {
-    const linhas = [['Colaborador', 'Data', 'Tipo', 'Horário', 'Ajustado', 'Motivo Ajuste']];
-    relatorio.forEach(r => {
-      Object.entries(r.diasTrabalhados).forEach(([dia, dados]) => {
-        dados.pontos.forEach(p => {
-          linhas.push([
-            r.usuario.nome,
-            dia,
-            TIPOS_LABEL[p.tipo],
-            format(new Date(p.dataHora), 'HH:mm:ss'),
-            p.ajustado ? 'Sim' : 'Não',
-            p.motivoAjuste || '',
-          ]);
-        });
+  async function exportarDoServidor(format) {
+    setExportando(true);
+    try {
+      await relatorioService.downloadEspelhoExport({
+        mes,
+        ano,
+        format,
+        ...(usuarioFiltro && { usuarioId: usuarioFiltro }),
       });
-    });
-    const csv = linhas.map(l => l.join(';')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url;
-    a.download = `espelho_ponto_${mes}_${ano}.csv`;
-    a.click();
+    } catch (e) {
+      alert(e?.message || 'Não foi possível exportar. Verifique se o backend está atualizado.');
+    } finally {
+      setExportando(false);
+    }
   }
 
   return (
@@ -83,7 +76,35 @@ export default function Relatorios() {
           <h1 style={{ fontSize:'24px', fontWeight:'700' }}>Espelho de Ponto</h1>
           <p style={{ color:'var(--cinza-400)', fontSize:'14px' }}>Visualize e ajuste os registros</p>
         </div>
-        <button className="btn btn-secondary" onClick={exportarCSV}>⬇ Exportar CSV</button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={exportando}
+            onClick={() => exportarDoServidor('csv')}
+            title="CSV com colunas para contador (intervalo, horas, flags)"
+          >
+            {exportando ? '…' : '⬇ CSV'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={exportando}
+            onClick={() => exportarDoServidor('xlsx')}
+            title="Planilha Excel"
+          >
+            {exportando ? '…' : '⬇ Excel'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={exportando}
+            onClick={() => exportarDoServidor('pdf')}
+            title="PDF resumido"
+          >
+            {exportando ? '…' : '⬇ PDF'}
+          </button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -136,11 +157,11 @@ export default function Relatorios() {
             </div>
             <div style={{ display:'flex', gap:'16px' }}>
               <div style={{ textAlign:'center' }}>
-                <p style={{ fontSize:'20px', fontWeight:'700', color:'var(--azul)' }}>{r.totalHoras}h</p>
+                <p style={{ fontSize:'20px', fontWeight:'700', color:'var(--azul)' }}>{r.totalHoras}</p>
                 <p style={{ fontSize:'11px', color:'var(--cinza-400)' }}>Total trabalhado</p>
               </div>
               <div style={{ textAlign:'center' }}>
-                <p style={{ fontSize:'20px', fontWeight:'700', color: parseFloat(r.totalExtras) > 0 ? 'var(--amarelo)' : 'var(--cinza-400)' }}>{r.totalExtras}h</p>
+                <p style={{ fontSize:'20px', fontWeight:'700', color: r.totalExtras && r.totalExtras !== '00:00' ? 'var(--amarelo)' : 'var(--cinza-400)' }}>{r.totalExtras}</p>
                 <p style={{ fontSize:'11px', color:'var(--cinza-400)' }}>Horas extras</p>
               </div>
             </div>
@@ -153,7 +174,7 @@ export default function Relatorios() {
                 <span style={{ fontSize:'12px', fontWeight:'600', color:'var(--cinza-700)', minWidth:'100px' }}>
                   {format(new Date(dia + 'T12:00:00'), "dd/MM - EEE", { locale:ptBR })}
                 </span>
-                <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas}h trabalhadas</span>
+                <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
               </div>
               <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', paddingLeft:'108px' }}>
                 {dados.pontos.map(p => (
