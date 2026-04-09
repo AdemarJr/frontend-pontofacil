@@ -58,13 +58,13 @@ export default function MeuPonto() {
         if (j && typeof j === 'object') return j;
       } catch {}
     }
-    // padrão “horário comercial”
+    // padrão “horário comercial” (janela larga para não perder o lembrete)
     return {
       ENTRADA: '08:00',
       SAIDA_ALMOCO: '12:00',
       RETORNO_ALMOCO: '13:00',
       SAIDA: '17:00',
-      toleranciaMinutos: 5,
+      toleranciaMinutos: 20,
     };
   }
 
@@ -92,14 +92,32 @@ export default function MeuPonto() {
     localStorage.setItem(k, String(Date.now()));
   }
 
-  function notificar(title, body) {
+  async function notificar(title, body) {
+    if (typeof Notification === 'undefined') return false;
+    if (Notification.permission !== 'granted') return false;
+    const base = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+    const iconUrl = `${base}/logo192.png` || '/logo192.png';
+    const opts = {
+      body,
+      icon: iconUrl,
+      badge: iconUrl,
+      tag: 'meu-ponto-lembrete',
+      renotify: true,
+    };
     try {
-      if (typeof Notification === 'undefined') return false;
-      if (Notification.permission !== 'granted') return false;
-      // Notificação “local” (funciona com o app aberto; em background depende do SO/browser)
-      new Notification(title, { body });
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification(title, opts);
+        return true;
+      }
+    } catch (e) {
+      console.warn('[meu-ponto] showNotification (SW):', e?.message);
+    }
+    try {
+      new Notification(title, opts);
       return true;
-    } catch {
+    } catch (e) {
+      console.warn('[meu-ponto] Notification API:', e?.message);
       return false;
     }
   }
@@ -120,7 +138,27 @@ export default function MeuPonto() {
     // garante que existe config padrão salva
     const cfg = obterConfigLembretes();
     salvarConfigLembretes(cfg);
-    alert('Lembretes ativados. Deixe o PWA aberto para receber as notificações.');
+    alert(
+      'Lembretes ativados.\n\nNo iPhone: notificações no PWA podem ser limitadas — use Safari, adicione à Tela Início e mantenha o app aberto nos horários, se possível.'
+    );
+  }
+
+  async function testarNotificacao() {
+    if (typeof Notification === 'undefined') {
+      alert('Este navegador não suporta notificações.');
+      return;
+    }
+    let perm = Notification.permission;
+    if (perm === 'default') {
+      perm = await Notification.requestPermission();
+      setPermissaoNotificacao(perm);
+    }
+    if (perm !== 'granted') {
+      alert('Permissão negada. Nas configurações do navegador, permita notificações para este site.');
+      return;
+    }
+    const ok = await notificar('PontoFácil — teste', 'Se você viu isto, as notificações estão funcionando.');
+    if (!ok) alert('Não foi possível exibir a notificação. Tente de novo após recarregar a página.');
   }
 
   function desativarLembretes() {
@@ -149,7 +187,16 @@ export default function MeuPonto() {
     if (usuario?.id) carregarProximo();
   }, [usuario?.id, carregarProximo]);
 
-  // Lembretes locais (PWA aberto): verifica minuto a minuto e notifica quando bater o horário do próximo tipo esperado.
+  useEffect(() => {
+    const sync = () => {
+      if (typeof Notification !== 'undefined') setPermissaoNotificacao(Notification.permission);
+    };
+    sync();
+    document.addEventListener('visibilitychange', sync);
+    return () => document.removeEventListener('visibilitychange', sync);
+  }, []);
+
+  // Lembretes: checa a cada 15s (evita perder a janela de 1 min) + Service Worker para PWA
   useEffect(() => {
     if (!usuario?.id) return;
     if (!lembretesAtivos) return;
@@ -157,17 +204,14 @@ export default function MeuPonto() {
     if (Notification.permission !== 'granted') return;
 
     const cfg = obterConfigLembretes();
-    const tolerancia = parseInt(cfg.toleranciaMinutos || 5, 10);
+    const tolerancia = parseInt(cfg.toleranciaMinutos || 20, 10);
 
-    const timer = setInterval(() => {
+    function tick() {
       const agora = new Date();
-      const agoraStr = hhmm(agora);
-
       const horarioAlvo = cfg[proximoTipo];
       if (!horarioAlvo) return;
       if (!podeNotificarHoje(proximoTipo)) return;
 
-      // Janela de tolerância (ex.: 08:00 até 08:05)
       const [h, m] = String(horarioAlvo).split(':').map((x) => parseInt(x, 10));
       if (Number.isNaN(h) || Number.isNaN(m)) return;
       const inicio = new Date(agora);
@@ -178,11 +222,14 @@ export default function MeuPonto() {
         const tipoInfo = TIPOS_LABEL[proximoTipo];
         const titulo = 'Hora de bater o ponto';
         const corpo = `${tipoInfo?.label || proximoTipo} — abra o Meu Ponto e registre.`;
-        const ok = notificar(titulo, corpo);
-        if (ok) marcarNotificado(proximoTipo);
+        notificar(titulo, corpo).then((ok) => {
+          if (ok) marcarNotificado(proximoTipo);
+        });
       }
-    }, 60 * 1000);
+    }
 
+    tick();
+    const timer = setInterval(tick, 15 * 1000);
     return () => clearInterval(timer);
   }, [usuario?.id, lembretesAtivos, proximoTipo]);
 
@@ -358,7 +405,7 @@ export default function MeuPonto() {
             <div>
               <p style={{ color: 'white', fontSize: 14, fontWeight: 700, margin: 0 }}>🔔 Lembretes de ponto</p>
               <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
-                Envia notificações no horário do próximo ponto esperado (funciona melhor com o PWA aberto).
+                Avisa no horário do próximo batida (Entrada, Almoço…). Use &quot;Testar&quot; para validar permissão. No iOS o suporte varia — mantenha o app aberto se não tocar.
               </p>
               {permissaoNotificacao !== 'granted' && (
                 <p style={{ color: '#fbbf24', fontSize: 12, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
@@ -367,25 +414,20 @@ export default function MeuPonto() {
               )}
             </div>
 
-            {lembretesAtivos ? (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={desativarLembretes}
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                Desativar
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary" onClick={testarNotificacao} style={{ whiteSpace: 'nowrap' }}>
+                Testar
               </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={ativarLembretes}
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                Ativar
-              </button>
-            )}
+              {lembretesAtivos ? (
+                <button type="button" className="btn btn-secondary" onClick={desativarLembretes} style={{ whiteSpace: 'nowrap' }}>
+                  Desativar
+                </button>
+              ) : (
+                <button type="button" className="btn btn-primary" onClick={ativarLembretes} style={{ whiteSpace: 'nowrap' }}>
+                  Ativar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

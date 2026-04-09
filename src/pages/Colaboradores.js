@@ -100,10 +100,18 @@ export default function Colaboradores() {
       if (modal === 'criar') {
         const { data } = await usuarioService.criar(payload);
         if (data.conviteEmailEnviado) {
-          alert('Cadastro concluído. Enviamos um e-mail para definir a senha de acesso web (confira a caixa de spam).');
+          alert('Cadastro concluído. Enviamos um e-mail com instruções e link para definir senha (confira spam).');
+        } else if (data.conviteEmailMotivo === 'smtp_nao_configurado') {
+          alert(
+            'Cadastro concluído, mas o e-mail NÃO foi enviado: SMTP não configurado no servidor (defina SMTP_HOST, MAIL_FROM e credenciais SMTP_USER/SMTP_PASS no backend).'
+          );
+        } else if (data.conviteEmailMotivo === 'falha_envio') {
+          alert(
+            'Cadastro concluído, mas o envio do e-mail falhou. Verifique os logs do backend e as credenciais SMTP (Hostinger costuma exigir usuário/senha corretos e porta 465 com SSL).'
+          );
         } else {
           alert(
-            'Cadastro concluído. O e-mail de convite não foi enviado (configure SMTP no servidor). O PIN do totem segue válido; depois, com SMTP, o colaborador pode usar "Esqueci minha senha" no login.'
+            'Cadastro concluído. O e-mail de convite não foi enviado. O PIN do totem segue válido; o colaborador pode usar "Esqueci minha senha" no login quando o SMTP estiver OK.'
           );
         }
       } else {
