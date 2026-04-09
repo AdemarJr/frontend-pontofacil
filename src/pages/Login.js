@@ -1,6 +1,6 @@
 // src/pages/Login.js
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/api';
 
@@ -61,6 +61,12 @@ export default function Login() {
             {carregando ? <span className="spinner" style={{ width:'20px', height:'20px', borderWidth:'2px' }} /> : 'Entrar'}
           </button>
         </form>
+
+        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px' }}>
+          <Link to="/recuperar-senha" style={{ color: 'var(--verde)', fontWeight: '500', textDecoration: 'none' }}>
+            Esqueci minha senha
+          </Link>
+        </p>
 
         <p style={{ textAlign:'center', marginTop:'24px', fontSize:'13px', color:'var(--cinza-400)', lineHeight: 1.6 }}>
           Colaborador: após entrar, use <strong>Meu ponto</strong> no celular (mesmas regras da empresa).

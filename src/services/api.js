@@ -79,6 +79,8 @@ export const authService = {
   login: (email, senha) => api.post('/auth/login', { email, senha }),
   loginPin: (pin, tenantId, deviceId) => api.post('/auth/login-pin', { pin, tenantId, deviceId }),
   refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  forgotPassword: (body) => api.post('/auth/forgot-password', body),
+  resetPassword: (body) => api.post('/auth/reset-password', body),
 };
 
 // ---- PONTO ----

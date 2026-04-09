@@ -5,6 +5,8 @@ import './styles/global.css';
 
 // Páginas
 import Login from './pages/Login';
+import RecuperarSenha from './pages/RecuperarSenha';
+import RedefinirSenha from './pages/RedefinirSenha';
 import Totem from './pages/Totem';
 import Dashboard from './pages/Dashboard';
 import Colaboradores from './pages/Colaboradores';
@@ -53,6 +55,8 @@ export default function App() {
           <Route path="/" element={<RedirecionarInicio />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
 
           {/* Colaborador: registro pelo app (e-mail) ou totem (PIN) */}
           <Route path="/meu-ponto" element={

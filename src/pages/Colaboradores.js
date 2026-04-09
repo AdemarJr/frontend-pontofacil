@@ -98,7 +98,14 @@ export default function Colaboradores() {
         else payload.localRegistroId = null;
       }
       if (modal === 'criar') {
-        await usuarioService.criar(payload);
+        const { data } = await usuarioService.criar(payload);
+        if (data.conviteEmailEnviado) {
+          alert('Cadastro concluído. Enviamos um e-mail para definir a senha de acesso web (confira a caixa de spam).');
+        } else {
+          alert(
+            'Cadastro concluído. O e-mail de convite não foi enviado (configure SMTP no servidor). O PIN do totem segue válido; depois, com SMTP, o colaborador pode usar "Esqueci minha senha" no login.'
+          );
+        }
       } else {
         await usuarioService.atualizar(modal.id, payload);
       }

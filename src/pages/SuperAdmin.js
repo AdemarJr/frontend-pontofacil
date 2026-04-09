@@ -55,9 +55,20 @@ export default function SuperAdmin() {
   async function criarTenant() {
     setSalvando(true);
     try {
-      await superAdminService.criarTenant(form);
+      const payload = { ...form };
+      if (!String(payload.adminSenha || '').trim()) delete payload.adminSenha;
+      const { data } = await superAdminService.criarTenant(payload);
       setModal(false);
       carregar();
+      if (data.primeiroAcessoPorEmail) {
+        alert(
+          data.conviteAdminEnviado
+            ? 'Empresa criada. Foi enviado um e-mail ao administrador para definir a senha de acesso (verifique spam).'
+            : 'Empresa criada. O convite por e-mail não foi enviado — configure SMTP no servidor ou defina uma senha inicial ao criar a empresa.'
+        );
+      } else {
+        alert('Empresa criada. O administrador pode entrar com o e-mail e a senha informados.');
+      }
     } catch (e) {
       alert(e.response?.data?.error || 'Erro ao criar empresa');
     } finally { setSalvando(false); }
@@ -101,9 +112,18 @@ export default function SuperAdmin() {
     if (!modalAdmin) return;
     setSalvando(true);
     try {
-      await superAdminService.criarAdminTenant(modalAdmin.id, formAdmin);
+      const payload = { ...formAdmin };
+      if (!String(payload.senha || '').trim()) delete payload.senha;
+      const { data } = await superAdminService.criarAdminTenant(modalAdmin.id, payload);
       setModalAdmin(null);
       carregar();
+      if (data.primeiroAcessoPorEmail) {
+        alert(
+          data.conviteEmailEnviado
+            ? 'Administrador cadastrado. Foi enviado e-mail para definir a senha.'
+            : 'Administrador cadastrado. O e-mail de convite não foi enviado — configure SMTP ou use Reset senha na lista.'
+        );
+      }
     } catch (e) {
       alert(e.response?.data?.error || 'Erro ao cadastrar administrador');
     } finally { setSalvando(false); }
@@ -140,7 +160,7 @@ export default function SuperAdmin() {
     try {
       const { data } = await superAdminService.resetSenhaAdminTenant(t.id, admin.id);
       alert(
-        `Senha temporária gerada:\n\n${data.senhaTemporaria}\n\nAdmin: ${data.usuario.email}\n\nCopie e envie para o cliente.`
+        `Senha temporária gerada:\n\n${data.senhaTemporaria}\n\nAdmin: ${data.usuario.email}\n\nCopie e envie para o cliente. Com SMTP configurado, o cliente também pode usar "Esqueci minha senha" no login.`
       );
     } catch (e) {
       alert(e.response?.data?.error || 'Erro ao resetar senha');
@@ -169,8 +189,9 @@ export default function SuperAdmin() {
           <div>
             <h1 style={{ fontSize:'22px', fontWeight:'700' }}>Empresas Assinantes</h1>
             <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginTop:'6px', maxWidth:'640px' }}>
-              <strong>Nova empresa:</strong> use &quot;+ Nova Empresa&quot; e preencha o bloco <em>Administrador</em> — ele poderá entrar em <code style={{ fontSize:'12px' }}>/login</code> com e-mail e senha.
-              {' '}<strong>Já existe empresa sem admin?</strong> use <em>Cadastrar admin</em> na linha da tabela.
+              <strong>Nova empresa:</strong> use &quot;+ Nova Empresa&quot; e o bloco <em>Administrador</em>. Se deixar a senha em branco, o primeiro acesso é por e-mail (link para definir senha). Com senha, o admin entra direto em{' '}
+              <code style={{ fontSize:'12px' }}>/login</code>.
+              {' '}<strong>Empresa sem admin?</strong> use <em>Cadastrar admin</em> na tabela (mesma regra: senha opcional).
             </p>
           </div>
           <button className="btn btn-primary" onClick={abrirNovo}>+ Nova Empresa</button>
@@ -303,7 +324,7 @@ export default function SuperAdmin() {
               {[
                 { key:'adminNome', label:'Nome do administrador', type:'text' },
                 { key:'adminEmail', label:'E-mail de login', type:'email' },
-                { key:'adminSenha', label:'Senha inicial', type:'password' },
+                { key:'adminSenha', label:'Senha inicial (opcional — em branco = convite por e-mail)', type:'password' },
               ].map(f => (
                 <div key={f.key}>
                   <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>{f.label}</label>
@@ -367,7 +388,7 @@ export default function SuperAdmin() {
               {[
                 { key:'nome', label:'Nome completo', type:'text' },
                 { key:'email', label:'E-mail de login', type:'email' },
-                { key:'senha', label:'Senha (mín. 6 caracteres)', type:'password' },
+                { key:'senha', label:'Senha (opcional — em branco = convite por e-mail; se preencher, mín. 6 caracteres)', type:'password' },
               ].map(f => (
                 <div key={f.key}>
                   <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>{f.label}</label>
