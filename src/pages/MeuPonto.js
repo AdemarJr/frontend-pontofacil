@@ -19,6 +19,8 @@ export default function MeuPonto() {
   const [proximoTipo, setProximoTipo] = useState('ENTRADA');
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState('');
+  const [lembretesAtivos, setLembretesAtivos] = useState(() => localStorage.getItem('meuPontoLembretesAtivos') === '1');
+  const [permissaoNotificacao, setPermissaoNotificacao] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'));
   const webcamRef = useRef(null);
 
   function humanizarErroRegistro(err) {
@@ -48,6 +50,84 @@ export default function MeuPonto() {
     return errorMsg || 'Não foi possível registrar';
   }
 
+  function obterConfigLembretes() {
+    const raw = localStorage.getItem('meuPontoLembretesConfig');
+    if (raw) {
+      try {
+        const j = JSON.parse(raw);
+        if (j && typeof j === 'object') return j;
+      } catch {}
+    }
+    // padrão “horário comercial”
+    return {
+      ENTRADA: '08:00',
+      SAIDA_ALMOCO: '12:00',
+      RETORNO_ALMOCO: '13:00',
+      SAIDA: '17:00',
+      toleranciaMinutos: 5,
+    };
+  }
+
+  function salvarConfigLembretes(cfg) {
+    localStorage.setItem('meuPontoLembretesConfig', JSON.stringify(cfg));
+  }
+
+  function hhmm(date) {
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
+  function mesmaDataKey(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  function podeNotificarHoje(tipo) {
+    const k = `meuPontoLembreteNotificado:${mesmaDataKey()}:${tipo}`;
+    return !localStorage.getItem(k);
+  }
+
+  function marcarNotificado(tipo) {
+    const k = `meuPontoLembreteNotificado:${mesmaDataKey()}:${tipo}`;
+    localStorage.setItem(k, String(Date.now()));
+  }
+
+  function notificar(title, body) {
+    try {
+      if (typeof Notification === 'undefined') return false;
+      if (Notification.permission !== 'granted') return false;
+      // Notificação “local” (funciona com o app aberto; em background depende do SO/browser)
+      new Notification(title, { body });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function ativarLembretes() {
+    if (typeof Notification === 'undefined') {
+      alert('Seu navegador não suporta notificações.');
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    setPermissaoNotificacao(perm);
+    if (perm !== 'granted') {
+      alert('Permissão negada. Ative nas configurações do navegador para receber lembretes.');
+      return;
+    }
+    localStorage.setItem('meuPontoLembretesAtivos', '1');
+    setLembretesAtivos(true);
+    // garante que existe config padrão salva
+    const cfg = obterConfigLembretes();
+    salvarConfigLembretes(cfg);
+    alert('Lembretes ativados. Deixe o PWA aberto para receber as notificações.');
+  }
+
+  function desativarLembretes() {
+    localStorage.setItem('meuPontoLembretesAtivos', '0');
+    setLembretesAtivos(false);
+  }
+
   const carregarProximo = useCallback(async () => {
     if (!usuario?.id) return;
     try {
@@ -68,6 +148,43 @@ export default function MeuPonto() {
   useEffect(() => {
     if (usuario?.id) carregarProximo();
   }, [usuario?.id, carregarProximo]);
+
+  // Lembretes locais (PWA aberto): verifica minuto a minuto e notifica quando bater o horário do próximo tipo esperado.
+  useEffect(() => {
+    if (!usuario?.id) return;
+    if (!lembretesAtivos) return;
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission !== 'granted') return;
+
+    const cfg = obterConfigLembretes();
+    const tolerancia = parseInt(cfg.toleranciaMinutos || 5, 10);
+
+    const timer = setInterval(() => {
+      const agora = new Date();
+      const agoraStr = hhmm(agora);
+
+      const horarioAlvo = cfg[proximoTipo];
+      if (!horarioAlvo) return;
+      if (!podeNotificarHoje(proximoTipo)) return;
+
+      // Janela de tolerância (ex.: 08:00 até 08:05)
+      const [h, m] = String(horarioAlvo).split(':').map((x) => parseInt(x, 10));
+      if (Number.isNaN(h) || Number.isNaN(m)) return;
+      const inicio = new Date(agora);
+      inicio.setHours(h, m, 0, 0);
+      const fim = new Date(inicio.getTime() + tolerancia * 60 * 1000);
+
+      if (agora >= inicio && agora <= fim) {
+        const tipoInfo = TIPOS_LABEL[proximoTipo];
+        const titulo = 'Hora de bater o ponto';
+        const corpo = `${tipoInfo?.label || proximoTipo} — abra o Meu Ponto e registre.`;
+        const ok = notificar(titulo, corpo);
+        if (ok) marcarNotificado(proximoTipo);
+      }
+    }, 60 * 1000);
+
+    return () => clearInterval(timer);
+  }, [usuario?.id, lembretesAtivos, proximoTipo]);
 
   const enviarRegistro = useCallback(
     async (fotoBase64) => {
@@ -234,6 +351,44 @@ export default function MeuPonto() {
       <p style={{ color: '#64748b', fontSize: 12, textAlign: 'center', maxWidth: 340, lineHeight: 1.5 }}>
         Mesmas regras do totem: localização se a cerca estiver ativa, foto se for obrigatória. Use um link salvo ou o PWA no celular.
       </p>
+
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ color: 'white', fontSize: 14, fontWeight: 700, margin: 0 }}>🔔 Lembretes de ponto</p>
+              <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
+                Envia notificações no horário do próximo ponto esperado (funciona melhor com o PWA aberto).
+              </p>
+              {permissaoNotificacao !== 'granted' && (
+                <p style={{ color: '#fbbf24', fontSize: 12, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
+                  Permissão de notificação: {permissaoNotificacao === 'denied' ? 'bloqueada' : 'não concedida'}.
+                </p>
+              )}
+            </div>
+
+            {lembretesAtivos ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={desativarLembretes}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                Desativar
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={ativarLembretes}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                Ativar
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 340 }}>
         {fotoObrigatoria ? (
