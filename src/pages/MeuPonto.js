@@ -21,6 +21,33 @@ export default function MeuPonto() {
   const [mensagem, setMensagem] = useState('');
   const webcamRef = useRef(null);
 
+  function humanizarErroRegistro(err) {
+    const status = err?.response?.status;
+    const code = err?.response?.data?.code;
+    const errorMsg = err?.response?.data?.error;
+
+    if (code === 'FORA_GEOFENCE') {
+      return (
+        'Você está fora da localização programada no painel.\n' +
+        'Para bater o ponto, vá para o local correto e tente novamente.'
+      );
+    }
+    if (code === 'LOCAL_INVALIDO') {
+      return 'Seu cadastro está vinculado a um local inválido. Fale com o RH/Administrador.';
+    }
+    if (status === 403) {
+      // fallback genérico para outros 403 (sem mascarar mensagens específicas)
+      return errorMsg || 'Acesso negado.';
+    }
+    if (status === 400 && errorMsg === 'Localização obrigatória para este tenant') {
+      return (
+        'A localização é obrigatória para bater ponto nesta empresa.\n' +
+        'Ative o GPS/permissão de localização e tente novamente.'
+      );
+    }
+    return errorMsg || 'Não foi possível registrar';
+  }
+
   const carregarProximo = useCallback(async () => {
     if (!usuario?.id) return;
     try {
@@ -75,7 +102,7 @@ export default function MeuPonto() {
           carregarProximo();
         }, 2800);
       } catch (err) {
-        setMensagem(err.response?.data?.error || 'Não foi possível registrar');
+        setMensagem(humanizarErroRegistro(err));
         setEtapa('erro');
         setTimeout(() => setEtapa('confirmar'), 3500);
       } finally {
