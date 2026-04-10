@@ -6,7 +6,7 @@ import { usuarioService, localRegistroService } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
 export default function Colaboradores() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, usuario: usuarioLogado } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [modal, setModal] = useState(null); // null | 'criar' | {usuario}
@@ -20,6 +20,9 @@ export default function Colaboradores() {
   const [pinsGerados, setPinsGerados] = useState(() => ({})); // { [usuarioId]: pinGerado }
   const [pinsCarregando, setPinsCarregando] = useState(() => new Set());
   const [locais, setLocais] = useState([]);
+  /** null | 'salvar' | { tipo: 'excluir', usuario } */
+  const [confirmacao, setConfirmacao] = useState(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   useEffect(() => { carregar(); }, []);
 
@@ -95,7 +98,8 @@ export default function Colaboradores() {
     setModal(u);
   }
 
-  async function salvar() {
+  async function executarSalvar() {
+    setConfirmacao(null);
     setErro('');
     setSalvando(true);
     try {
@@ -125,10 +129,35 @@ export default function Colaboradores() {
         await usuarioService.atualizar(modal.id, payload);
       }
       setModal(null);
-      carregar();
+      try {
+        await carregar();
+      } catch (reloadErr) {
+        console.error('[Colaboradores] Lista não atualizou após salvar:', reloadErr);
+      }
     } catch (err) {
-      setErro(err.response?.data?.error || 'Erro ao salvar');
-    } finally { setSalvando(false); }
+      const msg = err.response?.data?.error || err.message;
+      setErro(msg || 'Erro ao salvar');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function executarExclusao() {
+    const u = confirmacao?.usuario;
+    if (!u) return;
+    setExcluindo(true);
+    setErro('');
+    try {
+      await usuarioService.excluirDefinitivo(u.id);
+      setConfirmacao(null);
+      setModal(null);
+      await carregar();
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message;
+      alert(msg || 'Não foi possível excluir o colaborador');
+    } finally {
+      setExcluindo(false);
+    }
   }
 
   async function toggleAtivo(u) {
@@ -232,6 +261,15 @@ export default function Colaboradores() {
                       <button onClick={() => toggleAtivo(u)} style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px', color: u.ativo ? 'var(--vermelho)' : 'var(--verde)' }}>
                         {u.ativo ? 'Desativar' : 'Ativar'}
                       </button>
+                      {usuarioLogado?.id !== u.id && (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmacao({ tipo: 'excluir', usuario: u })}
+                          style={{ background:'none', border:'1px solid var(--vermelho)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px', color: 'var(--vermelho)' }}
+                        >
+                          Excluir
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -263,6 +301,13 @@ export default function Colaboradores() {
               {modal === 'criar' ? 'Novo Colaborador' : `Editar: ${modal.nome}`}
             </h2>
 
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setConfirmacao('salvar');
+              }}
+              style={{ display:'grid', gap:'16px' }}
+            >
             <div style={{ display:'grid', gap:'16px' }}>
               {[
                 { key:'nome', label:'Nome completo', type:'text', required:true },
@@ -335,9 +380,59 @@ export default function Colaboradores() {
             {erro && <div style={{ background:'var(--vermelho-claro)', color:'var(--vermelho)', padding:'10px 14px', borderRadius:'8px', fontSize:'13px', marginTop:'16px' }}>{erro}</div>}
 
             <div style={{ display:'flex', gap:'12px', marginTop:'24px' }}>
-              <button className="btn btn-secondary btn-full" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-full" onClick={salvar} disabled={salvando}>
+              <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary btn-full" disabled={salvando}>
                 {salvando ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {confirmacao === 'salvar' && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, padding:'20px' }}>
+          <div className="card" style={{ width:'100%', maxWidth:'420px', padding:'28px' }}>
+            <h3 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'12px' }}>Confirmar salvamento</h3>
+            <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.5, marginBottom:'24px' }}>
+              {modal === 'criar'
+                ? 'Deseja cadastrar este colaborador com os dados informados?'
+                : `Deseja salvar as alterações em "${modal.nome}"?`}
+            </p>
+            <div style={{ display:'flex', gap:'12px' }}>
+              <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={salvando}>
+                Cancelar
+              </button>
+              <button type="button" className="btn btn-primary btn-full" onClick={executarSalvar} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmacao?.tipo === 'excluir' && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, padding:'20px' }}>
+          <div className="card" style={{ width:'100%', maxWidth:'440px', padding:'28px' }}>
+            <h3 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'12px', color:'var(--vermelho)' }}>Excluir definitivamente</h3>
+            <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.55, marginBottom:'16px' }}>
+              O colaborador <strong>{confirmacao.usuario.nome}</strong> será removido do sistema. Esta ação apaga também o histórico de pontos, escalas e ajustes ligados a ele no período — não dá para desfazer.
+            </p>
+            <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'24px' }}>
+              Se quiser só impedir acesso sem apagar histórico, use <strong>Desativar</strong>.
+            </p>
+            <div style={{ display:'flex', gap:'12px' }}>
+              <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={excluindo}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-full"
+                onClick={executarExclusao}
+                disabled={excluindo}
+                style={{ background:'var(--vermelho)', color:'#fff', border:'none' }}
+              >
+                {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
               </button>
             </div>
           </div>

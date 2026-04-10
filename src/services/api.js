@@ -98,6 +98,7 @@ export const usuarioService = {
   criar: (dados) => api.post('/usuarios', dados),
   atualizar: (id, dados) => api.put(`/usuarios/${id}`, dados),
   remover: (id) => api.delete(`/usuarios/${id}`),
+  excluirDefinitivo: (id) => api.delete(`/usuarios/${id}/definitivo`),
 };
 
 // ---- ESCALAS (jornada) ----
