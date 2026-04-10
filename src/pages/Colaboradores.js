@@ -112,6 +112,10 @@ export default function Colaboradores() {
         const { data } = await usuarioService.criar(payload);
         if (data.conviteEmailEnviado) {
           alert('Cadastro concluído. Enviamos um e-mail com instruções e link para definir senha (confira spam).');
+        } else if (data.conviteEmailMotivo === 'envio_em_segundo_plano') {
+          alert(
+            'Cadastro concluído. O convite por e-mail está sendo enviado em segundo plano; em alguns instantes deve chegar (confira spam). Se não receber, verifique SMTP e os logs do servidor.'
+          );
         } else if (data.conviteEmailMotivo === 'smtp_nao_configurado') {
           alert(
             'Cadastro concluído, mas o e-mail NÃO foi enviado: SMTP não configurado no servidor (defina SMTP_HOST, MAIL_FROM e credenciais SMTP_USER/SMTP_PASS no backend).'
