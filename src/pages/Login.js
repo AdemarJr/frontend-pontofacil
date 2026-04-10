@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/api';
+import { publicUrl } from '../utils/branding';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -34,11 +35,12 @@ export default function Login() {
       <div className="card" style={{ width:'100%', maxWidth:'400px', padding:'40px' }}>
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:'32px' }}>
-          <div style={{ width:'56px', height:'56px', background:'var(--verde)', borderRadius:'16px', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:'28px' }}>
-            🕐
-          </div>
-          <h1 style={{ fontSize:'24px', fontWeight:'700', color:'var(--cinza-900)' }}>PontoFácil</h1>
-          <p style={{ color:'var(--cinza-400)', fontSize:'14px', marginTop:'4px' }}>Sistema de Controle de Ponto Digital</p>
+          <img
+            src={publicUrl('/logo-horizontal.png')}
+            alt="Ponto Fácil"
+            style={{ maxWidth: '100%', width: 'auto', height: 'auto', maxHeight: '52px', objectFit: 'contain', margin: '0 auto 14px', display: 'block' }}
+          />
+          <p style={{ color:'var(--cinza-400)', fontSize:'14px', marginTop:'4px', marginBottom: 0 }}>Sistema de Controle de Ponto Digital</p>
         </div>
 
         <form onSubmit={handleSubmit}>

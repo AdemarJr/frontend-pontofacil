@@ -22,7 +22,7 @@
 .landing-header-inner {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -32,10 +32,19 @@
 .landing-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-shrink: 0;
   font-weight: 700;
   font-size: 1.15rem;
   color: var(--cinza-900);
+}
+
+.landing-logo-img {
+  display: block;
+  height: 72px;
+  width: auto;
+  max-width: min(380px, 62vw);
+  object-fit: contain;
+  object-position: left center;
 }
 
 .landing-nav {
@@ -374,6 +383,21 @@
   text-align: center;
   font-size: 13px;
   color: var(--cinza-400);
+}
+
+.landing-footer-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.landing-footer-logo {
+  display: block;
+  height: auto;
+  width: auto;
+  max-height: 96px;
+  max-width: min(160px, 40vw);
+  object-fit: contain;
 }
 
 .landing-footer strong {

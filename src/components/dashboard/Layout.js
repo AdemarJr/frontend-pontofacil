@@ -1,6 +1,7 @@
 // src/components/dashboard/Layout.js
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { logoInternoUrl } from '../../utils/branding';
 
 const MENU = [
   { path: '/dashboard', label: 'Início', icon: '📊' },
@@ -24,13 +25,30 @@ export default function Layout({ children }) {
       {/* Sidebar */}
       <aside style={{ width:'240px', background:'var(--cinza-900)', display:'flex', flexDirection:'column', flexShrink:0, position:'fixed', height:'100vh', zIndex:100 }}>
         {/* Logo */}
-        <div style={{ padding:'24px 20px', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-            <div style={{ width:'36px', height:'36px', background:'var(--verde)', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px' }}>🕐</div>
-            <div>
-              <p style={{ color:'white', fontWeight:'600', fontSize:'15px', lineHeight:'1' }}>PontoFácil</p>
-              <p style={{ color:'#64748b', fontSize:'11px', marginTop:'2px' }}>{usuario?.tenant?.nomeFantasia}</p>
-            </div>
+        <div
+          style={{
+            padding: '24px 16px 20px',
+            borderBottom: '1px solid rgba(255,255,255,0.12)',
+            background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <img
+              src={logoInternoUrl()}
+              alt="Ponto Fácil"
+              style={{
+                maxWidth: '100%',
+                height: 'auto',
+                maxHeight: '72px',
+                objectFit: 'contain',
+                objectPosition: 'left',
+              }}
+            />
+            {usuario?.tenant?.nomeFantasia && (
+              <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: '11px', lineHeight: '1.35', margin: 0 }}>
+                {usuario.tenant.nomeFantasia}
+              </p>
+            )}
           </div>
         </div>
 

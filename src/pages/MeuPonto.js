@@ -4,6 +4,7 @@ import Webcam from 'react-webcam';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { pontoService } from '../services/api';
+import { publicUrl, logoInternoUrl } from '../utils/branding';
 
 const TIPOS_LABEL = {
   ENTRADA: { label: 'Entrada', cor: '#1D9E75', emoji: '🟢' },
@@ -119,8 +120,7 @@ export default function MeuPonto() {
   const notificar = useCallback(async (title, body, tag = 'meu-ponto-lembrete') => {
     if (typeof Notification === 'undefined') return false;
     if (Notification.permission !== 'granted') return false;
-    const base = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
-    const iconUrl = `${base}/logo192.png` || '/logo192.png';
+    const iconUrl = publicUrl('/logo192.png');
     const opts = {
       body,
       icon: iconUrl,
@@ -401,22 +401,74 @@ export default function MeuPonto() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg,#0f2027 0%,#203a43 100%)', padding: 24, gap: 24 }}>
-      <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 8 }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: 'linear-gradient(180deg,#0f2027 0%,#203a43 100%)',
+        paddingTop: 0,
+        paddingBottom: 24,
+        gap: 24,
+      }}
+    >
+      <header
+        style={{
+          width: '100%',
+          padding: '18px 56px 18px 20px',
+          background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          boxSizing: 'border-box',
+        }}
+      >
+        <img
+          src={logoInternoUrl()}
+          alt="Ponto Fácil"
+          style={{ maxHeight: 64, width: 'auto', maxWidth: 'min(340px, 82vw)', objectFit: 'contain' }}
+        />
         <button
           type="button"
           onClick={() => {
             logout();
             navigate('/login');
           }}
-          style={{ background: 'rgba(226,75,74,0.15)', border: 'none', color: '#f87171', padding: '8px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer' }}
+          style={{
+            position: 'absolute',
+            right: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'rgba(0,0,0,0.15)',
+            border: 'none',
+            color: 'rgba(255,255,255,0.95)',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
         >
           Sair
         </button>
-      </div>
+      </header>
 
-      <h1 style={{ color: 'white', fontSize: 26, fontWeight: 700, margin: 0 }}>Meu ponto</h1>
-      <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', maxWidth: 320 }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 24px',
+          gap: 24,
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
+      <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: 0 }}>Meu ponto</h1>
+      <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', maxWidth: 320, margin: 0 }}>
         {usuario.tenant?.nomeFantasia}
       </p>
 
@@ -484,6 +536,7 @@ export default function MeuPonto() {
             </button>
           </>
         )}
+      </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 // src/pages/Landing.js — página pública de vendas
 import { Link } from 'react-router-dom';
+import { publicUrl } from '../utils/branding';
 import '../styles/landing.css';
 
 const WA_NUMBER = '5592994764780';
@@ -60,10 +61,15 @@ export default function Landing() {
     <div className="landing">
       <header className="landing-header">
         <div className="landing-header-inner">
-          <div className="landing-logo">
-            <span style={{ fontSize: '1.5rem' }}>🕐</span>
-            <span>PontoFácil</span>
-          </div>
+          <Link to="/" className="landing-logo" aria-label="Ponto Fácil — início">
+            <img
+              src={publicUrl('/logo-horizontal.png')}
+              alt="Ponto Fácil"
+              className="landing-logo-img"
+              width={360}
+              height={72}
+            />
+          </Link>
           <nav className="landing-nav" aria-label="Seções">
             <a href="#funcionalidades">Funcionalidades</a>
             <a href="#planos">Planos</a>
@@ -270,6 +276,16 @@ export default function Landing() {
       </section>
 
       <footer className="landing-footer">
+        <div className="landing-footer-brand">
+          <img
+            src={publicUrl('/logo-stacked.png')}
+            alt="Ponto Fácil"
+            className="landing-footer-logo"
+            width={140}
+            height={120}
+            decoding="async"
+          />
+        </div>
         <p>
           <strong>PontoFácil</strong> — Sistema SaaS de controle de ponto digital
         </p>

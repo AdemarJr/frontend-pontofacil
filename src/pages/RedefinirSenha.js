@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import { publicUrl } from '../utils/branding';
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -58,6 +59,11 @@ export default function RedefinirSenha() {
     >
       <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px' }}>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <img
+            src={publicUrl('/logo-stacked.png')}
+            alt="Ponto Fácil"
+            style={{ maxHeight: '72px', width: 'auto', maxWidth: '100%', objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
+          />
           <h1 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--cinza-900)' }}>Nova senha</h1>
           <p style={{ color: 'var(--cinza-400)', fontSize: '14px', marginTop: '8px' }}>
             Defina uma senha para acessar pelo navegador (painel ou Meu ponto). Seu PIN do totem não é alterado aqui.

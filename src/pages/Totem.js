@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { authService, pontoService } from '../services/api';
+import { logoInternoUrl } from '../utils/branding';
 
 const TENANT_ID = localStorage.getItem('totemTenantId') || '';
 
@@ -249,9 +250,24 @@ export default function Totem() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'linear-gradient(180deg, #0f2027 0%, #203a43 50%, #0f2027 100%)', padding:'20px', gap:'32px' }}>
       {/* Header */}
-      <div style={{ textAlign:'center' }}>
-        <h1 style={{ color:'white', fontSize:'32px', fontWeight:'700' }}>🕐 PontoFácil</h1>
-        <p style={{ color:'#94a3b8', marginTop:'8px', fontSize:'16px' }}>
+      <div style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
+        <div
+          style={{
+            padding: '18px 22px',
+            borderRadius: 16,
+            background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <img
+            src={logoInternoUrl()}
+            alt="Ponto Fácil"
+            style={{ maxHeight: 72, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
+          />
+        </div>
+        <p style={{ color:'#94a3b8', marginTop:'16px', fontSize:'16px' }}>
           {new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })}
         </p>
         <p style={{ color:'#1D9E75', fontSize:'28px', fontWeight:'600', marginTop:'4px' }}>

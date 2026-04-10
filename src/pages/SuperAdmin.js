@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ListPagination, { slicePaged } from '../components/ListPagination';
+import { logoInternoUrl } from '../utils/branding';
 import { superAdminService } from '../services/api';
 import { format } from 'date-fns';
 
@@ -180,11 +181,34 @@ export default function SuperAdmin() {
   return (
     <div style={{ minHeight:'100vh', background:'var(--cinza-100)' }}>
       {/* Topbar */}
-      <div style={{ background:'var(--cinza-900)', padding:'0 32px', height:'60px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-          <span style={{ fontSize:'20px' }}>🕐</span>
-          <span style={{ color:'white', fontWeight:'600' }}>PontoFácil</span>
-          <span style={{ background:'rgba(29,158,117,0.3)', color:'var(--verde)', fontSize:'11px', padding:'2px 8px', borderRadius:'20px', fontWeight:'600' }}>SUPER ADMIN</span>
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
+          padding: '0 32px',
+          minHeight: '76px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <img
+            src={logoInternoUrl()}
+            alt="Ponto Fácil"
+            style={{ height: '58px', width: 'auto', maxWidth: '280px', objectFit: 'contain' }}
+          />
+          <span
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              fontSize: '11px',
+              padding: '4px 10px',
+              borderRadius: '20px',
+              fontWeight: '600',
+            }}
+          >
+            SUPER ADMIN
+          </span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'16px' }}>
           <span style={{ color:'#94a3b8', fontSize:'13px' }}>{usuario?.email}</span>
