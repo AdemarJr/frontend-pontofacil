@@ -499,10 +499,6 @@ export default function MeuPonto() {
         </p>
       </div>
 
-      <p style={{ color: '#64748b', fontSize: 12, textAlign: 'center', maxWidth: 340, lineHeight: 1.5 }}>
-        Você já está logado com seu e-mail. Localização e foto seguem as regras da empresa (cerca virtual e foto obrigatória, se ativas). Salve este link ou use o PWA no celular.
-      </p>
-
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
