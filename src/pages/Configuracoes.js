@@ -71,14 +71,14 @@ export default function Configuracoes() {
     carregarLocais();
   }
 
-  if (!config) return <Layout><div style={{ display:'flex', justifyContent:'center', padding:'80px' }}><div className="spinner" /></div></Layout>;
-
-  const tenantId = config.id;
-
   const { pageItems: locaisPagina, total: totalLocais, safePage: locaisSafePage } = useMemo(
     () => slicePaged(locais, locaisPage, locaisPageSize),
     [locais, locaisPage, locaisPageSize]
   );
+
+  if (!config) return <Layout><div style={{ display:'flex', justifyContent:'center', padding:'80px' }}><div className="spinner" /></div></Layout>;
+
+  const tenantId = config.id;
 
   return (
     <Layout>
