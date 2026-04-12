@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { pontoService } from '../services/api';
+import { pontoService, tenantService } from '../services/api';
 import { publicUrl, logoInternoUrl } from '../utils/branding';
 
 const TIPOS_LABEL = {
@@ -35,6 +35,23 @@ function textoAlteracaoAtividade(novoTipo) {
   return map[novoTipo] || `Próximo registro esperado: ${TIPOS_LABEL[novoTipo]?.label || novoTipo}. Abra o Meu Ponto.`;
 }
 
+function mensagemErroGeolocalizacao(err) {
+  const c = err?.code;
+  if (c === 1) {
+    return (
+      'Acesso à localização negado.\n' +
+      'Nas configurações do navegador ou do celular, permita localização para este site/app e tente de novo.'
+    );
+  }
+  if (c === 2) {
+    return 'Não foi possível obter a posição. Ative o GPS e tente novamente.';
+  }
+  if (c === 3) {
+    return 'Tempo esgotado ao obter o GPS. Verifique o sinal e tente de novo.';
+  }
+  return 'Não foi possível obter sua localização. Ative o GPS e as permissões e tente novamente.';
+}
+
 export default function MeuPonto() {
   const { usuario, logout, carregando: authCarregando } = useAuth();
   const navigate = useNavigate();
@@ -44,19 +61,23 @@ export default function MeuPonto() {
   const [mensagem, setMensagem] = useState('');
   const [lembretesAtivos, setLembretesAtivos] = useState(() => localStorage.getItem('meuPontoLembretesAtivos') === '1');
   const [permissaoNotificacao, setPermissaoNotificacao] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'));
+  /** Atualizado pelo servidor (cerca e foto podem mudar sem novo login). */
+  const [tenantCfg, setTenantCfg] = useState(null);
   const webcamRef = useRef(null);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
 
+  /** Erro típico de extensão do navegador — não vem do PontoFácil. */
   function humanizarErroRegistro(err) {
     const status = err?.response?.status;
-    const code = err?.response?.data?.code;
-    const errorMsg = err?.response?.data?.error;
+    const data = err?.response?.data;
+    const code = typeof data === 'object' && data ? data.code : undefined;
+    const errorMsg = typeof data === 'object' && data ? data.error : undefined;
 
     if (code === 'FORA_GEOFENCE') {
       return (
-        'Você está fora da localização programada no painel.\n' +
-        'Para bater o ponto, vá para o local correto e tente novamente.'
+        'Você está fora da área permitida para registro (cerca virtual).\n' +
+        'Dirija-se ao local da empresa (ou ao local vinculado ao seu cadastro) e tente de novo.'
       );
     }
     if (code === 'LOCAL_INVALIDO') {
@@ -219,6 +240,24 @@ export default function MeuPonto() {
   }, [usuario?.id, carregarProximo]);
 
   useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
+    tenantService
+      .meu()
+      .then(({ data }) => {
+        setTenantCfg({
+          geofenceAtivo: Boolean(data.geofenceAtivo),
+          fotoObrigatoria: data.fotoObrigatoria !== false,
+        });
+      })
+      .catch(() => {
+        setTenantCfg({
+          geofenceAtivo: Boolean(usuario.tenant?.geofenceAtivo),
+          fotoObrigatoria: usuario.tenant?.fotoObrigatoria !== false,
+        });
+      });
+  }, [usuario?.id, usuario?.role, usuario?.tenant?.geofenceAtivo, usuario?.tenant?.fotoObrigatoria]);
+
+  useEffect(() => {
     if (typeof Notification !== 'undefined') setPermissaoNotificacao(Notification.permission);
     const onVisibility = () => {
       if (typeof Notification !== 'undefined') setPermissaoNotificacao(Notification.permission);
@@ -277,16 +316,43 @@ export default function MeuPonto() {
     async (fotoBase64) => {
       setCarregando(true);
       try {
+        const cercaAtiva = tenantCfg?.geofenceAtivo ?? usuario?.tenant?.geofenceAtivo;
         let latitude = null;
         let longitude = null;
-        try {
-          const pos = await new Promise((res, rej) =>
-            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, enableHighAccuracy: true })
-          );
-          latitude = pos.coords.latitude;
-          longitude = pos.coords.longitude;
-        } catch {
-          /* se cerca ativa, o backend retorna erro */
+
+        if (cercaAtiva) {
+          if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            setMensagem('Este dispositivo não oferece GPS. Não é possível registrar com cerca virtual ativa.');
+            setEtapa('erro');
+            setTimeout(() => setEtapa('confirmar'), 4000);
+            return;
+          }
+          try {
+            const pos = await new Promise((res, rej) => {
+              navigator.geolocation.getCurrentPosition(res, rej, {
+                timeout: 15000,
+                enableHighAccuracy: true,
+                maximumAge: 0,
+              });
+            });
+            latitude = pos.coords.latitude;
+            longitude = pos.coords.longitude;
+          } catch (geoErr) {
+            setMensagem(mensagemErroGeolocalizacao(geoErr));
+            setEtapa('erro');
+            setTimeout(() => setEtapa('confirmar'), 4500);
+            return;
+          }
+        } else {
+          try {
+            const pos = await new Promise((res, rej) =>
+              navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, enableHighAccuracy: true })
+            );
+            latitude = pos.coords.latitude;
+            longitude = pos.coords.longitude;
+          } catch {
+            /* sem cerca: localização opcional */
+          }
         }
 
         await pontoService.registrar({
@@ -315,7 +381,7 @@ export default function MeuPonto() {
         setCarregando(false);
       }
     },
-    [proximoTipo, carregarProximo]
+    [proximoTipo, carregarProximo, tenantCfg?.geofenceAtivo, usuario?.tenant?.geofenceAtivo]
   );
 
   const registrarFoto = useCallback(async () => {
@@ -342,7 +408,8 @@ export default function MeuPonto() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const fotoObrigatoria = usuario.tenant?.fotoObrigatoria !== false;
+  const fotoObrigatoria = tenantCfg ? tenantCfg.fotoObrigatoria : usuario.tenant?.fotoObrigatoria !== false;
+  const cercaVirtualAtiva = tenantCfg?.geofenceAtivo ?? usuario?.tenant?.geofenceAtivo;
 
   if (etapa === 'carregando') {
     return (
@@ -471,6 +538,21 @@ export default function MeuPonto() {
       <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', maxWidth: 320, margin: 0 }}>
         {usuario.tenant?.nomeFantasia}
       </p>
+      {cercaVirtualAtiva ? (
+        <p
+          style={{
+            color: '#86efac',
+            fontSize: 13,
+            textAlign: 'center',
+            maxWidth: 340,
+            margin: 0,
+            lineHeight: 1.45,
+            padding: '0 8px',
+          }}
+        >
+          Cerca virtual ativa: o ponto só é aceito dentro da área permitida pela empresa.
+        </p>
+      ) : null}
       <button
         type="button"
         onClick={() => navigate('/comprovantes')}
