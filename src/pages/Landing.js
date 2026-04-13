@@ -1,6 +1,8 @@
 // src/pages/Landing.js — página pública de vendas
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../utils/branding';
+import { trackLandingPageView } from '../utils/googleAnalyticsLanding';
 import '../styles/landing.css';
 
 const WA_NUMBER = '5592994764780';
@@ -69,6 +71,10 @@ const SECURITY = [
 ];
 
 export default function Landing() {
+  useEffect(() => {
+    trackLandingPageView();
+  }, []);
+
   return (
     <div className="landing">
       <header className="landing-header">
