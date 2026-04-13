@@ -31,6 +31,9 @@ export default function Relatorios() {
   const [ajusteModal, setAjusteModal] = useState(null);
   const [ajusteForm, setAjusteForm] = useState({ dataHoraNova:'', motivo:'' });
   const [salvandoAjuste, setSalvandoAjuste] = useState(false);
+  const [inserirModal, setInserirModal] = useState(null);
+  const [inserirForm, setInserirForm] = useState({ tipo:'ENTRADA', dataHora:'', motivo:'' });
+  const [salvandoInsercao, setSalvandoInsercao] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [bancoResumo, setBancoResumo] = useState(null);
   const [bancoPage, setBancoPage] = useState(1);
@@ -89,6 +92,31 @@ export default function Relatorios() {
       setAjusteModal(null);
       buscar();
     } finally { setSalvandoAjuste(false); }
+  }
+
+  async function salvarInsercao() {
+    if (!inserirModal?.usuarioId) return;
+    if (!inserirForm.tipo || !inserirForm.dataHora || !inserirForm.motivo) return;
+    setSalvandoInsercao(true);
+    try {
+      await relatorioService.inserirPontoManual({
+        usuarioId: inserirModal.usuarioId,
+        tipo: inserirForm.tipo,
+        dataHora: inserirForm.dataHora,
+        motivo: inserirForm.motivo,
+      });
+      setInserirModal(null);
+      buscar();
+    } catch (e) {
+      const code = e?.response?.data?.code;
+      if (code === 'DUPLICADO_DIA') {
+        alert('Já existe uma batida desse tipo nesse dia. Em vez de inserir, ajuste o horário da batida existente.');
+      } else {
+        alert(e?.response?.data?.error || e?.message || 'Não foi possível inserir a batida.');
+      }
+    } finally {
+      setSalvandoInsercao(false);
+    }
   }
 
   const bancoRows = bancoResumo?.resumo || [];
@@ -299,6 +327,59 @@ export default function Relatorios() {
                 </span>
                 <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
               </div>
+              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', paddingLeft:'108px', marginBottom: 6 }}>
+                {[
+                  { k:'entrada', t:'ENTRADA', label:'Entrada', v: dados.marcacoes?.entrada },
+                  { k:'saidaAlmoco', t:'SAIDA_ALMOCO', label:'Saída int.', v: dados.marcacoes?.saidaAlmoco },
+                  { k:'retornoAlmoco', t:'RETORNO_ALMOCO', label:'Retorno int.', v: dados.marcacoes?.retornoAlmoco },
+                  { k:'saida', t:'SAIDA', label:'Saída', v: dados.marcacoes?.saida },
+                ].map((it) => {
+                  const faltando = !it.v;
+                  return (
+                    <div
+                      key={it.k}
+                      style={{
+                        display:'flex',
+                        alignItems:'center',
+                        justifyContent:'space-between',
+                        gap:'10px',
+                        background: faltando ? 'rgba(226,75,74,0.08)' : 'rgba(255,255,255,0.06)',
+                        border: `1px solid ${faltando ? 'rgba(226,75,74,0.25)' : 'rgba(148,163,184,0.18)'}`,
+                        borderRadius: 10,
+                        padding: '8px 10px',
+                        minWidth: 160,
+                      }}
+                    >
+                      <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                        <span style={{ fontSize: 11, color: faltando ? 'var(--vermelho)' : 'var(--cinza-400)', fontWeight: 700 }}>
+                          {it.label}
+                        </span>
+                        <span style={{ fontFamily:'monospace', fontWeight: 800, color: 'white' }}>
+                          {it.v || '—'}
+                        </span>
+                      </div>
+                      {faltando ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 10px', fontSize: 12, whiteSpace:'nowrap' }}
+                          onClick={() => {
+                            setInserirModal({ usuarioId: r.usuario.id, dia, nome: r.usuario.nome });
+                            setInserirForm({
+                              tipo: it.t,
+                              dataHora: `${dia}T${it.t === 'ENTRADA' ? '08:00' : it.t === 'SAIDA' ? '17:00' : it.t === 'SAIDA_ALMOCO' ? '12:00' : '13:00'}`,
+                              motivo: '',
+                            });
+                          }}
+                          title="Inserir batida faltante com justificativa"
+                        >
+                          + Inserir
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
               <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', paddingLeft:'108px' }}>
                 {dados.pontos.map(p => (
                   <div key={p.id} style={{ display:'flex', alignItems:'center', gap:'6px', background:'var(--cinza-100)', borderRadius:'8px', padding:'6px 10px' }}>
@@ -359,6 +440,43 @@ export default function Relatorios() {
               <button className="btn btn-secondary btn-full" onClick={() => setAjusteModal(null)}>Cancelar</button>
               <button className="btn btn-primary btn-full" onClick={salvarAjuste} disabled={salvandoAjuste || !ajusteForm.motivo}>
                 {salvandoAjuste ? 'Salvando...' : 'Confirmar Ajuste'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de inserção */}
+      {inserirModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
+          <div className="card" style={{ width:'100%', maxWidth:'520px', padding:'28px' }}>
+            <h2 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'10px' }}>Inserir batida faltante</h2>
+            <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 16 }}>
+              {inserirModal.nome} — {format(new Date(inserirModal.dia + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })}
+            </p>
+            <div style={{ display:'grid', gap:'14px' }}>
+              <div>
+                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Tipo</label>
+                <select className="input" value={inserirForm.tipo} onChange={e => setInserirForm(p => ({ ...p, tipo: e.target.value }))}>
+                  <option value="ENTRADA">Entrada</option>
+                  <option value="SAIDA_ALMOCO">Saída intervalo</option>
+                  <option value="RETORNO_ALMOCO">Retorno intervalo</option>
+                  <option value="SAIDA">Saída</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Data/hora</label>
+                <input className="input" type="datetime-local" value={inserirForm.dataHora} onChange={e => setInserirForm(p => ({...p, dataHora: e.target.value}))} />
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Justificativa *</label>
+                <textarea className="input" rows={3} placeholder="Ex: Esqueceu de registrar a saída..." value={inserirForm.motivo} onChange={e => setInserirForm(p => ({...p, motivo: e.target.value}))} style={{ resize:'vertical' }} />
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:'12px', marginTop:'20px' }}>
+              <button className="btn btn-secondary btn-full" onClick={() => setInserirModal(null)}>Cancelar</button>
+              <button className="btn btn-primary btn-full" onClick={salvarInsercao} disabled={salvandoInsercao || !inserirForm.motivo}>
+                {salvandoInsercao ? 'Salvando...' : 'Confirmar inserção'}
               </button>
             </div>
           </div>

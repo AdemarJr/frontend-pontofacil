@@ -132,6 +132,7 @@ export const relatorioService = {
   bancoHorasResumo: (params) => api.get('/relatorios/banco-horas', { params }),
   resumoDia: () => api.get('/relatorios/resumo-dia'),
   ajustarPonto: (dados) => api.post('/relatorios/ajuste', dados),
+  inserirPontoManual: (dados) => api.post('/relatorios/inserir', dados),
   /**
    * Exporta espelho com colunas para contador (regras básicas no servidor).
    * format: csv | xlsx | pdf
