@@ -18,6 +18,8 @@ export default function Escalas() {
   const [usuarios, setUsuarios] = useState([]);
   const [usuarioId, setUsuarioId] = useState(() => localStorage.getItem('pontofacil_escalas_usuarioId') || '');
   const [escalas, setEscalas] = useState([]);
+  const [resumo, setResumo] = useState([]);
+  const [carregandoResumo, setCarregandoResumo] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
@@ -38,6 +40,15 @@ export default function Escalas() {
     usuarioService.listar().then(({ data }) => {
       setUsuarios(data.filter((u) => u.role === 'COLABORADOR'));
     });
+  }, []);
+
+  useEffect(() => {
+    setCarregandoResumo(true);
+    escalaService
+      .resumo()
+      .then(({ data }) => setResumo(data.escalas || []))
+      .catch(() => setResumo([]))
+      .finally(() => setCarregandoResumo(false));
   }, []);
 
   useEffect(() => {
@@ -98,6 +109,10 @@ export default function Escalas() {
       });
       const { data } = await escalaService.listar(usuarioId);
       setEscalas(data);
+      escalaService
+        .resumo()
+        .then(({ data }) => setResumo(data.escalas || []))
+        .catch(() => {});
     } catch (err) {
       setErro(err.response?.data?.error || 'Erro ao salvar escala');
     } finally {
@@ -110,12 +125,20 @@ export default function Escalas() {
     await escalaService.remover(id);
     const { data } = await escalaService.listar(usuarioId);
     setEscalas(data);
+    escalaService
+      .resumo()
+      .then(({ data }) => setResumo(data.escalas || []))
+      .catch(() => {});
   }
 
   async function toggleAtivo(esc) {
     await escalaService.atualizar(esc.id, { ativo: !esc.ativo });
     const { data } = await escalaService.listar(usuarioId);
     setEscalas(data);
+    escalaService
+      .resumo()
+      .then(({ data }) => setResumo(data.escalas || []))
+      .catch(() => {});
   }
 
   const cols = usuarios.find((u) => u.id === usuarioId);
@@ -151,6 +174,65 @@ export default function Escalas() {
         >
           Como usar
         </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '10px' }}>Escalas criadas</h2>
+        <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 12 }}>
+          Aqui aparecem automaticamente as escalas ativas por colaborador. Clique em um nome para abrir os detalhes e editar.
+        </p>
+
+        {carregandoResumo ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}>
+            <div className="spinner" />
+          </div>
+        ) : resumo.length === 0 ? (
+          <div style={{ color: 'var(--cinza-400)', fontSize: 13 }}>
+            Nenhuma escala ativa cadastrada ainda.
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="tabela" style={{ fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  <th>Escala</th>
+                  <th>Horário</th>
+                  <th>Dias</th>
+                  <th>Atualizada</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {resumo.map((row) => (
+                  <tr key={row.escala.id}>
+                    <td style={{ fontWeight: 700 }}>{row.usuario?.nome}</td>
+                    <td>{row.escala.nome}</td>
+                    <td style={{ fontFamily: 'monospace' }}>
+                      {row.escala.horaInicio}–{row.escala.horaFim}
+                    </td>
+                    <td style={{ fontFamily: 'monospace' }}>
+                      {(row.escala.diasSemana || []).join(',')}
+                    </td>
+                    <td style={{ fontFamily: 'monospace', color: 'var(--cinza-400)' }}>
+                      {row.escala.updatedAt ? new Date(row.escala.updatedAt).toLocaleDateString('pt-BR') : '—'}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setUsuarioId(row.usuario.id)}
+                        style={{ padding: '6px 10px', fontSize: 12 }}
+                      >
+                        Abrir
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div id="tour-escalas-colaborador" className="card" style={{ marginBottom: '20px' }}>

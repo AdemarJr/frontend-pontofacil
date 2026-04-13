@@ -117,6 +117,7 @@ export const escalaService = {
   atualizar: (id, dados) => api.put(`/escalas/${id}`, dados),
   remover: (id) => api.delete(`/escalas/${id}`),
   minha: () => api.get('/escalas/minha'),
+  resumo: () => api.get('/escalas/resumo'),
 };
 
 // ---- LOCAIS DE REGISTRO (cerca virtual múltipla) ----
