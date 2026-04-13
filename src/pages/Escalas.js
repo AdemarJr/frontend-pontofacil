@@ -16,7 +16,7 @@ const DIAS = [
 
 export default function Escalas() {
   const [usuarios, setUsuarios] = useState([]);
-  const [usuarioId, setUsuarioId] = useState('');
+  const [usuarioId, setUsuarioId] = useState(() => localStorage.getItem('pontofacil_escalas_usuarioId') || '');
   const [escalas, setEscalas] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -47,6 +47,11 @@ export default function Escalas() {
 
   useEffect(() => {
     setEscalasPage(1);
+  }, [usuarioId]);
+
+  useEffect(() => {
+    if (usuarioId) localStorage.setItem('pontofacil_escalas_usuarioId', usuarioId);
+    else localStorage.removeItem('pontofacil_escalas_usuarioId');
   }, [usuarioId]);
 
   useEffect(() => {

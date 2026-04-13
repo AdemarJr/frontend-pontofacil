@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { pontoService, tenantService } from '../services/api';
+import { pontoService, tenantService, escalaService } from '../services/api';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
 import { publicUrl, logoInternoUrl } from '../utils/branding';
 
@@ -67,6 +67,7 @@ export default function MeuPonto() {
   const [pendenciaCheckin, setPendenciaCheckin] = useState(null);
   const [pendenciaModalAberto, setPendenciaModalAberto] = useState(false);
   const [registroOpts, setRegistroOpts] = useState(null);
+  const [avisoEscala, setAvisoEscala] = useState(null);
   const webcamRef = useRef(null);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
@@ -278,6 +279,31 @@ export default function MeuPonto() {
         });
       });
   }, [usuario?.id, usuario?.role, usuario?.tenant?.geofenceAtivo, usuario?.tenant?.fotoObrigatoria]);
+
+  // Aviso quando a escala foi criada/atualizada para o colaborador
+  useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
+    escalaService
+      .minha()
+      .then(({ data }) => {
+        const escala = data?.escala || null;
+        if (!escala?.id) return;
+        const lastId = localStorage.getItem('meuPontoUltimaEscalaId');
+        const lastUpdatedAt = localStorage.getItem('meuPontoUltimaEscalaUpdatedAt');
+        const updatedAt = escala.updatedAt ? String(escala.updatedAt) : '';
+        const mudou = (lastId && lastId !== escala.id) || (lastUpdatedAt && updatedAt && lastUpdatedAt !== updatedAt);
+        if (!lastId || mudou) {
+          setAvisoEscala({
+            nome: escala.nome,
+            horaInicio: escala.horaInicio,
+            horaFim: escala.horaFim,
+          });
+        }
+        localStorage.setItem('meuPontoUltimaEscalaId', escala.id);
+        if (updatedAt) localStorage.setItem('meuPontoUltimaEscalaUpdatedAt', updatedAt);
+      })
+      .catch(() => {});
+  }, [usuario?.id, usuario?.role]);
 
   useEffect(() => {
     if (typeof Notification !== 'undefined') setPermissaoNotificacao(Notification.permission);
@@ -635,6 +661,35 @@ export default function MeuPonto() {
           {new Date().toLocaleString('pt-BR')}
         </p>
       </div>
+
+      {avisoEscala ? (
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          <div
+            style={{
+              background: 'rgba(29,158,117,0.12)',
+              border: '1px solid rgba(29,158,117,0.28)',
+              borderRadius: 14,
+              padding: 14,
+              color: '#dcfce7',
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>Sua escala foi criada/atualizada</p>
+            <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: '#bbf7d0', lineHeight: 1.45 }}>
+              {avisoEscala.nome} — {avisoEscala.horaInicio} até {avisoEscala.horaFim}
+            </p>
+            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '8px 12px', fontSize: 12 }}
+                onClick={() => setAvisoEscala(null)}
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div id="tour-meu-lembretes" style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14 }}>
