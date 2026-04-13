@@ -64,6 +64,9 @@ export default function MeuPonto() {
   const [permissaoNotificacao, setPermissaoNotificacao] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'));
   /** Atualizado pelo servidor (cerca e foto podem mudar sem novo login). */
   const [tenantCfg, setTenantCfg] = useState(null);
+  const [pendenciaCheckin, setPendenciaCheckin] = useState(null);
+  const [pendenciaModalAberto, setPendenciaModalAberto] = useState(false);
+  const [registroOpts, setRegistroOpts] = useState(null);
   const webcamRef = useRef(null);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
@@ -93,6 +96,10 @@ export default function MeuPonto() {
         'A localização é obrigatória para bater ponto nesta empresa.\n' +
         'Ative o GPS/permissão de localização e tente novamente.'
       );
+    }
+    if (code === 'TIPO_INESPERADO') {
+      const esperado = data?.esperado ? ` (esperado: ${TIPOS_LABEL[data.esperado]?.label || data.esperado})` : '';
+      return `Seu app estava desatualizado em relação ao último registro${esperado}. Atualizando a tela…`;
     }
     return errorMsg || 'Não foi possível registrar';
   }
@@ -204,6 +211,11 @@ export default function MeuPonto() {
         const anterior = proximoTipoRef.current;
         proximoTipoRef.current = novo;
         setProximoTipo(novo);
+        const pend = data.pendenciaCheckin || null;
+        setPendenciaCheckin(pend);
+        if (!silent && pend?.aberta) {
+          setPendenciaModalAberto(true);
+        }
         setEtapa('confirmar');
 
         const mudou = anterior !== null && anterior !== novo;
@@ -226,6 +238,8 @@ export default function MeuPonto() {
         const novo = 'ENTRADA';
         proximoTipoRef.current = novo;
         setProximoTipo(novo);
+        setPendenciaCheckin(null);
+        setPendenciaModalAberto(false);
       }
     },
     [usuario?.id, notificar]
@@ -321,9 +335,11 @@ export default function MeuPonto() {
   }, [usuario?.id, lembretesAtivos, proximoTipo, notificar]);
 
   const enviarRegistro = useCallback(
-    async (fotoBase64) => {
+    async (fotoBase64, opts = {}) => {
       setCarregando(true);
       try {
+        const tipoParaEnviar = opts.tipo || proximoTipo;
+        const forcarNovoTurno = opts.forcarNovoTurno === true;
         const cercaAtiva = tenantCfg?.geofenceAtivo ?? usuario?.tenant?.geofenceAtivo;
         let latitude = null;
         let longitude = null;
@@ -364,17 +380,18 @@ export default function MeuPonto() {
         }
 
         await pontoService.registrar({
-          tipo: proximoTipo,
+          tipo: tipoParaEnviar,
           latitude,
           longitude,
           origem: 'APP_INDIVIDUAL',
           fotoBase64,
+          ...(forcarNovoTurno ? { forcarNovoTurno: true } : {}),
         });
 
         lastSelfRegistroAt.current = Date.now();
 
         setMensagem(
-          `Ponto registrado!\n${TIPOS_LABEL[proximoTipo]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`
+          `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`
         );
         setEtapa('sucesso');
         setTimeout(() => {
@@ -382,9 +399,18 @@ export default function MeuPonto() {
           carregarProximo({ silent: true });
         }, 2800);
       } catch (err) {
-        setMensagem(humanizarErroRegistro(err));
+        const msg = humanizarErroRegistro(err);
+        setMensagem(msg);
         setEtapa('erro');
-        setTimeout(() => setEtapa('confirmar'), 3500);
+        // Se o servidor retornou "tipo inesperado", recarrega o próximo e volta rápido
+        if (err?.response?.data?.code === 'TIPO_INESPERADO') {
+          setTimeout(() => {
+            setEtapa('confirmar');
+            carregarProximo({ silent: true });
+          }, 1400);
+        } else {
+          setTimeout(() => setEtapa('confirmar'), 3500);
+        }
       } finally {
         setCarregando(false);
       }
@@ -397,8 +423,10 @@ export default function MeuPonto() {
     if (webcamRef.current) {
       fotoBase64 = webcamRef.current.getScreenshot();
     }
-    await enviarRegistro(fotoBase64);
-  }, [enviarRegistro]);
+    const opts = registroOpts || {};
+    setRegistroOpts(null);
+    await enviarRegistro(fotoBase64, opts);
+  }, [enviarRegistro, registroOpts]);
 
   const tipoInfo = TIPOS_LABEL[proximoTipo];
 
@@ -646,7 +674,11 @@ export default function MeuPonto() {
               type="button"
               className="btn btn-primary btn-full btn-lg"
               disabled={carregando}
-              onClick={() => enviarRegistro(null)}
+              onClick={() => {
+                const opts = registroOpts || {};
+                setRegistroOpts(null);
+                enviarRegistro(null, opts);
+              }}
             >
               {carregando ? 'Registrando…' : 'Registrar agora (sem foto)'}
             </button>
@@ -656,6 +688,88 @@ export default function MeuPonto() {
           </>
         )}
       </div>
+
+      {pendenciaModalAberto && pendenciaCheckin?.aberta ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(2,6,23,0.72)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            zIndex: 9999,
+          }}
+          onClick={() => setPendenciaModalAberto(false)}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 520,
+              background: '#0b1220',
+              border: '1px solid rgba(148,163,184,0.18)',
+              borderRadius: 16,
+              padding: 18,
+              boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 800 }}>
+              Identificamos um registro em aberto
+            </p>
+            <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
+              Seu último registro foi há aproximadamente <b>{pendenciaCheckin.horasAberto}h</b>. Isso pode indicar que a saída não foi registrada.
+            </p>
+            <p style={{ marginTop: 10, marginBottom: 0, color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
+              Você pode registrar a saída agora (se fizer sentido) ou iniciar um novo turno e o sistema sinaliza pendência para ajuste pelo gestor/RH.
+            </p>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+              {!pendenciaCheckin.sugerirNovoTurno ? (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={carregando}
+                  onClick={() => {
+                    setPendenciaModalAberto(false);
+                    setRegistroOpts(null);
+                    if (fotoObrigatoria) setEtapa('camera');
+                    else enviarRegistro(null, {});
+                  }}
+                >
+                  Registrar saída agora
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={carregando}
+                onClick={() => {
+                  setPendenciaModalAberto(false);
+                  setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
+                  if (fotoObrigatoria) setEtapa('camera');
+                  else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
+                }}
+              >
+                Iniciar novo turno
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setPendenciaModalAberto(false)}
+                style={{ marginLeft: 'auto' }}
+              >
+                Agora não
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       </div>
     </div>
   );
