@@ -88,6 +88,8 @@ export const pontoService = {
   registrar: (dados) => api.post('/ponto/registrar', dados),
   listar: (params) => api.get('/ponto', { params }),
   ultimoPonto: (usuarioId) => api.get(`/ponto/ultimo/${usuarioId}`),
+  pendencias: (params) => api.get('/ponto/pendencias', { params }),
+  solicitarAjuste: (dados) => api.post('/ponto/solicitacoes-ajuste', dados),
 };
 
 // ---- COMPROVANTES DE AUSÊNCIA (atestado / falta) ----

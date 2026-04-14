@@ -68,6 +68,11 @@ export default function MeuPonto() {
   const [pendenciaModalAberto, setPendenciaModalAberto] = useState(false);
   const [registroOpts, setRegistroOpts] = useState(null);
   const [avisoEscala, setAvisoEscala] = useState(null);
+  const [pendenciasDias, setPendenciasDias] = useState([]);
+  const [carregandoPendencias, setCarregandoPendencias] = useState(false);
+  const [justificarModal, setJustificarModal] = useState(null); // { dia, tipo }
+  const [justificarForm, setJustificarForm] = useState({ dataHoraSugerida: '', justificativa: '' });
+  const [salvandoJustificativa, setSalvandoJustificativa] = useState(false);
   const webcamRef = useRef(null);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
@@ -101,6 +106,11 @@ export default function MeuPonto() {
     if (code === 'TIPO_INESPERADO') {
       const esperado = data?.esperado ? ` (esperado: ${TIPOS_LABEL[data.esperado]?.label || data.esperado})` : '';
       return `Seu app estava desatualizado em relação ao último registro${esperado}. Atualizando a tela…`;
+    }
+    if (code === 'DUPLICADO_DIA') {
+      const tipo = data?.tipo ? (TIPOS_LABEL[data.tipo]?.label || data.tipo) : 'este tipo';
+      const when = data?.dataHora ? `\nHorário já registrado: ${new Date(data.dataHora).toLocaleTimeString('pt-BR')}` : '';
+      return `Você já registrou ${tipo} hoje.${when}`;
     }
     return errorMsg || 'Não foi possível registrar';
   }
@@ -255,6 +265,23 @@ export default function MeuPonto() {
     if (usuario?.id) carregarProximo();
   }, [usuario?.id, carregarProximo]);
 
+  const carregarPendencias = useCallback(async () => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
+    setCarregandoPendencias(true);
+    try {
+      const { data } = await pontoService.pendencias({ dias: 14 });
+      setPendenciasDias(Array.isArray(data?.pendencias) ? data.pendencias : []);
+    } catch {
+      setPendenciasDias([]);
+    } finally {
+      setCarregandoPendencias(false);
+    }
+  }, [usuario?.id, usuario?.role]);
+
+  useEffect(() => {
+    carregarPendencias();
+  }, [carregarPendencias]);
+
   /** Tour guiado na tela principal do Meu ponto (primeira visita) */
   useEffect(() => {
     if (etapa !== 'confirmar') return;
@@ -323,6 +350,32 @@ export default function MeuPonto() {
     const id = setInterval(() => carregarProximo({ silent: false }), 4 * 60 * 1000);
     return () => clearInterval(id);
   }, [usuario?.id, carregarProximo]);
+
+  async function salvarJustificativa() {
+    if (!justificarModal?.dia || !justificarModal?.tipo) return;
+    const justificativa = String(justificarForm.justificativa || '').trim();
+    if (!justificativa) {
+      alert('Informe a justificativa.');
+      return;
+    }
+    setSalvandoJustificativa(true);
+    try {
+      await pontoService.solicitarAjuste({
+        dia: justificarModal.dia,
+        tipo: justificarModal.tipo,
+        dataHoraSugerida: justificarForm.dataHoraSugerida || undefined,
+        justificativa,
+      });
+      alert('Justificativa enviada ao administrador/RH.');
+      setJustificarModal(null);
+      setJustificarForm({ dataHoraSugerida: '', justificativa: '' });
+      carregarPendencias();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível enviar a justificativa.');
+    } finally {
+      setSalvandoJustificativa(false);
+    }
+  }
 
   // Lembretes: checa a cada 15s (evita perder a janela de 1 min) + Service Worker para PWA
   useEffect(() => {
@@ -416,13 +469,20 @@ export default function MeuPonto() {
           ...(confirmarRegistroCurto ? { confirmarRegistroCurto: true } : {}),
         };
 
-        await pontoService.registrar(payload);
+        const res = await pontoService.registrar(payload);
+        const aviso = res?.data?.aviso;
 
         lastSelfRegistroAt.current = Date.now();
 
-        setMensagem(
-          `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`
-        );
+        const baseMsg = `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`;
+        if (aviso?.code === 'PENDENCIA_DIA_ANTERIOR') {
+          setMensagem(
+            baseMsg +
+              `\n\nAtenção: existe um ponto do dia anterior para ajuste pelo administrador/RH.`
+          );
+        } else {
+          setMensagem(baseMsg);
+        }
         setEtapa('sucesso');
         setTimeout(() => {
           setEtapa('confirmar');
@@ -763,6 +823,162 @@ export default function MeuPonto() {
           </>
         )}
       </div>
+
+      {/* Pendências do colaborador (batidas faltantes) */}
+      <div style={{ width: '100%', maxWidth: 520 }}>
+        <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>🧾 Pendências de ponto</p>
+              <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
+                Veja dias com batidas faltantes e envie uma justificativa para o administrador/RH.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={carregandoPendencias}
+              onClick={carregarPendencias}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              {carregandoPendencias ? 'Atualizando…' : 'Atualizar'}
+            </button>
+          </div>
+
+          {carregandoPendencias ? (
+            <p style={{ color: '#cbd5e1', fontSize: 12, marginTop: 12, marginBottom: 0 }}>Carregando…</p>
+          ) : pendenciasDias.length === 0 ? (
+            <p style={{ color: '#cbd5e1', fontSize: 12, marginTop: 12, marginBottom: 0 }}>Nenhuma pendência recente.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+              {pendenciasDias.slice(0, 8).map((p) => (
+                <div
+                  key={`${p.dia}-${p.faltando?.join(',')}`}
+                  style={{
+                    background: 'rgba(2,6,23,0.35)',
+                    border: '1px solid rgba(148,163,184,0.16)',
+                    borderRadius: 12,
+                    padding: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div>
+                    <p style={{ margin: 0, color: 'white', fontSize: 13, fontWeight: 800 }}>{p.dia}</p>
+                    <p style={{ marginTop: 6, marginBottom: 0, color: '#fbbf24', fontSize: 12 }}>
+                      Faltando: {(p.faltando || []).map((t) => TIPOS_LABEL[t]?.label || t).join(', ')}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {(p.faltando || []).slice(0, 2).map((tipo) => (
+                      <button
+                        key={`${p.dia}-${tipo}`}
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ padding: '8px 10px', fontSize: 12 }}
+                        onClick={() => {
+                          setJustificarModal({ dia: p.dia, tipo });
+                          setJustificarForm({ dataHoraSugerida: `${p.dia}T08:00`, justificativa: '' });
+                        }}
+                      >
+                        Justificar {TIPOS_LABEL[tipo]?.label || tipo}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {pendenciasDias.length > 8 ? (
+                <p style={{ margin: 0, color: '#94a3b8', fontSize: 12 }}>
+                  Mostrando 8 pendências. Ajuste com o administrador/RH se houver mais.
+                </p>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de justificativa */}
+      {justificarModal ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(2,6,23,0.72)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            zIndex: 9999,
+          }}
+          onClick={() => setJustificarModal(null)}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 520,
+              background: '#0b1220',
+              border: '1px solid rgba(148,163,184,0.18)',
+              borderRadius: 16,
+              padding: 18,
+              boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 900 }}>
+              Justificar batida faltante
+            </p>
+            <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
+              Dia: <b>{justificarModal.dia}</b> · Tipo: <b>{TIPOS_LABEL[justificarModal.tipo]?.label || justificarModal.tipo}</b>
+            </p>
+
+            <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
+              <div>
+                <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+                  Sugestão de horário (opcional)
+                </label>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={justificarForm.dataHoraSugerida}
+                  onChange={(e) => setJustificarForm((p) => ({ ...p, dataHoraSugerida: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+                  Justificativa *
+                </label>
+                <textarea
+                  className="input"
+                  rows={3}
+                  value={justificarForm.justificativa}
+                  onChange={(e) => setJustificarForm((p) => ({ ...p, justificativa: e.target.value }))}
+                  placeholder="Ex: Esqueci de registrar a saída do intervalo."
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setJustificarModal(null)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={salvandoJustificativa || !String(justificarForm.justificativa || '').trim()}
+                onClick={salvarJustificativa}
+              >
+                {salvandoJustificativa ? 'Enviando…' : 'Enviar justificativa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {pendenciaModalAberto && pendenciaCheckin?.aberta ? (
         <div
