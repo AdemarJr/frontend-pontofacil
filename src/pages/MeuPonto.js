@@ -84,6 +84,14 @@ export default function MeuPonto() {
     const code = typeof data === 'object' && data ? data.code : undefined;
     const errorMsg = typeof data === 'object' && data ? data.error : undefined;
 
+    if (code === 'DB_SCHEMA_OUTDATED') {
+      return (
+        'O servidor foi atualizado, mas o banco de dados ainda não.\n' +
+        'Peça para o administrador aplicar as migrations no Railway:\n' +
+        'npx prisma migrate deploy\n' +
+        'e reiniciar o backend.'
+      );
+    }
     if (code === 'FORA_GEOFENCE') {
       return (
         'Você está fora da área permitida para registro (cerca virtual).\n' +
@@ -111,6 +119,9 @@ export default function MeuPonto() {
       const tipo = data?.tipo ? (TIPOS_LABEL[data.tipo]?.label || data.tipo) : 'este tipo';
       const when = data?.dataHora ? `\nHorário já registrado: ${new Date(data.dataHora).toLocaleTimeString('pt-BR')}` : '';
       return `Você já registrou ${tipo} hoje.${when}`;
+    }
+    if (status === 500) {
+      return errorMsg || 'Servidor com erro no momento. Tente novamente em instantes.';
     }
     return errorMsg || 'Não foi possível registrar';
   }
