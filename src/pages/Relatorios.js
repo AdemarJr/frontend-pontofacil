@@ -142,6 +142,21 @@ export default function Relatorios() {
     }
   }
 
+  async function excluirBatida(ponto) {
+    const motivo = window.prompt(
+      `Excluir batida "${TIPOS_LABEL[ponto.tipo] || ponto.tipo}" (${format(new Date(ponto.dataHora), 'dd/MM/yyyy HH:mm')})?\n\nInforme o motivo (obrigatório):`
+    );
+    if (!motivo || !String(motivo).trim()) return;
+    try {
+      // Reaproveita o serviço já existente no bundle (pontoService está no backend /ponto)
+      const { pontoService } = await import('../services/api');
+      await pontoService.excluir(ponto.id, String(motivo).trim());
+      await buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível excluir a batida.');
+    }
+  }
+
   const bancoRows = bancoResumo?.resumo || [];
   const { pageItems: bancoPagina, total: totalBancoRows, safePage: bancoSafePage } = useMemo(
     () => slicePaged(bancoRows, bancoPage, bancoPageSize),
@@ -417,6 +432,11 @@ export default function Relatorios() {
                       style={{ background:'none', border:'none', cursor:'pointer', color:'var(--cinza-400)', fontSize:'12px', padding:'0 2px' }}
                       title="Ajustar horário"
                     >✏️</button>
+                    <button
+                      onClick={() => excluirBatida(p)}
+                      style={{ background:'none', border:'none', cursor:'pointer', color:'var(--vermelho)', fontSize:'12px', padding:'0 2px' }}
+                      title="Excluir batida (com motivo)"
+                    >🗑️</button>
                   </div>
                 ))}
               </div>

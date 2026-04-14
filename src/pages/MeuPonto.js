@@ -618,8 +618,9 @@ export default function MeuPonto() {
         alignItems: 'center',
         background: 'linear-gradient(180deg,#0f2027 0%,#203a43 100%)',
         paddingTop: 0,
-        paddingBottom: 24,
-        gap: 24,
+        paddingBottom: 0,
+        gap: 0,
+        overflow: 'hidden',
       }}
     >
       <header
@@ -633,6 +634,7 @@ export default function MeuPonto() {
           justifyContent: 'center',
           position: 'relative',
           boxSizing: 'border-box',
+          flexShrink: 0,
         }}
       >
         <img
@@ -670,11 +672,14 @@ export default function MeuPonto() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
           padding: '0 24px',
           gap: 24,
           width: '100%',
           boxSizing: 'border-box',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          paddingTop: 18,
+          paddingBottom: 24,
         }}
       >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%' }}>

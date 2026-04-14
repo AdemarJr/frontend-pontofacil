@@ -90,6 +90,7 @@ export const pontoService = {
   ultimoPonto: (usuarioId) => api.get(`/ponto/ultimo/${usuarioId}`),
   pendencias: (params) => api.get('/ponto/pendencias', { params }),
   solicitarAjuste: (dados) => api.post('/ponto/solicitacoes-ajuste', dados),
+  excluir: (registroId, motivo) => api.delete(`/ponto/${registroId}`, { data: { motivo } }),
 };
 
 // ---- COMPROVANTES DE AUSÊNCIA (atestado / falta) ----
