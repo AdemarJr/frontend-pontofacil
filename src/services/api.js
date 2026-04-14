@@ -35,6 +35,27 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
+    // Backend desatualizado vs banco (migrations não rodaram)
+    if (error.response?.status === 500 && error.response?.data?.code === 'DB_SCHEMA_OUTDATED') {
+      try {
+        const k = 'pf:lastDbSchemaOutdatedAlertAt';
+        const last = parseInt(localStorage.getItem(k) || '0', 10);
+        const now = Date.now();
+        // evita spam de alert em múltiplas requests (dashboard faz várias)
+        if (!last || now - last > 60_000) {
+          localStorage.setItem(k, String(now));
+          alert(
+            'O backend foi atualizado, mas o banco de dados ainda não.\n\n' +
+              'No Railway, rode:\n' +
+              'npx prisma migrate deploy\n\n' +
+              'Depois reinicie o backend.'
+          );
+        }
+      } catch {
+        // ignore
+      }
+      return Promise.reject(error);
+    }
     if (
       error.response?.status === 401 &&
       error.response?.data?.code === 'TOKEN_EXPIRED' &&
