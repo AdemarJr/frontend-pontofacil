@@ -366,6 +366,7 @@ export default function MeuPonto() {
       try {
         const tipoParaEnviar = opts.tipo || proximoTipo;
         const forcarNovoTurno = opts.forcarNovoTurno === true;
+        const confirmarRegistroCurto = opts.confirmarRegistroCurto === true;
         const cercaAtiva = tenantCfg?.geofenceAtivo ?? usuario?.tenant?.geofenceAtivo;
         let latitude = null;
         let longitude = null;
@@ -405,14 +406,17 @@ export default function MeuPonto() {
           }
         }
 
-        await pontoService.registrar({
+        const payload = {
           tipo: tipoParaEnviar,
           latitude,
           longitude,
           origem: 'APP_INDIVIDUAL',
           fotoBase64,
           ...(forcarNovoTurno ? { forcarNovoTurno: true } : {}),
-        });
+          ...(confirmarRegistroCurto ? { confirmarRegistroCurto: true } : {}),
+        };
+
+        await pontoService.registrar(payload);
 
         lastSelfRegistroAt.current = Date.now();
 
@@ -425,6 +429,22 @@ export default function MeuPonto() {
           carregarProximo({ silent: true });
         }, 2800);
       } catch (err) {
+        // Aviso de "registro cedo demais" — permite confirmar e registrar mesmo assim.
+        if (err?.response?.data?.code === 'REGISTRO_MUITO_CEDO' && opts.confirmarRegistroCurto !== true) {
+          const d = err.response.data;
+          const minutos = Number(d.minutosDecorridos ?? 0);
+          const minimo = Number(d.minimoMinutos ?? 0);
+          const faltam = Math.max(0, minimo - minutos);
+          const ok = window.confirm(
+            (d.error || 'Registro muito cedo.') +
+              `\n\nDecorridos: ${minutos} min\nMínimo: ${minimo} min` +
+              (faltam > 0 ? `\nFaltam: ${faltam} min` : '') +
+              '\n\nDeseja registrar mesmo assim?'
+          );
+          if (ok) {
+            return await enviarRegistro(fotoBase64, { ...opts, confirmarRegistroCurto: true });
+          }
+        }
         const msg = humanizarErroRegistro(err);
         setMensagem(msg);
         setEtapa('erro');

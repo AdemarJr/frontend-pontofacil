@@ -91,6 +91,8 @@ export default function Relatorios() {
       });
       setAjusteModal(null);
       buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível salvar o ajuste.');
     } finally { setSalvandoAjuste(false); }
   }
 

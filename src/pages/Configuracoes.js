@@ -26,6 +26,8 @@ export default function Configuracoes() {
         geofenceAtivo: data.geofenceAtivo,
         fotoObrigatoria: data.fotoObrigatoria,
         toleranciaMinutos: data.toleranciaMinutos || 5,
+        trabalhoMinimoAntesSaidaMinutos: data.trabalhoMinimoAntesSaidaMinutos ?? 30,
+        intervaloMinimoAlmocoMinutos: data.intervaloMinimoAlmocoMinutos ?? 30,
       });
     });
   }, []);
@@ -260,6 +262,49 @@ export default function Configuracoes() {
           <div>
             <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>Tolerância de atraso (minutos)</label>
             <input className="input" type="number" min="0" max="60" value={form.toleranciaMinutos} onChange={e => setForm(p => ({...p, toleranciaMinutos: Number(e.target.value)}))} style={{ maxWidth:'120px' }} />
+          </div>
+
+          <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: 'var(--cinza-700)' }}>
+              Avisos de “registro cedo demais” (minutos)
+            </h3>
+            <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.4 }}>
+              O colaborador verá um aviso ao tentar registrar muito rápido após a última marcação, com opção de confirmar.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>
+                  Mínimo de trabalho antes de Saída/Saída almoço
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  min="0"
+                  max="600"
+                  value={form.trabalhoMinimoAntesSaidaMinutos}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, trabalhoMinimoAntesSaidaMinutos: Number(e.target.value) }))
+                  }
+                  style={{ maxWidth: '160px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>
+                  Mínimo de intervalo antes do Retorno
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  min="0"
+                  max="600"
+                  value={form.intervaloMinimoAlmocoMinutos}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, intervaloMinimoAlmocoMinutos: Number(e.target.value) }))
+                  }
+                  style={{ maxWidth: '160px' }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
