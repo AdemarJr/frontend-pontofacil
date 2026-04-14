@@ -81,13 +81,20 @@ export default function Relatorios() {
   }
 
   async function salvarAjuste() {
-    if (!ajusteForm.dataHoraNova || !ajusteForm.motivo) return;
+    if (!ajusteForm.dataHoraNova) {
+      alert('Selecione o novo horário.');
+      return;
+    }
+    if (!String(ajusteForm.motivo || '').trim()) {
+      alert('Informe o motivo do ajuste.');
+      return;
+    }
     setSalvandoAjuste(true);
     try {
       await relatorioService.ajustarPonto({
         registroId: ajusteModal.id,
         dataHoraNova: ajusteForm.dataHoraNova,
-        motivo: ajusteForm.motivo,
+        motivo: String(ajusteForm.motivo).trim(),
       });
       setAjusteModal(null);
       buscar();
@@ -97,15 +104,29 @@ export default function Relatorios() {
   }
 
   async function salvarInsercao() {
-    if (!inserirModal?.usuarioId) return;
-    if (!inserirForm.tipo || !inserirForm.dataHora || !inserirForm.motivo) return;
+    if (!inserirModal?.usuarioId) {
+      alert('Selecione um colaborador para inserir a batida.');
+      return;
+    }
+    if (!inserirForm.tipo) {
+      alert('Selecione o tipo da batida.');
+      return;
+    }
+    if (!inserirForm.dataHora) {
+      alert('Selecione a data/hora da batida.');
+      return;
+    }
+    if (!String(inserirForm.motivo || '').trim()) {
+      alert('Informe a justificativa para inserir a batida.');
+      return;
+    }
     setSalvandoInsercao(true);
     try {
       await relatorioService.inserirPontoManual({
         usuarioId: inserirModal.usuarioId,
         tipo: inserirForm.tipo,
         dataHora: inserirForm.dataHora,
-        motivo: inserirForm.motivo,
+        motivo: String(inserirForm.motivo).trim(),
       });
       setInserirModal(null);
       buscar();
@@ -440,7 +461,12 @@ export default function Relatorios() {
             </div>
             <div style={{ display:'flex', gap:'12px', marginTop:'20px' }}>
               <button className="btn btn-secondary btn-full" onClick={() => setAjusteModal(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-full" onClick={salvarAjuste} disabled={salvandoAjuste || !ajusteForm.motivo}>
+              <button
+                className="btn btn-primary btn-full"
+                onClick={salvarAjuste}
+                disabled={salvandoAjuste || !String(ajusteForm.motivo || '').trim()}
+                title={!String(ajusteForm.motivo || '').trim() ? 'Informe o motivo do ajuste' : undefined}
+              >
                 {salvandoAjuste ? 'Salvando...' : 'Confirmar Ajuste'}
               </button>
             </div>
@@ -477,7 +503,12 @@ export default function Relatorios() {
             </div>
             <div style={{ display:'flex', gap:'12px', marginTop:'20px' }}>
               <button className="btn btn-secondary btn-full" onClick={() => setInserirModal(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-full" onClick={salvarInsercao} disabled={salvandoInsercao || !inserirForm.motivo}>
+              <button
+                className="btn btn-primary btn-full"
+                onClick={salvarInsercao}
+                disabled={salvandoInsercao || !String(inserirForm.motivo || '').trim()}
+                title={!String(inserirForm.motivo || '').trim() ? 'Informe a justificativa' : undefined}
+              >
                 {salvandoInsercao ? 'Salvando...' : 'Confirmar inserção'}
               </button>
             </div>
