@@ -257,8 +257,9 @@ export default function MeuPonto() {
   );
 
   useEffect(() => {
-    document.body.classList.add('totem-mode');
-    return () => document.body.classList.remove('totem-mode');
+    // O modo "totem" desabilita scroll/toque (global.css). No Meu Ponto (app do colaborador),
+    // isso quebra o scroll no iPhone. Portanto, não aplicamos totem-mode aqui.
+    return undefined;
   }, []);
 
   useEffect(() => {
