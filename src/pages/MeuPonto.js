@@ -56,6 +56,7 @@ function mensagemErroGeolocalizacao(err) {
 export default function MeuPonto() {
   const { usuario, logout, carregando: authCarregando } = useAuth();
   const navigate = useNavigate();
+  const [aba, setAba] = useState('bater'); // bater | pendencias | ausencias
   const [etapa, setEtapa] = useState('carregando');
   const [proximoTipo, setProximoTipo] = useState('ENTRADA');
   const [carregando, setCarregando] = useState(false);
@@ -691,7 +692,8 @@ export default function MeuPonto() {
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           paddingTop: 18,
-          paddingBottom: 24,
+          paddingBottom: 88, // espaço para o menu inferior (mobile)
+          minHeight: 0,
         }}
       >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%' }}>
@@ -731,33 +733,43 @@ export default function MeuPonto() {
           Cerca virtual ativa: o ponto só é aceito dentro da área permitida pela empresa.
         </p>
       ) : null}
-      <button
-        type="button"
-        onClick={() => navigate('/comprovantes')}
-        style={{
-          marginTop: 12,
-          background: 'rgba(255,255,255,0.1)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: '#e2e8f0',
-          padding: '10px 18px',
-          borderRadius: 10,
-          fontSize: 14,
-          cursor: 'pointer',
-          fontWeight: 500,
-        }}
-      >
-        📎 Atestado ou comprovante de ausência
-      </button>
+      {aba === 'bater' ? (
+        <button
+          type="button"
+          onClick={() => {
+            setAba('ausencias');
+            try {
+              const el = document.scrollingElement;
+              if (el) el.scrollTop = 0;
+            } catch {}
+          }}
+          style={{
+            marginTop: 12,
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#e2e8f0',
+            padding: '10px 18px',
+            borderRadius: 10,
+            fontSize: 14,
+            cursor: 'pointer',
+            fontWeight: 500,
+          }}
+        >
+          📎 Atestado ou abono de ausência
+        </button>
+      ) : null}
 
-      <div id="tour-meu-proximo" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, textAlign: 'center', minWidth: 280 }}>
-        <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>Próximo registro</p>
-        <p style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
-          {tipoInfo?.emoji} {tipoInfo?.label}
-        </p>
-        <p style={{ color: '#64748b', fontSize: 13, marginTop: 12 }}>
-          {new Date().toLocaleString('pt-BR')}
-        </p>
-      </div>
+      {aba === 'bater' ? (
+        <div id="tour-meu-proximo" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, textAlign: 'center', minWidth: 280 }}>
+          <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>Próximo registro</p>
+          <p style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
+            {tipoInfo?.emoji} {tipoInfo?.label}
+          </p>
+          <p style={{ color: '#64748b', fontSize: 13, marginTop: 12 }}>
+            {new Date().toLocaleString('pt-BR')}
+          </p>
+        </div>
+      ) : null}
 
       {avisoEscala ? (
         <div style={{ width: '100%', maxWidth: 420 }}>
@@ -788,6 +800,7 @@ export default function MeuPonto() {
         </div>
       ) : null}
 
+      {aba === 'bater' ? (
       <div id="tour-meu-lembretes" style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -814,7 +827,9 @@ export default function MeuPonto() {
           </div>
         </div>
       </div>
+      ) : null}
 
+      {aba === 'bater' ? (
       <div id="tour-meu-acao" style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 340 }}>
         {fotoObrigatoria ? (
           <button type="button" className="btn btn-primary btn-full btn-lg" onClick={() => setEtapa('camera')}>
@@ -840,8 +855,10 @@ export default function MeuPonto() {
           </>
         )}
       </div>
+      ) : null}
 
       {/* Pendências do colaborador (batidas faltantes) */}
+      {aba === 'pendencias' ? (
       <div style={{ width: '100%', maxWidth: 520 }}>
         <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -916,6 +933,31 @@ export default function MeuPonto() {
           )}
         </div>
       </div>
+      ) : null}
+
+      {/* Ausências / comprovantes */}
+      {aba === 'ausencias' ? (
+        <div style={{ width: '100%', maxWidth: 520 }}>
+          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)' }}>
+            <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>📎 Atestado / abono de ausência</p>
+            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
+              Envie um comprovante (atestado/declaração) para análise do administrador/RH.
+            </p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+              <button type="button" className="btn btn-primary" onClick={() => navigate('/comprovantes')}>
+                Abrir meus comprovantes
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => window.open('https://wa.me/5592994764780?text=' + encodeURIComponent('Olá! Preciso de ajuda com envio de comprovante/abono no PontoFácil.'), '_blank')}
+              >
+                Preciso de ajuda
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Modal de justificativa */}
       {justificarModal ? (
@@ -1078,6 +1120,71 @@ export default function MeuPonto() {
           </div>
         </div>
       ) : null}
+
+      {/* Menu inferior (mobile) */}
+      <div
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          background: 'rgba(2,6,23,0.92)',
+          borderTop: '1px solid rgba(148,163,184,0.18)',
+          zIndex: 9998,
+        }}
+      >
+        <div style={{ maxWidth: 520, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: '10px 12px' }}>
+          <button
+            type="button"
+            onClick={() => setAba('bater')}
+            style={{
+              background: aba === 'bater' ? 'rgba(29,158,117,0.22)' : 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(148,163,184,0.18)',
+              color: 'white',
+              borderRadius: 12,
+              padding: '10px 8px',
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: 'pointer',
+            }}
+          >
+            🕐 Bater ponto
+          </button>
+          <button
+            type="button"
+            onClick={() => setAba('pendencias')}
+            style={{
+              background: aba === 'pendencias' ? 'rgba(251,191,36,0.18)' : 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(148,163,184,0.18)',
+              color: 'white',
+              borderRadius: 12,
+              padding: '10px 8px',
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: 'pointer',
+            }}
+          >
+            🧾 Pendências
+          </button>
+          <button
+            type="button"
+            onClick={() => setAba('ausencias')}
+            style={{
+              background: aba === 'ausencias' ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(148,163,184,0.18)',
+              color: 'white',
+              borderRadius: 12,
+              padding: '10px 8px',
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: 'pointer',
+            }}
+          >
+            📎 Ausências
+          </button>
+        </div>
+      </div>
       </div>
     </div>
   );

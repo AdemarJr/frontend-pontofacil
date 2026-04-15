@@ -28,15 +28,7 @@ export default function Relatorios() {
   const [usuarios, setUsuarios] = useState([]);
   const [relatorio, setRelatorio] = useState([]);
   const [carregando, setCarregando] = useState(false);
-  const [ajusteModal, setAjusteModal] = useState(null);
-  const [ajusteForm, setAjusteForm] = useState({ dataHoraNova:'', motivo:'' });
-  const [salvandoAjuste, setSalvandoAjuste] = useState(false);
-  const [inserirModal, setInserirModal] = useState(null);
-  const [inserirForm, setInserirForm] = useState({ tipo:'ENTRADA', dataHora:'', motivo:'' });
-  const [salvandoInsercao, setSalvandoInsercao] = useState(false);
   const [exportando, setExportando] = useState(false);
-  const [solicitacoes, setSolicitacoes] = useState([]);
-  const [carregandoSolicitacoes, setCarregandoSolicitacoes] = useState(false);
   const [bancoResumo, setBancoResumo] = useState(null);
   const [bancoPage, setBancoPage] = useState(1);
   const [bancoPageSize, setBancoPageSize] = useState(10);
@@ -71,52 +63,6 @@ export default function Relatorios() {
       .catch(() => setBancoResumo(null));
   }, [mes, ano, usuarioFiltro]);
 
-  async function carregarSolicitacoes() {
-    setCarregandoSolicitacoes(true);
-    try {
-      const { data } = await relatorioService.solicitacoesAjuste({ status: 'PENDENTE', limite: 50 });
-      setSolicitacoes(Array.isArray(data?.solicitacoes) ? data.solicitacoes : []);
-    } catch {
-      setSolicitacoes([]);
-    } finally {
-      setCarregandoSolicitacoes(false);
-    }
-  }
-
-  useEffect(() => {
-    carregarSolicitacoes();
-  }, []);
-
-  async function decidirSolicitacao(sol, acao) {
-    if (!sol?.id) return;
-    if (acao === 'REJEITAR') {
-      const resp = window.prompt('Motivo da rejeição (opcional):') || '';
-      try {
-        await relatorioService.decidirSolicitacaoAjuste(sol.id, { acao: 'REJEITAR', respostaAdmin: resp });
-        await carregarSolicitacoes();
-        await buscar();
-      } catch (e) {
-        alert(e?.response?.data?.error || e?.message || 'Não foi possível rejeitar.');
-      }
-      return;
-    }
-
-    // APROVAR: pede um horário efetivo (se não vier do colaborador)
-    const sugestao = sol.dataHoraSugerida ? format(new Date(sol.dataHoraSugerida), "yyyy-MM-dd'T'HH:mm") : '';
-    const dh = window.prompt(
-      `Aprovar e inserir a batida?\n\nColaborador: ${sol.usuario?.nome}\nDia: ${sol.dia}\nTipo: ${TIPOS_LABEL[sol.tipo] || sol.tipo}\n\nInforme a data/hora (YYYY-MM-DDTHH:mm):`,
-      sugestao || `${sol.dia}T08:00`
-    );
-    if (!dh) return;
-    try {
-      await relatorioService.decidirSolicitacaoAjuste(sol.id, { acao: 'APROVAR', dataHoraEfetiva: dh });
-      await carregarSolicitacoes();
-      await buscar();
-    } catch (e) {
-      alert(e?.response?.data?.error || e?.message || 'Não foi possível aprovar.');
-    }
-  }
-
   async function buscar() {
     setCarregando(true);
     try {
@@ -126,83 +72,6 @@ export default function Relatorios() {
       });
       setRelatorio(data.relatorio || []);
     } finally { setCarregando(false); }
-  }
-
-  async function salvarAjuste() {
-    if (!ajusteForm.dataHoraNova) {
-      alert('Selecione o novo horário.');
-      return;
-    }
-    if (!String(ajusteForm.motivo || '').trim()) {
-      alert('Informe o motivo do ajuste.');
-      return;
-    }
-    setSalvandoAjuste(true);
-    try {
-      await relatorioService.ajustarPonto({
-        registroId: ajusteModal.id,
-        dataHoraNova: ajusteForm.dataHoraNova,
-        motivo: String(ajusteForm.motivo).trim(),
-      });
-      setAjusteModal(null);
-      buscar();
-    } catch (e) {
-      alert(e?.response?.data?.error || e?.message || 'Não foi possível salvar o ajuste.');
-    } finally { setSalvandoAjuste(false); }
-  }
-
-  async function salvarInsercao() {
-    if (!inserirModal?.usuarioId) {
-      alert('Selecione um colaborador para inserir a batida.');
-      return;
-    }
-    if (!inserirForm.tipo) {
-      alert('Selecione o tipo da batida.');
-      return;
-    }
-    if (!inserirForm.dataHora) {
-      alert('Selecione a data/hora da batida.');
-      return;
-    }
-    if (!String(inserirForm.motivo || '').trim()) {
-      alert('Informe a justificativa para inserir a batida.');
-      return;
-    }
-    setSalvandoInsercao(true);
-    try {
-      await relatorioService.inserirPontoManual({
-        usuarioId: inserirModal.usuarioId,
-        tipo: inserirForm.tipo,
-        dataHora: inserirForm.dataHora,
-        motivo: String(inserirForm.motivo).trim(),
-      });
-      setInserirModal(null);
-      buscar();
-    } catch (e) {
-      const code = e?.response?.data?.code;
-      if (code === 'DUPLICADO_DIA') {
-        alert('Já existe uma batida desse tipo nesse dia. Em vez de inserir, ajuste o horário da batida existente.');
-      } else {
-        alert(e?.response?.data?.error || e?.message || 'Não foi possível inserir a batida.');
-      }
-    } finally {
-      setSalvandoInsercao(false);
-    }
-  }
-
-  async function excluirBatida(ponto) {
-    const motivo = window.prompt(
-      `Excluir batida "${TIPOS_LABEL[ponto.tipo] || ponto.tipo}" (${format(new Date(ponto.dataHora), 'dd/MM/yyyy HH:mm')})?\n\nInforme o motivo (obrigatório):`
-    );
-    if (!motivo || !String(motivo).trim()) return;
-    try {
-      // Reaproveita o serviço já existente no bundle (pontoService está no backend /ponto)
-      const { pontoService } = await import('../services/api');
-      await pontoService.excluir(ponto.id, String(motivo).trim());
-      await buscar();
-    } catch (e) {
-      alert(e?.response?.data?.error || e?.message || 'Não foi possível excluir a batida.');
-    }
   }
 
   const bancoRows = bancoResumo?.resumo || [];
@@ -234,72 +103,6 @@ export default function Relatorios() {
 
   return (
     <Layout>
-      {/* Solicitações de ajuste (colaborador -> admin) */}
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>🧾 Solicitações de ajuste (pendentes)</h2>
-            <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0 }}>
-              Aprovar insere a batida faltante e ela some das pendências do colaborador.
-            </p>
-          </div>
-          <button type="button" className="btn btn-secondary" onClick={carregarSolicitacoes} disabled={carregandoSolicitacoes}>
-            {carregandoSolicitacoes ? 'Atualizando…' : 'Atualizar'}
-          </button>
-        </div>
-
-        {solicitacoes.length === 0 ? (
-          <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 12, marginBottom: 0 }}>
-            Nenhuma solicitação pendente.
-          </p>
-        ) : (
-          <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
-            {solicitacoes.slice(0, 10).map((s) => (
-              <div
-                key={s.id}
-                style={{
-                  border: '1px solid var(--cinza-100)',
-                  borderRadius: 12,
-                  padding: 12,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>
-                    {s.usuario?.nome} — {s.dia} — {TIPOS_LABEL[s.tipo] || s.tipo}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6, whiteSpace: 'pre-line' }}>
-                    {s.justificativa}
-                  </div>
-                  {s.dataHoraSugerida ? (
-                    <div style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6 }}>
-                      Sugestão: {format(new Date(s.dataHoraSugerida), 'dd/MM/yyyy HH:mm')}
-                    </div>
-                  ) : null}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="btn btn-secondary" onClick={() => decidirSolicitacao(s, 'REJEITAR')}>
-                    Negar
-                  </button>
-                  <button type="button" className="btn btn-primary" onClick={() => decidirSolicitacao(s, 'APROVAR')}>
-                    Aprovar
-                  </button>
-                </div>
-              </div>
-            ))}
-            {solicitacoes.length > 10 ? (
-              <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0 }}>
-                Mostrando 10. Clique em Atualizar para recarregar.
-              </p>
-            ) : null}
-          </div>
-        )}
-      </div>
-
       {/* Header */}
       <div id="tour-rel-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'24px', flexWrap:'wrap', gap:'12px' }}>
         <div>
@@ -510,24 +313,7 @@ export default function Relatorios() {
                           {it.v || '—'}
                         </span>
                       </div>
-                      {faltando ? (
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          style={{ padding: '6px 10px', fontSize: 12, whiteSpace:'nowrap' }}
-                          onClick={() => {
-                            setInserirModal({ usuarioId: r.usuario.id, dia, nome: r.usuario.nome });
-                            setInserirForm({
-                              tipo: it.t,
-                              dataHora: `${dia}T${it.t === 'ENTRADA' ? '08:00' : it.t === 'SAIDA' ? '17:00' : it.t === 'SAIDA_ALMOCO' ? '12:00' : '13:00'}`,
-                              motivo: '',
-                            });
-                          }}
-                          title="Inserir batida faltante com justificativa"
-                        >
-                          + Inserir
-                        </button>
-                      ) : null}
+                    {faltando ? null : null}
                     </div>
                   );
                 })}
@@ -541,16 +327,6 @@ export default function Relatorios() {
                       {format(new Date(p.dataHora), 'HH:mm')}
                     </span>
                     {p.ajustado && <span className="badge badge-amarelo" style={{ fontSize:'10px', padding:'1px 6px' }}>Ajustado</span>}
-                    <button
-                      onClick={() => { setAjusteModal(p); setAjusteForm({ dataHoraNova: format(new Date(p.dataHora), "yyyy-MM-dd'T'HH:mm"), motivo:'' }); }}
-                      style={{ background:'none', border:'none', cursor:'pointer', color:'var(--cinza-400)', fontSize:'12px', padding:'0 2px' }}
-                      title="Ajustar horário"
-                    >✏️</button>
-                    <button
-                      onClick={() => excluirBatida(p)}
-                      style={{ background:'none', border:'none', cursor:'pointer', color:'var(--vermelho)', fontSize:'12px', padding:'0 2px' }}
-                      title="Excluir batida (com motivo)"
-                    >🗑️</button>
                   </div>
                 ))}
               </div>
@@ -575,80 +351,6 @@ export default function Relatorios() {
       )}
       </div>
 
-      {/* Modal de ajuste */}
-      {ajusteModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'420px', padding:'28px' }}>
-            <h2 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'20px' }}>Ajuste Manual de Ponto</h2>
-            <div style={{ background:'var(--cinza-100)', borderRadius:'8px', padding:'12px', marginBottom:'20px', fontSize:'13px', color:'var(--cinza-700)' }}>
-              <strong>Horário original:</strong> {format(new Date(ajusteModal.dataHora), 'dd/MM/yyyy HH:mm:ss')}
-            </div>
-            <div style={{ display:'grid', gap:'14px' }}>
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Novo horário</label>
-                <input className="input" type="datetime-local" value={ajusteForm.dataHoraNova} onChange={e => setAjusteForm(p => ({...p, dataHoraNova: e.target.value}))} />
-              </div>
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Motivo do ajuste *</label>
-                <textarea className="input" rows={3} placeholder="Ex: Colaborador esqueceu de registrar a entrada..." value={ajusteForm.motivo} onChange={e => setAjusteForm(p => ({...p, motivo: e.target.value}))} style={{ resize:'vertical' }} />
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:'12px', marginTop:'20px' }}>
-              <button className="btn btn-secondary btn-full" onClick={() => setAjusteModal(null)}>Cancelar</button>
-              <button
-                className="btn btn-primary btn-full"
-                onClick={salvarAjuste}
-                disabled={salvandoAjuste || !String(ajusteForm.motivo || '').trim()}
-                title={!String(ajusteForm.motivo || '').trim() ? 'Informe o motivo do ajuste' : undefined}
-              >
-                {salvandoAjuste ? 'Salvando...' : 'Confirmar Ajuste'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de inserção */}
-      {inserirModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'520px', padding:'28px' }}>
-            <h2 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'10px' }}>Inserir batida faltante</h2>
-            <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 16 }}>
-              {inserirModal.nome} — {format(new Date(inserirModal.dia + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })}
-            </p>
-            <div style={{ display:'grid', gap:'14px' }}>
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Tipo</label>
-                <select className="input" value={inserirForm.tipo} onChange={e => setInserirForm(p => ({ ...p, tipo: e.target.value }))}>
-                  <option value="ENTRADA">Entrada</option>
-                  <option value="SAIDA_ALMOCO">Saída intervalo</option>
-                  <option value="RETORNO_ALMOCO">Retorno intervalo</option>
-                  <option value="SAIDA">Saída</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Data/hora</label>
-                <input className="input" type="datetime-local" value={inserirForm.dataHora} onChange={e => setInserirForm(p => ({...p, dataHora: e.target.value}))} />
-              </div>
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Justificativa *</label>
-                <textarea className="input" rows={3} placeholder="Ex: Esqueceu de registrar a saída..." value={inserirForm.motivo} onChange={e => setInserirForm(p => ({...p, motivo: e.target.value}))} style={{ resize:'vertical' }} />
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:'12px', marginTop:'20px' }}>
-              <button className="btn btn-secondary btn-full" onClick={() => setInserirModal(null)}>Cancelar</button>
-              <button
-                className="btn btn-primary btn-full"
-                onClick={salvarInsercao}
-                disabled={salvandoInsercao || !String(inserirForm.motivo || '').trim()}
-                title={!String(inserirForm.motivo || '').trim() ? 'Informe a justificativa' : undefined}
-              >
-                {salvandoInsercao ? 'Salvando...' : 'Confirmar inserção'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }

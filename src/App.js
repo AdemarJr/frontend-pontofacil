@@ -12,6 +12,8 @@ import Totem from './pages/Totem';
 import Dashboard from './pages/Dashboard';
 import Colaboradores from './pages/Colaboradores';
 import Relatorios from './pages/Relatorios';
+import AjustesPonto from './pages/AjustesPonto';
+import Solicitacoes from './pages/Solicitacoes';
 import Configuracoes from './pages/Configuracoes';
 import Escalas from './pages/Escalas';
 import SuperAdmin from './pages/SuperAdmin';
@@ -92,6 +94,16 @@ export default function App() {
           <Route path="/relatorios" element={
             <RotaProtegida apenasAdmin>
               <Relatorios />
+            </RotaProtegida>
+          } />
+          <Route path="/ajustes-ponto" element={
+            <RotaProtegida apenasAdmin>
+              <AjustesPonto />
+            </RotaProtegida>
+          } />
+          <Route path="/solicitacoes" element={
+            <RotaProtegida apenasAdmin>
+              <Solicitacoes />
             </RotaProtegida>
           } />
           <Route path="/escalas" element={
