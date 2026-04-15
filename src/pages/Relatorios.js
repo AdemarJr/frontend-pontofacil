@@ -35,6 +35,8 @@ export default function Relatorios() {
   const [inserirForm, setInserirForm] = useState({ tipo:'ENTRADA', dataHora:'', motivo:'' });
   const [salvandoInsercao, setSalvandoInsercao] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [solicitacoes, setSolicitacoes] = useState([]);
+  const [carregandoSolicitacoes, setCarregandoSolicitacoes] = useState(false);
   const [bancoResumo, setBancoResumo] = useState(null);
   const [bancoPage, setBancoPage] = useState(1);
   const [bancoPageSize, setBancoPageSize] = useState(10);
@@ -68,6 +70,52 @@ export default function Relatorios() {
       .then(({ data }) => setBancoResumo(data))
       .catch(() => setBancoResumo(null));
   }, [mes, ano, usuarioFiltro]);
+
+  async function carregarSolicitacoes() {
+    setCarregandoSolicitacoes(true);
+    try {
+      const { data } = await relatorioService.solicitacoesAjuste({ status: 'PENDENTE', limite: 50 });
+      setSolicitacoes(Array.isArray(data?.solicitacoes) ? data.solicitacoes : []);
+    } catch {
+      setSolicitacoes([]);
+    } finally {
+      setCarregandoSolicitacoes(false);
+    }
+  }
+
+  useEffect(() => {
+    carregarSolicitacoes();
+  }, []);
+
+  async function decidirSolicitacao(sol, acao) {
+    if (!sol?.id) return;
+    if (acao === 'REJEITAR') {
+      const resp = window.prompt('Motivo da rejeição (opcional):') || '';
+      try {
+        await relatorioService.decidirSolicitacaoAjuste(sol.id, { acao: 'REJEITAR', respostaAdmin: resp });
+        await carregarSolicitacoes();
+        await buscar();
+      } catch (e) {
+        alert(e?.response?.data?.error || e?.message || 'Não foi possível rejeitar.');
+      }
+      return;
+    }
+
+    // APROVAR: pede um horário efetivo (se não vier do colaborador)
+    const sugestao = sol.dataHoraSugerida ? format(new Date(sol.dataHoraSugerida), "yyyy-MM-dd'T'HH:mm") : '';
+    const dh = window.prompt(
+      `Aprovar e inserir a batida?\n\nColaborador: ${sol.usuario?.nome}\nDia: ${sol.dia}\nTipo: ${TIPOS_LABEL[sol.tipo] || sol.tipo}\n\nInforme a data/hora (YYYY-MM-DDTHH:mm):`,
+      sugestao || `${sol.dia}T08:00`
+    );
+    if (!dh) return;
+    try {
+      await relatorioService.decidirSolicitacaoAjuste(sol.id, { acao: 'APROVAR', dataHoraEfetiva: dh });
+      await carregarSolicitacoes();
+      await buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível aprovar.');
+    }
+  }
 
   async function buscar() {
     setCarregando(true);
@@ -186,6 +234,72 @@ export default function Relatorios() {
 
   return (
     <Layout>
+      {/* Solicitações de ajuste (colaborador -> admin) */}
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>🧾 Solicitações de ajuste (pendentes)</h2>
+            <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0 }}>
+              Aprovar insere a batida faltante e ela some das pendências do colaborador.
+            </p>
+          </div>
+          <button type="button" className="btn btn-secondary" onClick={carregarSolicitacoes} disabled={carregandoSolicitacoes}>
+            {carregandoSolicitacoes ? 'Atualizando…' : 'Atualizar'}
+          </button>
+        </div>
+
+        {solicitacoes.length === 0 ? (
+          <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 12, marginBottom: 0 }}>
+            Nenhuma solicitação pendente.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+            {solicitacoes.slice(0, 10).map((s) => (
+              <div
+                key={s.id}
+                style={{
+                  border: '1px solid var(--cinza-100)',
+                  borderRadius: 12,
+                  padding: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>
+                    {s.usuario?.nome} — {s.dia} — {TIPOS_LABEL[s.tipo] || s.tipo}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6, whiteSpace: 'pre-line' }}>
+                    {s.justificativa}
+                  </div>
+                  {s.dataHoraSugerida ? (
+                    <div style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6 }}>
+                      Sugestão: {format(new Date(s.dataHoraSugerida), 'dd/MM/yyyy HH:mm')}
+                    </div>
+                  ) : null}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => decidirSolicitacao(s, 'REJEITAR')}>
+                    Negar
+                  </button>
+                  <button type="button" className="btn btn-primary" onClick={() => decidirSolicitacao(s, 'APROVAR')}>
+                    Aprovar
+                  </button>
+                </div>
+              </div>
+            ))}
+            {solicitacoes.length > 10 ? (
+              <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0 }}>
+                Mostrando 10. Clique em Atualizar para recarregar.
+              </p>
+            ) : null}
+          </div>
+        )}
+      </div>
+
       {/* Header */}
       <div id="tour-rel-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'24px', flexWrap:'wrap', gap:'12px' }}>
         <div>

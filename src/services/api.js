@@ -159,6 +159,8 @@ export const relatorioService = {
   resumoDia: () => api.get('/relatorios/resumo-dia'),
   ajustarPonto: (dados) => api.post('/relatorios/ajuste', dados),
   inserirPontoManual: (dados) => api.post('/relatorios/inserir', dados),
+  solicitacoesAjuste: (params) => api.get('/relatorios/solicitacoes-ajuste', { params }),
+  decidirSolicitacaoAjuste: (id, dados) => api.post(`/relatorios/solicitacoes-ajuste/${id}/decidir`, dados),
   /**
    * Exporta espelho com colunas para contador (regras básicas no servidor).
    * format: csv | xlsx | pdf
