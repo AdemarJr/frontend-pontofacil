@@ -196,6 +196,20 @@ export default function Landing() {
                   />
                 </div>
               </figure>
+              <figure className="landing-showcase-figure landing-showcase-figure--phone">
+                <figcaption className="landing-showcase-caption">Login no app</figcaption>
+                <div className="landing-showcase-frame landing-showcase-frame--phone">
+                  <img
+                    src={publicUrl('/landing-app-login.png')}
+                    alt="Tela de login do app para o colaborador"
+                    className="landing-showcase-img"
+                    width={390}
+                    height={844}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </figure>
               <figure className="landing-showcase-figure landing-showcase-figure--tablet">
                 <figcaption className="landing-showcase-caption">Totem · PIN</figcaption>
                 <div className="landing-showcase-frame landing-showcase-frame--tablet">

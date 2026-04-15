@@ -866,7 +866,7 @@
 
 @media (min-width: 700px) {
   .landing-showcase-devices {
-    grid-template-columns: minmax(240px, 280px) minmax(220px, 320px);
+    grid-template-columns: minmax(240px, 280px) minmax(240px, 280px) minmax(220px, 320px);
     justify-content: center;
     justify-items: center;
   }
