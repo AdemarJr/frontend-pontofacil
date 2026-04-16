@@ -10,6 +10,14 @@ const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORN
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
 
+/** Evita o backend (UTC) interpretar "YYYY-MM-DDTHH:mm" como horário UTC em vez do fuso do gerente. */
+function datetimeLocalParaIsoUtc(valor) {
+  if (!valor) return '';
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return valor;
+  return d.toISOString();
+}
+
 export default function AjustesPonto() {
   const hoje = new Date();
   const [mes, setMes] = useState(hoje.getMonth() + 1);
@@ -69,7 +77,7 @@ export default function AjustesPonto() {
     try {
       await relatorioService.ajustarPonto({
         registroId: ajusteModal.id,
-        dataHoraNova: ajusteForm.dataHoraNova,
+        dataHoraNova: datetimeLocalParaIsoUtc(ajusteForm.dataHoraNova),
         motivo: String(ajusteForm.motivo).trim(),
       });
       setAjusteModal(null);
@@ -103,7 +111,7 @@ export default function AjustesPonto() {
       await relatorioService.inserirPontoManual({
         usuarioId: inserirModal.usuarioId,
         tipo: inserirForm.tipo,
-        dataHora: inserirForm.dataHora,
+        dataHora: datetimeLocalParaIsoUtc(inserirForm.dataHora),
         motivo: String(inserirForm.motivo).trim(),
       });
       setInserirModal(null);
