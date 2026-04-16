@@ -718,6 +718,20 @@ export default function MeuPonto() {
       <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', maxWidth: 320, margin: 0 }}>
         {usuario.tenant?.nomeFantasia}
       </p>
+      <p
+        style={{
+          color: '#facc15',
+          fontSize: 15,
+          fontWeight: 800,
+          textAlign: 'center',
+          maxWidth: 320,
+          margin: 0,
+          letterSpacing: 0.2,
+          textShadow: '0 1px 10px rgba(0,0,0,0.25)',
+        }}
+      >
+        {usuario.nome}
+      </p>
       {cercaVirtualAtiva ? (
         <p
           style={{

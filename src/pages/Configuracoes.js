@@ -20,6 +20,8 @@ export default function Configuracoes() {
     tenantService.meu().then(({ data }) => {
       setConfig(data);
       setForm({
+        permitirTotem: data.permitirTotem ?? true,
+        permitirMeuPonto: data.permitirMeuPonto ?? true,
         geofenceLat: data.geofenceLat || '',
         geofenceLng: data.geofenceLng || '',
         geofenceRaio: data.geofenceRaio || 200,
@@ -125,6 +127,34 @@ export default function Configuracoes() {
           </div>
         </div>
 
+        {/* Canais de registro */}
+        <div className="card">
+          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>🔀 Canais de registro</h2>
+          <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'12px', lineHeight:1.5 }}>
+            Defina por onde os colaboradores podem registrar ponto. Cada batida fica identificada no sistema como <strong>Totem</strong> ou <strong>Meu ponto</strong>.
+          </p>
+          <div style={{ display:'grid', gap:'10px' }}>
+            <label style={{ display:'flex', alignItems:'center', gap:'10px', cursor:'pointer' }}>
+              <input
+                type="checkbox"
+                checked={Boolean(form.permitirTotem)}
+                onChange={(e) => setForm((p) => ({ ...p, permitirTotem: e.target.checked }))}
+                style={{ width:'18px', height:'18px', accentColor:'var(--verde)' }}
+              />
+              <span style={{ fontSize:'14px', fontWeight:'500' }}>Permitir registro pelo Totem</span>
+            </label>
+            <label style={{ display:'flex', alignItems:'center', gap:'10px', cursor:'pointer' }}>
+              <input
+                type="checkbox"
+                checked={Boolean(form.permitirMeuPonto)}
+                onChange={(e) => setForm((p) => ({ ...p, permitirMeuPonto: e.target.checked }))}
+                style={{ width:'18px', height:'18px', accentColor:'var(--verde)' }}
+              />
+              <span style={{ fontSize:'14px', fontWeight:'500' }}>Permitir registro pelo Meu ponto (celular)</span>
+            </label>
+          </div>
+        </div>
+
         {/* Geofencing */}
         <div id="tour-cfg-geofence" className="card">
           <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>📍 Geofencing</h2>
@@ -134,7 +164,7 @@ export default function Configuracoes() {
             <span style={{ fontSize:'14px', fontWeight:'500' }}>Ativar restrição por localização</span>
           </label>
           <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'12px', lineHeight:1.5 }}>
-            Com a cerca ativa, o totem só registra ponto dentro da área. Se você cadastrar <strong>locais nomeados</strong> abaixo,
+            Com a cerca ativa, <strong>o Meu ponto</strong> só registra dentro da área. Se você cadastrar <strong>locais nomeados</strong> abaixo,
             eles passam a valer no lugar de latitude/longitude únicas da empresa. Em Colaboradores, você pode restringir cada pessoa a um local.
           </p>
 
@@ -158,7 +188,7 @@ export default function Configuracoes() {
 
         {/* Locais nomeados (múltiplas cercas) */}
         <div id="tour-cfg-locais" className="card">
-          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'8px' }}>📌 Locais permitidos para o totem</h2>
+          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'8px' }}>📌 Locais permitidos (restrição de localização)</h2>
           <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'16px' }}>
             Cadastre filiais, obras ou entradas com nome, GPS e raio. Com cerca virtual ativa, basta existir um local cadastrado
             (ou use o mapa único acima se não houver locais).
