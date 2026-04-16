@@ -76,6 +76,17 @@ export default function Login() {
           Totem compartilhado (PIN)?{' '}
           <a href="/totem" style={{ color:'var(--verde)', textDecoration:'none', fontWeight:'500' }}>Abrir totem</a>
         </p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <Link
+            to="/"
+            className="btn btn-secondary"
+            style={{ textDecoration: 'none' }}
+            title="Voltar para a página inicial"
+          >
+            ← Voltar para o site
+          </Link>
+        </div>
       </div>
     </div>
   );

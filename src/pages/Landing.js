@@ -378,6 +378,75 @@ export default function Landing() {
             O PontoFácil é uma PWA: seu time pode &quot;instalar&quot; no aparelho, abrir em tela cheia no totem e
             usar gestos naturais, sem depender de publicação em loja de aplicativos para começar a operar.
           </p>
+
+          <div style={{ marginTop: 18, display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Link to="/meu-ponto" className="landing-btn-header landing-btn-header--primary">
+              Abrir Meu ponto
+            </Link>
+            <Link to="/totem" className="landing-btn-header landing-btn-header--ghost">
+              Abrir Totem
+            </Link>
+          </div>
+
+          <div style={{ marginTop: 26, display: 'grid', gap: 14, width: '100%', maxWidth: 980 }}>
+            <div className="landing-card" style={{ textAlign: 'left' }}>
+              <h3 style={{ marginTop: 0 }}>📲 Como instalar o PWA do Meu-Ponto (colaborador)</h3>
+              <p style={{ marginTop: 8, color: 'var(--cinza-400)' }}>
+                Abra o link do Meu ponto no celular e adicione à tela inicial para usar como app.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginTop: 12 }}>
+                <div style={{ border: '1px solid var(--cinza-200)', borderRadius: 12, padding: 14 }}>
+                  <strong>📱 No Android (Google Chrome)</strong>
+                  <ol style={{ marginTop: 10, marginBottom: 0, paddingLeft: 18, color: 'var(--cinza-700)', lineHeight: 1.55 }}>
+                    <li>Abra o Chrome e acesse o Meu ponto.</li>
+                    <li>Aguarde carregar. Se aparecer o banner “Adicionar à tela inicial”, toque nele.</li>
+                    <li>Se não aparecer: toque em <strong>⋮</strong> (três pontinhos).</li>
+                    <li>Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                    <li>Confirme em <strong>Instalar</strong>.</li>
+                  </ol>
+                </div>
+                <div style={{ border: '1px solid var(--cinza-200)', borderRadius: 12, padding: 14 }}>
+                  <strong>🍎 No iOS / iPhone (Safari)</strong>
+                  <ol style={{ marginTop: 10, marginBottom: 0, paddingLeft: 18, color: 'var(--cinza-700)', lineHeight: 1.55 }}>
+                    <li>Abra o Safari e acesse o Meu ponto.</li>
+                    <li>Toque em <strong>Compartilhar</strong> (quadrado com seta para cima).</li>
+                    <li>Role e toque em <strong>Adicionar à Tela de Início</strong>.</li>
+                    <li>Se quiser, edite o nome do ícone.</li>
+                    <li>Toque em <strong>Adicionar</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div className="landing-card" style={{ textAlign: 'left' }}>
+              <h3 style={{ marginTop: 0 }}>🖥️ Como instalar o PWA do Totem (tablet/recepção)</h3>
+              <p style={{ marginTop: 8, color: 'var(--cinza-400)' }}>
+                Abra o link do Totem no tablet/celular e instale para operar em tela cheia. Depois, configure o <strong>ID da empresa</strong> no próprio Totem.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginTop: 12 }}>
+                <div style={{ border: '1px solid var(--cinza-200)', borderRadius: 12, padding: 14 }}>
+                  <strong>📱 No Android (Google Chrome)</strong>
+                  <ol style={{ marginTop: 10, marginBottom: 0, paddingLeft: 18, color: 'var(--cinza-700)', lineHeight: 1.55 }}>
+                    <li>Abra o Chrome e acesse o Totem.</li>
+                    <li>Toque em <strong>⋮</strong> (três pontinhos).</li>
+                    <li>Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                    <li>Confirme em <strong>Instalar</strong>.</li>
+                    <li>Abra o ícone instalado e cole o <strong>ID da empresa</strong> quando solicitado.</li>
+                  </ol>
+                </div>
+                <div style={{ border: '1px solid var(--cinza-200)', borderRadius: 12, padding: 14 }}>
+                  <strong>🍎 No iOS / iPhone/iPad (Safari)</strong>
+                  <ol style={{ marginTop: 10, marginBottom: 0, paddingLeft: 18, color: 'var(--cinza-700)', lineHeight: 1.55 }}>
+                    <li>Abra o Safari e acesse o Totem.</li>
+                    <li>Toque em <strong>Compartilhar</strong> (quadrado com seta para cima).</li>
+                    <li>Toque em <strong>Adicionar à Tela de Início</strong>.</li>
+                    <li>Toque em <strong>Adicionar</strong>.</li>
+                    <li>Abra o ícone instalado e configure o <strong>ID da empresa</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
