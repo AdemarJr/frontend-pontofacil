@@ -8,6 +8,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const TIPOS_LABEL = { ENTRADA:'Entrada', SAIDA_ALMOCO:'Saída Almoço', RETORNO_ALMOCO:'Retorno', SAIDA:'Saída' };
+const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
 
 function fmtMinutos(m) {
   if (m == null || Number.isNaN(Number(m))) return '—';
@@ -312,6 +313,11 @@ export default function Relatorios() {
                         <span style={{ fontFamily:'monospace', fontWeight: 800, color: 'white' }}>
                           {it.v || '—'}
                         </span>
+                        {!faltando && dados?.origens?.[it.k] ? (
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
+                            {ORIGEM_LABEL[dados.origens[it.k]] || dados.origens[it.k]}
+                          </span>
+                        ) : null}
                       </div>
                     {faltando ? null : null}
                     </div>
@@ -326,6 +332,11 @@ export default function Relatorios() {
                     <span style={{ fontSize:'13px', fontWeight:'600', fontFamily:'monospace' }}>
                       {format(new Date(p.dataHora), 'HH:mm')}
                     </span>
+                    {p.origem ? (
+                      <span className="badge" style={{ fontSize:'10px', padding:'1px 6px' }} title={p.origem}>
+                        {ORIGEM_LABEL[p.origem] || p.origem}
+                      </span>
+                    ) : null}
                     {p.ajustado && <span className="badge badge-amarelo" style={{ fontSize:'10px', padding:'1px 6px' }}>Ajustado</span>}
                   </div>
                 ))}

@@ -25,6 +25,12 @@ export default function Dashboard() {
   const [limite, setLimite] = useState(10);
   const [totalRegistros, setTotalRegistros] = useState(0);
 
+  const ORIGEM_LABEL = {
+    TOTEM: 'Totem',
+    APP_INDIVIDUAL: 'Meu ponto',
+    ADMIN_MANUAL: 'Manual',
+  };
+
   const carregarDados = useCallback(async () => {
     try {
       const hoje = format(new Date(), 'yyyy-MM-dd');
@@ -132,6 +138,7 @@ export default function Dashboard() {
                 <tr>
                   <th>Colaborador</th>
                   <th>Tipo</th>
+                  <th>Origem</th>
                   <th>Horário</th>
                   <th>Foto</th>
                   <th>Localização</th>
@@ -148,6 +155,23 @@ export default function Dashboard() {
                       <span className="badge" style={{ background: TIPOS_COR[r.tipo] + '20', color: TIPOS_COR[r.tipo] }}>
                         {TIPOS_LABEL[r.tipo]}
                       </span>
+                    </td>
+                    <td>
+                      {r.origem ? (
+                        <span
+                          className="badge"
+                          style={{
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(148,163,184,0.25)',
+                            color: 'var(--cinza-700)',
+                          }}
+                          title={r.origem}
+                        >
+                          {ORIGEM_LABEL[r.origem] || r.origem}
+                        </span>
+                      ) : (
+                        <span style={{ color:'var(--cinza-400)', fontSize:'12px' }}>—</span>
+                      )}
                     </td>
                     <td style={{ fontFamily:'monospace', fontSize:'15px', fontWeight:'500' }}>
                       {format(new Date(r.dataHora), 'HH:mm:ss')}

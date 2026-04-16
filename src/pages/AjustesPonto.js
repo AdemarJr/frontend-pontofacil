@@ -8,6 +8,7 @@ import { pontoService, relatorioService, usuarioService } from '../services/api'
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
+const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
 
 export default function AjustesPonto() {
   const hoje = new Date();
@@ -253,6 +254,11 @@ export default function AjustesPonto() {
                                     {it.label}
                                   </span>
                                   <span style={{ fontFamily: 'monospace', fontWeight: 800, color: 'white' }}>{it.v || '—'}</span>
+                                  {it.v && dados?.origens?.[it.k] ? (
+                                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
+                                      {ORIGEM_LABEL[dados.origens[it.k]] || dados.origens[it.k]}
+                                    </span>
+                                  ) : null}
                                 </div>
                                 {!it.v ? (
                                   <button
@@ -283,6 +289,15 @@ export default function AjustesPonto() {
                                 <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'monospace' }}>
                                   {format(new Date(p.dataHora), 'HH:mm')}
                                 </span>
+                                {p.origem ? (
+                                  <span
+                                    className="badge"
+                                    style={{ fontSize: 10, padding: '1px 6px' }}
+                                    title={p.origem}
+                                  >
+                                    {ORIGEM_LABEL[p.origem] || p.origem}
+                                  </span>
+                                ) : null}
                                 {p.ajustado && <span className="badge badge-amarelo" style={{ fontSize: 10, padding: '1px 6px' }}>Ajustado</span>}
                                 <button
                                   onClick={() => {
