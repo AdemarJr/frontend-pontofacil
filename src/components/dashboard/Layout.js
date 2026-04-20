@@ -1,7 +1,9 @@
 // src/components/dashboard/Layout.js
+import { useEffect, useState, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
+import { feriasService } from '../../services/api';
 
 const MENU = [
   { path: '/dashboard', label: 'Início', icon: '📊' },
@@ -17,8 +19,43 @@ const MENU = [
 ];
 
 export default function Layout({ children }) {
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [feriasPendentes, setFeriasPendentes] = useState(0);
+
+  const atualizarBadgeFerias = useCallback(async () => {
+    if (!isAdmin) {
+      setFeriasPendentes(0);
+      return;
+    }
+    try {
+      const { data } = await feriasService.pendentesContagem();
+      const n = typeof data?.count === 'number' ? data.count : 0;
+      setFeriasPendentes(n);
+    } catch {
+      setFeriasPendentes(0);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    atualizarBadgeFerias();
+    if (!isAdmin) return undefined;
+    const t = setInterval(atualizarBadgeFerias, 45000);
+    const onFocus = () => atualizarBadgeFerias();
+    const onVis = () => {
+      if (document.visibilityState === 'visible') atualizarBadgeFerias();
+    };
+    const onFerias = () => atualizarBadgeFerias();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('pf:ferias-pendentes', onFerias);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('pf:ferias-pendentes', onFerias);
+    };
+  }, [isAdmin, atualizarBadgeFerias]);
 
   function handleLogout() {
     logout();
@@ -74,7 +111,28 @@ export default function Layout({ children }) {
               })}
             >
               <span style={{ fontSize:'18px' }}>{item.icon}</span>
-              {item.label}
+              <span style={{ flex: 1, minWidth: 0 }}>{item.label}</span>
+              {item.path === '/ferias' && isAdmin && feriasPendentes > 0 ? (
+                <span
+                  title={`${feriasPendentes} solicitação(ões) de férias aguardando`}
+                  style={{
+                    minWidth: 22,
+                    height: 22,
+                    padding: '0 7px',
+                    borderRadius: 999,
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+                    color: 'white',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(234,88,12,0.45)',
+                  }}
+                >
+                  {feriasPendentes > 99 ? '99+' : feriasPendentes}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>

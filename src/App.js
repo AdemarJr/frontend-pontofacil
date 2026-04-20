@@ -19,6 +19,7 @@ import Escalas from './pages/Escalas';
 import SuperAdmin from './pages/SuperAdmin';
 import Landing from './pages/Landing';
 import MeuPonto from './pages/MeuPonto';
+import MinhasFerias from './pages/MinhasFerias';
 import ComprovantesColaborador from './pages/ComprovantesColaborador';
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
@@ -74,6 +75,11 @@ export default function App() {
           <Route path="/comprovantes" element={
             <RotaProtegida apenasColaborador>
               <ComprovantesColaborador />
+            </RotaProtegida>
+          } />
+          <Route path="/minhas-ferias" element={
+            <RotaProtegida apenasColaborador>
+              <MinhasFerias />
             </RotaProtegida>
           } />
           <Route path="/totem" element={

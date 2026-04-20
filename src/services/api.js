@@ -163,6 +163,14 @@ export const feriadoService = {
 // ---- FÉRIAS ----
 export const feriasService = {
   listar: (params) => api.get('/ferias', { params }),
+  /** Admin: quantidade de solicitações PENDENTE (badge menu) */
+  pendentesContagem: () => api.get('/ferias/pendentes-contagem'),
+  /** Colaborador: lista só as próprias solicitações/períodos */
+  minhas: () => api.get('/ferias/minhas'),
+  /** Colaborador: abre solicitação (status PENDENTE até o gestor decidir) */
+  solicitar: (dados) => api.post('/ferias/solicitar', dados),
+  /** Admin: aprovar ou rejeitar solicitação */
+  decidir: (id, dados) => api.post(`/ferias/${id}/decidir`, dados),
   criar: (dados) => api.post('/ferias', dados),
   atualizar: (id, dados) => api.put(`/ferias/${id}`, dados),
   remover: (id) => api.delete(`/ferias/${id}`),

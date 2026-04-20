@@ -961,6 +961,9 @@ export default function MeuPonto() {
               <button type="button" className="btn btn-primary" onClick={() => navigate('/comprovantes')}>
                 Abrir meus comprovantes
               </button>
+              <button type="button" className="btn btn-primary" onClick={() => navigate('/minhas-ferias')} style={{ background: 'rgba(29,158,117,0.85)' }}>
+                Solicitar férias
+              </button>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -969,6 +972,15 @@ export default function MeuPonto() {
                 Preciso de ajuda
               </button>
             </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)', marginTop: 14 }}>
+            <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>Férias</p>
+            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
+              Envie o período para análise do gestor/RH. Após aprovação, o espelho de ponto deixa de cobrar batidas nesses dias.
+            </p>
+            <button type="button" className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => navigate('/minhas-ferias')}>
+              Abrir minhas férias
+            </button>
           </div>
         </div>
       ) : null}
