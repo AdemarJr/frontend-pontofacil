@@ -88,11 +88,11 @@ export default function Solicitacoes() {
                   flexWrap: 'wrap',
                 }}
               >
-                <div style={{ minWidth: 240 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13 }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0, maxWidth: '100%' }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, overflowWrap: 'anywhere' }}>
                     {s.usuario?.nome} — {s.dia} — {TIPOS_LABEL[s.tipo] || s.tipo}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6, whiteSpace: 'pre-line' }}>
+                  <div style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
                     {s.justificativa}
                   </div>
                   {s.dataHoraSugerida ? (

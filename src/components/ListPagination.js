@@ -98,7 +98,7 @@ export default function ListPagination({
         >
           Anterior
         </button>
-        <span style={{ color: 'var(--cinza-700)', fontWeight: 500, minWidth: '100px', textAlign: 'center' }}>
+        <span style={{ color: 'var(--cinza-700)', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap' }}>
           Página {safePage} / {totalPages}
         </span>
         <button

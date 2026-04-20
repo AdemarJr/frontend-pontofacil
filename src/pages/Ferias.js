@@ -239,9 +239,9 @@ export default function Ferias() {
                   border: '1px solid var(--cinza-200)',
                 }}
               >
-                <div>
-                  <div style={{ fontWeight: 800 }}>{f.usuario?.nome || 'Colaborador'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--cinza-400)' }}>{f.usuario?.email}</div>
+                <div style={{ minWidth: 0, flex: '1 1 200px' }}>
+                  <div style={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{f.usuario?.nome || 'Colaborador'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--cinza-400)', overflowWrap: 'anywhere' }}>{f.usuario?.email}</div>
                   <div style={{ fontSize: 13, fontFamily: 'monospace', marginTop: 6 }}>
                     {f.dataInicio} → {f.dataFim}
                   </div>
@@ -268,7 +268,7 @@ export default function Ferias() {
         </div>
       )}
 
-      <div className="card" style={{ padding: 0, overflowX: 'auto', maxWidth: '100%' }}>
+      <div className="card table-scroll" style={{ padding: 0, maxWidth: '100%' }}>
         {carregando ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
             <div className="spinner" />

@@ -185,7 +185,7 @@ export default function AjustesPonto() {
               ))}
             </select>
           </div>
-          <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--cinza-400)', marginBottom: 6 }}>
               COLABORADOR
             </label>
@@ -214,12 +214,12 @@ export default function AjustesPonto() {
               const dias = r.diasTrabalhados || {};
               const keys = Object.keys(dias).sort().reverse();
               return (
-                <div key={r.usuario?.id || r.usuario?.nome} style={{ border: '1px solid var(--cinza-100)', borderRadius: 12, padding: 12 }}>
+                <div key={r.usuario?.id || r.usuario?.nome} style={{ border: '1px solid var(--cinza-100)', borderRadius: 12, padding: 12, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                    <div style={{ fontWeight: 800 }}>
+                    <div style={{ fontWeight: 800, minWidth: 0, overflowWrap: 'anywhere' }}>
                       {r.usuario?.nome} <span style={{ color: 'var(--cinza-400)', fontWeight: 500 }}>— {r.usuario?.cargo || ''}</span>
                     </div>
-                    <div style={{ color: 'var(--cinza-400)', fontSize: 12 }}>{r.usuario?.departamento || ''}</div>
+                    <div style={{ color: 'var(--cinza-400)', fontSize: 12, minWidth: 0, overflowWrap: 'anywhere' }}>{r.usuario?.departamento || ''}</div>
                   </div>
 
                   <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
@@ -241,7 +241,7 @@ export default function AjustesPonto() {
                             {faltando ? <span className="badge badge-vermelho">Faltando marcação</span> : <span className="badge badge-verde">OK</span>}
                           </div>
 
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, width: '100%', minWidth: 0 }}>
                             {itens.map((it) => (
                               <div
                                 key={it.k}
@@ -254,7 +254,9 @@ export default function AjustesPonto() {
                                   border: `1px solid ${!it.v ? 'rgba(226,75,74,0.25)' : 'rgba(148,163,184,0.18)'}`,
                                   borderRadius: 10,
                                   padding: '8px 10px',
-                                  minWidth: 160,
+                                  flex: '1 1 140px',
+                                  minWidth: 0,
+                                  maxWidth: '100%',
                                 }}
                               >
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -289,9 +291,9 @@ export default function AjustesPonto() {
                             ))}
                           </div>
 
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, width: '100%', minWidth: 0 }}>
                             {pontos.map((p) => (
-                              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--cinza-100)', borderRadius: 8, padding: '6px 10px' }}>
+                              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--cinza-100)', borderRadius: 8, padding: '6px 10px', maxWidth: '100%', minWidth: 0, flexWrap: 'wrap' }}>
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: TIPOS_COR[p.tipo], flexShrink: 0 }} />
                                 <span style={{ fontSize: 12, color: 'var(--cinza-700)' }}>{TIPOS_LABEL[p.tipo]}</span>
                                 <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'monospace' }}>

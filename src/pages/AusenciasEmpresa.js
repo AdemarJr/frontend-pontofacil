@@ -174,7 +174,7 @@ export default function AusenciasEmpresa() {
         </div>
       )}
 
-      <div id="tour-aus-lista" className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div id="tour-aus-lista" className="card table-scroll" style={{ padding: 0, maxWidth: '100%' }}>
         {carregando ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
             <div className="spinner" />
@@ -184,7 +184,7 @@ export default function AusenciasEmpresa() {
             Nenhum registro neste filtro. Confira se a migração do banco foi aplicada e se o colaborador é da mesma empresa.
           </p>
         ) : lista.length === 0 ? null : (
-          <table className="tabela">
+          <table className="tabela" style={{ minWidth: 680 }}>
             <thead>
               <tr>
                 <th>Data(s)</th>

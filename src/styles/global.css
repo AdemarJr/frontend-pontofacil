@@ -89,6 +89,9 @@ img {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
   padding: 20px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* ---- INPUTS ---- */
@@ -128,8 +131,10 @@ img {
 .table-scroll {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 /* ---- LOADING ---- */
@@ -476,7 +481,7 @@ img {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow-x: auto;
+  overflow-x: clip;
   overflow-wrap: break-word;
 }
 

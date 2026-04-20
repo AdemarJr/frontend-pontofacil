@@ -191,8 +191,8 @@ export default function Escalas() {
             Nenhuma escala ativa cadastrada ainda.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="tabela" style={{ fontSize: 13 }}>
+          <div className="table-scroll">
+            <table className="tabela" style={{ fontSize: 13, minWidth: 640 }}>
               <thead>
                 <tr>
                   <th>Colaborador</th>

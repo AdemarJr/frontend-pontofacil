@@ -231,7 +231,7 @@ export default function SuperAdmin() {
 
         {/* Stats */}
         {stats && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'16px', marginBottom:'24px' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:'16px', marginBottom:'24px', minWidth: 0 }}>
             {[
               { label:'Empresas', valor: stats.totalTenants, cor:'var(--azul)' },
               { label:'Usuários ativos', valor: stats.totalUsuarios, cor:'var(--verde)' },
@@ -246,11 +246,11 @@ export default function SuperAdmin() {
         )}
 
         {/* Tabela de tenants */}
-        <div className="card" style={{ padding:0, overflow:'hidden' }}>
+        <div className="card table-scroll" style={{ padding:0, maxWidth:'100%' }}>
           {carregando ? (
             <div style={{ display:'flex', justifyContent:'center', padding:'60px' }}><div className="spinner" /></div>
           ) : (
-            <table className="tabela">
+            <table className="tabela" style={{ minWidth: 960 }}>
               <thead><tr>
                 <th>Empresa</th><th>CNPJ</th><th>Admin</th><th>Plano</th><th>Status</th><th>Usuários</th><th>Registros</th><th>Desde</th><th>Ações</th>
               </tr></thead>

@@ -119,9 +119,9 @@ export default function Dashboard() {
 
       {/* Últimos registros */}
       <div id="tour-dashboard-registros" className="card">
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px' }}>
-          <h2 style={{ fontSize:'16px', fontWeight:'600' }}>Registros de Hoje</h2>
-          <button onClick={carregarDados} style={{ background:'none', border:'none', color:'var(--verde)', cursor:'pointer', fontSize:'13px', fontWeight:'500' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px', flexWrap:'wrap', gap:'12px' }}>
+          <h2 style={{ fontSize:'16px', fontWeight:'600', minWidth:0 }}>Registros de Hoje</h2>
+          <button onClick={carregarDados} style={{ background:'none', border:'none', color:'var(--verde)', cursor:'pointer', fontSize:'13px', fontWeight:'500', whiteSpace:'nowrap' }}>
             ↻ Atualizar
           </button>
         </div>
@@ -132,8 +132,8 @@ export default function Dashboard() {
             <p>Nenhum registro hoje ainda</p>
           </div>
         ) : (
-          <div style={{ overflowX:'auto' }}>
-            <table className="tabela">
+          <div className="table-scroll">
+            <table className="tabela" style={{ minWidth: 720 }}>
               <thead>
                 <tr>
                   <th>Colaborador</th>

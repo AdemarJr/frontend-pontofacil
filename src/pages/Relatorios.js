@@ -174,7 +174,7 @@ export default function Relatorios() {
               {[2024,2025,2026].map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
-          <div style={{ flex:1, minWidth:'200px' }}>
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
             <label style={{ display:'block', fontSize:'12px', fontWeight:'500', color:'var(--cinza-400)', marginBottom:'6px' }}>COLABORADOR</label>
             <select className="input" value={usuarioFiltro} onChange={e => setUsuarioFiltro(e.target.value)}>
               <option value="">Todos</option>
@@ -191,8 +191,8 @@ export default function Relatorios() {
           <p style={{ fontSize: '12px', color: 'var(--cinza-400)', marginBottom: '12px' }}>
             {bancoResumo.obs}
           </p>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="tabela" style={{ fontSize: '13px' }}>
+          <div className="table-scroll">
+            <table className="tabela" style={{ fontSize: '13px', minWidth: 520 }}>
               <thead>
                 <tr>
                   <th>Colaborador</th>
@@ -246,19 +246,19 @@ export default function Relatorios() {
       ) : (
         <>
           {relatorioPagina.map((r) => (
-        <div key={r.usuario.nome} className="card" style={{ marginBottom:'16px' }}>
+        <div key={r.usuario.nome} className="card" style={{ marginBottom:'16px', minWidth: 0 }}>
           {/* Header do colaborador */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid var(--cinza-200)' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-              <div style={{ width:'40px', height:'40px', borderRadius:'50%', background:'var(--verde-claro)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'600', color:'var(--verde-escuro)' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid var(--cinza-200)', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:'12px', minWidth: 0, flex: '1 1 200px' }}>
+              <div style={{ width:'40px', height:'40px', borderRadius:'50%', background:'var(--verde-claro)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'600', color:'var(--verde-escuro)', flexShrink: 0 }}>
                 {r.usuario.nome[0]}
               </div>
-              <div>
-                <p style={{ fontWeight:'600' }}>{r.usuario.nome}</p>
-                <p style={{ fontSize:'13px', color:'var(--cinza-400)' }}>{r.usuario.cargo}</p>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontWeight:'600', overflowWrap: 'anywhere' }}>{r.usuario.nome}</p>
+                <p style={{ fontSize:'13px', color:'var(--cinza-400)', overflowWrap: 'anywhere' }}>{r.usuario.cargo}</p>
               </div>
             </div>
-            <div style={{ display:'flex', gap:'16px', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', gap:'16px', flexWrap:'wrap', flex: '1 1 auto', justifyContent: 'flex-start' }}>
               <div style={{ textAlign:'center' }}>
                 <p style={{ fontSize:'20px', fontWeight:'700', color:'var(--azul)' }}>{r.totalHoras}</p>
                 <p style={{ fontSize:'11px', color:'var(--cinza-400)' }}>Total trabalhado</p>
@@ -276,9 +276,9 @@ export default function Relatorios() {
 
           {/* Dias */}
           {Object.entries(r.diasTrabalhados).map(([dia, dados]) => (
-            <div key={dia} style={{ marginBottom:'12px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-                <span style={{ fontSize:'12px', fontWeight:'600', color:'var(--cinza-700)', minWidth:'100px' }}>
+            <div key={dia} style={{ marginBottom:'12px', minWidth: 0 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize:'12px', fontWeight:'600', color:'var(--cinza-700)', flexShrink: 0 }}>
                   {format(new Date(dia + 'T12:00:00'), "dd/MM - EEE", { locale:ptBR })}
                 </span>
                 <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
@@ -298,7 +298,7 @@ export default function Relatorios() {
                   </span>
                 ) : null}
               </div>
-              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', paddingLeft:'108px', marginBottom: 6 }}>
+              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginBottom: 6, width: '100%', minWidth: 0 }}>
                 {[
                   { k:'entrada', t:'ENTRADA', label:'Entrada', v: dados.marcacoes?.entrada },
                   { k:'saidaAlmoco', t:'SAIDA_ALMOCO', label:'Saída int.', v: dados.marcacoes?.saidaAlmoco },
@@ -318,7 +318,10 @@ export default function Relatorios() {
                         border: `1px solid ${faltando ? 'rgba(226,75,74,0.25)' : 'rgba(148,163,184,0.18)'}`,
                         borderRadius: 10,
                         padding: '8px 10px',
-                        minWidth: 160,
+                        flex: '1 1 140px',
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
                       }}
                     >
                       <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
@@ -339,9 +342,9 @@ export default function Relatorios() {
                   );
                 })}
               </div>
-              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', paddingLeft:'108px' }}>
+              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', width: '100%', minWidth: 0 }}>
                 {dados.pontos.map(p => (
-                  <div key={p.id} style={{ display:'flex', alignItems:'center', gap:'6px', background:'var(--cinza-100)', borderRadius:'8px', padding:'6px 10px' }}>
+                  <div key={p.id} style={{ display:'flex', alignItems:'center', gap:'6px', background:'var(--cinza-100)', borderRadius:'8px', padding:'6px 10px', maxWidth: '100%', minWidth: 0, flexWrap: 'wrap' }}>
                     <span style={{ width:'8px', height:'8px', borderRadius:'50%', background: TIPOS_COR[p.tipo], flexShrink:0 }} />
                     <span style={{ fontSize:'12px', color:'var(--cinza-700)' }}>{TIPOS_LABEL[p.tipo]}</span>
                     <span style={{ fontSize:'13px', fontWeight:'600', fontFamily:'monospace' }}>

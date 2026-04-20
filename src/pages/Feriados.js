@@ -393,7 +393,7 @@ export default function Feriados() {
                     flexWrap: 'wrap',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: '1 1 200px' }}>
                     <div
                       style={{
                         width: 48,
@@ -406,16 +406,17 @@ export default function Feriados() {
                         fontWeight: 800,
                         fontSize: 12,
                         color: f.suspendeExpediente !== false ? 'var(--vermelho)' : 'var(--azul)',
+                        flexShrink: 0,
                       }}
                     >
                       {format(parseISO(f.data + 'T12:00:00'), 'dd/MM', { locale: ptBR })}
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 800 }}>{f.nome}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{f.nome}</div>
                       <div style={{ fontSize: 12, color: 'var(--cinza-400)', fontFamily: 'monospace' }}>{f.data}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {f.suspendeExpediente !== false ? <span className="badge badge-vermelho">Suspenso</span> : <span className="badge badge-cinza">Normal</span>}
                     <button type="button" className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => abrirEditar(f)}>
                       Editar

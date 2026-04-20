@@ -234,11 +234,11 @@ export default function Colaboradores() {
 
       {/* Busca */}
       <div id="tour-colab-busca" style={{ marginBottom:'20px' }}>
-        <input className="input" placeholder="🔍 Buscar por nome, e-mail ou cargo..." value={busca} onChange={e => setBusca(e.target.value)} style={{ maxWidth:'400px' }} />
+        <input className="input" placeholder="🔍 Buscar por nome, e-mail ou cargo..." value={busca} onChange={e => setBusca(e.target.value)} style={{ width: '100%', maxWidth:'400px' }} />
       </div>
 
       {/* Tabela */}
-      <div id="tour-colab-tabela" className="card" style={{ padding: 0, overflowX: 'auto', maxWidth: '100%' }}>
+      <div id="tour-colab-tabela" className="card table-scroll" style={{ padding: 0, maxWidth: '100%' }}>
         {carregando ? (
           <div style={{ display:'flex', justifyContent:'center', padding:'60px' }}><div className="spinner" /></div>
         ) : (
