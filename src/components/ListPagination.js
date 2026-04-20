@@ -64,6 +64,8 @@ export default function ListPagination({
         marginTop: '16px',
         fontSize: '13px',
         color: 'var(--cinza-400)',
+        minWidth: 0,
+        maxWidth: '100%',
         ...style,
       }}
     >

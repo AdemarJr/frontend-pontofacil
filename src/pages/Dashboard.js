@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale';
 
 function CardMetrica({ label, valor, cor, emoji }) {
   return (
-    <div className="card" style={{ textAlign:'center', borderTop:`3px solid ${cor}` }}>
+    <div className="card" style={{ textAlign:'center', borderTop:`3px solid ${cor}`, minWidth: 0 }}>
       <div style={{ fontSize:'32px', marginBottom:'8px' }}>{emoji}</div>
       <p style={{ fontSize:'36px', fontWeight:'700', color: cor }}>{valor}</p>
       <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginTop:'4px' }}>{label}</p>
@@ -84,8 +84,8 @@ export default function Dashboard() {
   return (
     <Layout>
       {/* Header */}
-      <div id="tour-dashboard-header" style={{ marginBottom:'28px', display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:'16px' }}>
-        <div>
+      <div id="tour-dashboard-header" style={{ marginBottom:'28px', display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:'16px', width:'100%', minWidth: 0 }}>
+        <div style={{ minWidth: 0 }}>
           <h1 style={{ fontSize:'24px', fontWeight:'700' }}>Painel de Controle</h1>
           <p style={{ color:'var(--cinza-400)', marginTop:'4px' }}>
             {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -110,7 +110,7 @@ export default function Dashboard() {
       </div>
 
       {/* Métricas */}
-      <div id="tour-dashboard-metrics" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:'16px', marginBottom:'28px' }}>
+      <div id="tour-dashboard-metrics" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap:'16px', marginBottom:'28px', width:'100%', minWidth: 0 }}>
         <CardMetrica label="Total de Colaboradores" valor={resumo?.totalColaboradores ?? '-'} cor="var(--azul)" emoji="👥" />
         <CardMetrica label="Presentes Agora" valor={resumo?.presentes ?? '-'} cor="var(--verde)" emoji="✅" />
         <CardMetrica label="Ausentes" valor={resumo?.ausentes ?? '-'} cor="var(--vermelho)" emoji="❌" />
@@ -118,21 +118,21 @@ export default function Dashboard() {
       </div>
 
       {/* Últimos registros */}
-      <div id="tour-dashboard-registros" className="card">
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px', flexWrap:'wrap', gap:'12px' }}>
+      <div id="tour-dashboard-registros" className="card" style={{ padding: 0, maxWidth: '100%', minWidth: 0 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 20px 0', flexWrap:'wrap', gap:'12px' }}>
           <h2 style={{ fontSize:'16px', fontWeight:'600', minWidth:0 }}>Registros de Hoje</h2>
-          <button onClick={carregarDados} style={{ background:'none', border:'none', color:'var(--verde)', cursor:'pointer', fontSize:'13px', fontWeight:'500', whiteSpace:'nowrap' }}>
+          <button type="button" onClick={carregarDados} style={{ background:'none', border:'none', color:'var(--verde)', cursor:'pointer', fontSize:'13px', fontWeight:'500', whiteSpace:'nowrap' }}>
             ↻ Atualizar
           </button>
         </div>
 
         {registros.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'40px', color:'var(--cinza-400)' }}>
+          <div style={{ textAlign:'center', padding:'40px 20px', color:'var(--cinza-400)' }}>
             <p style={{ fontSize:'32px', marginBottom:'8px' }}>📭</p>
             <p>Nenhum registro hoje ainda</p>
           </div>
         ) : (
-          <div className="table-scroll">
+          <div className="table-scroll" style={{ marginTop: 16 }}>
             <table className="tabela" style={{ minWidth: 720 }}>
               <thead>
                 <tr>

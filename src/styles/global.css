@@ -124,7 +124,12 @@ img {
 /* ---- TABELA ---- */
 .tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tabela th { text-align: left; padding: 10px 12px; background: var(--cinza-100); color: var(--cinza-400); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-.tabela td { padding: 12px; border-bottom: 1px solid var(--cinza-200); }
+.tabela td { padding: 12px; border-bottom: 1px solid var(--cinza-200); vertical-align: top; }
+.tabela th,
+.tabela td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .tabela tbody tr:hover { background: var(--cinza-100); }
 
 /** Contêiner para tabelas largas no painel (mobile / janelas estreitas) */
@@ -470,10 +475,16 @@ img {
   letter-spacing: -0.02em;
 }
 
+/**
+ * IMPORTANTE: não usar margin-left na área principal com width:100% —
+ * isso somava 248px + 100% da viewport e gerava scroll horizontal em todo o painel.
+ * O recuo do menu fixo entra como padding-left (border-box).
+ */
 .admin-shell__main {
   flex: 1;
-  margin-left: 248px;
+  margin-left: 0;
   padding: 28px 24px 40px;
+  padding-left: calc(248px + 24px);
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--cinza-100);
