@@ -21,6 +21,7 @@ import Landing from './pages/Landing';
 import MeuPonto from './pages/MeuPonto';
 import MinhasFerias from './pages/MinhasFerias';
 import ComprovantesColaborador from './pages/ComprovantesColaborador';
+import ColaboradorAppLayout from './components/colaborador/ColaboradorAppLayout';
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
@@ -66,22 +67,16 @@ export default function App() {
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
 
-          {/* Colaborador: registro pelo app (e-mail) ou totem (PIN) */}
-          <Route path="/meu-ponto" element={
+          {/* Colaborador: shell tipo app (tab bar + header) */}
+          <Route element={
             <RotaProtegida apenasColaborador>
-              <MeuPonto />
+              <ColaboradorAppLayout />
             </RotaProtegida>
-          } />
-          <Route path="/comprovantes" element={
-            <RotaProtegida apenasColaborador>
-              <ComprovantesColaborador />
-            </RotaProtegida>
-          } />
-          <Route path="/minhas-ferias" element={
-            <RotaProtegida apenasColaborador>
-              <MinhasFerias />
-            </RotaProtegida>
-          } />
+          }>
+            <Route path="meu-ponto" element={<MeuPonto />} />
+            <Route path="comprovantes" element={<ComprovantesColaborador />} />
+            <Route path="minhas-ferias" element={<MinhasFerias />} />
+          </Route>
           <Route path="/totem" element={
             <RotaProtegida>
               <Totem />

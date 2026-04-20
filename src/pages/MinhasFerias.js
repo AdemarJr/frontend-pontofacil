@@ -1,9 +1,7 @@
 // Colaborador: solicitar e acompanhar férias (fluxo típico de RH)
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { feriasService } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
-import { logoInternoUrl } from '../utils/branding';
 import {
   format,
   parseISO,
@@ -57,8 +55,7 @@ function corBarra(status) {
 }
 
 export default function MinhasFerias() {
-  const { usuario, logout } = useAuth();
-  const navigate = useNavigate();
+  const { usuario } = useAuth();
   const [lista, setLista] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [enviando, setEnviando] = useState(false);
@@ -142,33 +139,13 @@ export default function MinhasFerias() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0b1220 0%, #0f172a 40%)', color: '#e2e8f0' }}>
-      <header style={{ padding: '16px 20px', borderBottom: '1px solid rgba(148,163,184,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src={logoInternoUrl()} alt="" style={{ height: 36, objectFit: 'contain' }} />
-          <div>
-            <div style={{ fontWeight: 900, fontSize: 16 }}>Minhas férias</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>{usuario?.nome}</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" className="btn btn-secondary" style={{ fontSize: 13 }} onClick={() => navigate('/meu-ponto')}>
-            Voltar ao Meu ponto
-          </button>
-          <button
-            type="button"
-            style={{ fontSize: 13, padding: '8px 12px', background: 'rgba(226,75,74,0.15)', border: 'none', borderRadius: 8, color: '#f87171', cursor: 'pointer' }}
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-          >
-            Sair
-          </button>
-        </div>
-      </header>
+    <div className="colaborador-page" style={{ maxWidth: 1080, color: '#e2e8f0' }}>
+      <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em', color: '#fff' }}>Minhas férias</h1>
+      <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 22 }}>
+        {usuario?.nome} · solicitações e calendário
+      </p>
 
-      <main style={{ maxWidth: 1080, margin: '0 auto', padding: '24px 20px 48px' }}>
+      <div style={{ width: '100%' }}>
         <div
           style={{
             display: 'grid',
@@ -398,7 +375,7 @@ export default function MinhasFerias() {
             })}
           </ul>
         )}
-      </main>
+      </div>
     </div>
   );
 }

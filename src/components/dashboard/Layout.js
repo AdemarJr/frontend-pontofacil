@@ -1,6 +1,6 @@
 // src/components/dashboard/Layout.js
-import { useEffect, useState, useCallback } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
 import { feriasService } from '../../services/api';
@@ -21,7 +21,10 @@ const MENU = [
 export default function Layout({ children }) {
   const { usuario, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [feriasPendentes, setFeriasPendentes] = useState(0);
+  const [navAberto, setNavAberto] = useState(false);
+  const [mobile, setMobile] = useState(false);
 
   const atualizarBadgeFerias = useCallback(async () => {
     if (!isAdmin) {
@@ -57,19 +60,50 @@ export default function Layout({ children }) {
     };
   }, [isAdmin, atualizarBadgeFerias]);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const fn = () => setMobile(mq.matches);
+    fn();
+    mq.addEventListener('change', fn);
+    return () => mq.removeEventListener('change', fn);
+  }, []);
+
+  useEffect(() => {
+    setNavAberto(false);
+  }, [location.pathname]);
+
   function handleLogout() {
     logout();
     navigate('/login');
   }
 
+  const tituloPagina = useMemo(() => {
+    const p = location.pathname;
+    const ex = MENU.find((m) => m.path === p);
+    if (ex) return ex.label;
+    const candidates = MENU.filter((m) => p.startsWith(`${m.path}/`));
+    candidates.sort((a, b) => b.path.length - a.path.length);
+    return candidates[0]?.label || 'Painel';
+  }, [location.pathname]);
+
   return (
-    <div style={{ display:'flex', minHeight:'100vh' }}>
-      {/* Sidebar */}
-      <aside id="tour-sidebar" style={{ width:'240px', background:'var(--cinza-900)', display:'flex', flexDirection:'column', flexShrink:0, position:'fixed', height:'100vh', zIndex:100 }}>
-        {/* Logo */}
+    <div className="admin-shell">
+      {mobile && navAberto ? (
+        <button
+          type="button"
+          className="admin-shell__overlay admin-shell__overlay--open"
+          aria-label="Fechar menu"
+          onClick={() => setNavAberto(false)}
+        />
+      ) : null}
+
+      <aside
+        id="tour-sidebar"
+        className={`admin-shell__sidebar${navAberto && mobile ? ' admin-shell__sidebar--open' : ''}`}
+      >
         <div
           style={{
-            padding: '24px 16px 20px',
+            padding: '22px 16px 18px',
             borderBottom: '1px solid rgba(255,255,255,0.12)',
             background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
           }}
@@ -81,7 +115,7 @@ export default function Layout({ children }) {
               style={{
                 maxWidth: '100%',
                 height: 'auto',
-                maxHeight: '72px',
+                maxHeight: '64px',
                 objectFit: 'contain',
                 objectPosition: 'left',
               }}
@@ -94,23 +128,29 @@ export default function Layout({ children }) {
           </div>
         </div>
 
-        {/* Nav */}
-        <nav style={{ padding:'16px 12px', flex:1 }}>
-          {MENU.map(item => (
+        <nav style={{ padding: '16px 12px', flex: 1, overflowY: 'auto' }}>
+          {MENU.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.path === '/dashboard'}
+              onClick={() => mobile && setNavAberto(false)}
               style={({ isActive }) => ({
-                display:'flex', alignItems:'center', gap:'10px',
-                padding:'10px 12px', borderRadius:'8px', marginBottom:'4px',
-                textDecoration:'none', fontSize:'14px', fontWeight:'500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '11px 12px',
+                borderRadius: '10px',
+                marginBottom: '4px',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '600',
                 color: isActive ? 'white' : '#94a3b8',
-                background: isActive ? 'rgba(29,158,117,0.2)' : 'transparent',
-                transition:'all 0.15s',
+                background: isActive ? 'rgba(29,158,117,0.22)' : 'transparent',
+                transition: 'all 0.15s',
               })}
             >
-              <span style={{ fontSize:'18px' }}>{item.icon}</span>
+              <span style={{ fontSize: '18px' }}>{item.icon}</span>
               <span style={{ flex: 1, minWidth: 0 }}>{item.label}</span>
               {item.path === '/ferias' && isAdmin && feriasPendentes > 0 ? (
                 <span
@@ -137,27 +177,73 @@ export default function Layout({ children }) {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div style={{ padding:'16px', borderTop:'1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'12px' }}>
-            <div style={{ width:'32px', height:'32px', borderRadius:'50%', background:'var(--verde)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', color:'white', fontWeight:'600' }}>
+        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'var(--verde)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                color: 'white',
+                fontWeight: '600',
+              }}
+            >
               {usuario?.nome?.[0]}
             </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <p style={{ color:'white', fontSize:'13px', fontWeight:'500', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{usuario?.nome}</p>
-              <p style={{ color:'#64748b', fontSize:'11px' }}>{usuario?.role === 'ADMIN' ? 'Administrador' : 'Usuário'}</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p
+                style={{
+                  color: 'white',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {usuario?.nome}
+              </p>
+              <p style={{ color: '#64748b', fontSize: '11px' }}>{usuario?.role === 'ADMIN' ? 'Administrador' : 'Usuário'}</p>
             </div>
           </div>
-          <button onClick={handleLogout} style={{ width:'100%', padding:'8px', background:'rgba(226,75,74,0.15)', border:'none', borderRadius:'8px', color:'#f87171', fontSize:'13px', cursor:'pointer', fontWeight:'500' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: 'rgba(226,75,74,0.15)',
+              border: 'none',
+              borderRadius: '10px',
+              color: '#f87171',
+              fontSize: '13px',
+              cursor: 'pointer',
+              fontWeight: '600',
+            }}
+          >
             Sair
           </button>
         </div>
       </aside>
 
-      {/* Conteúdo principal */}
-      <main style={{ flex:1, marginLeft:'240px', padding:'32px', minHeight:'100vh', background:'var(--cinza-100)' }}>
-        {children}
-      </main>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <header className="admin-shell__topbar">
+          <button
+            type="button"
+            className="admin-shell__menu-toggle"
+            aria-label="Abrir menu"
+            onClick={() => setNavAberto(true)}
+          >
+            ☰
+          </button>
+          <span className="admin-shell__topbar-title">{tituloPagina}</span>
+        </header>
+        <main className="admin-shell__main">{children}</main>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 // Registro de ponto pelo celular (login e-mail + mesmas regras: geofence, foto, etc.)
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useColaboradorChrome } from '../context/ColaboradorChromeContext';
 import { pontoService, tenantService, escalaService } from '../services/api';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
-import { publicUrl, logoInternoUrl } from '../utils/branding';
+import { publicUrl } from '../utils/branding';
 
 const TIPOS_LABEL = {
   ENTRADA: { label: 'Entrada', cor: '#1D9E75', emoji: '🟢' },
@@ -54,9 +55,10 @@ function mensagemErroGeolocalizacao(err) {
 }
 
 export default function MeuPonto() {
-  const { usuario, logout, carregando: authCarregando } = useAuth();
-  const navigate = useNavigate();
-  const [aba, setAba] = useState('bater'); // bater | pendencias | ausencias
+  const { usuario, carregando: authCarregando } = useAuth();
+  const [searchParams] = useSearchParams();
+  const aba = searchParams.get('tab') === 'pendencias' ? 'pendencias' : 'bater';
+  const { setChromeHidden } = useColaboradorChrome();
   const [etapa, setEtapa] = useState('carregando');
   const [proximoTipo, setProximoTipo] = useState('ENTRADA');
   const [carregando, setCarregando] = useState(false);
@@ -301,6 +303,12 @@ export default function MeuPonto() {
     const t = setTimeout(() => runMeuPontoTour({ force: false }), 900);
     return () => clearTimeout(t);
   }, [etapa]);
+
+  useEffect(() => {
+    const hide = ['sucesso', 'erro', 'camera', 'carregando'].includes(etapa);
+    setChromeHidden(hide);
+    return () => setChromeHidden(false);
+  }, [etapa, setChromeHidden]);
 
   useEffect(() => {
     if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
@@ -623,154 +631,93 @@ export default function MeuPonto() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        background: 'linear-gradient(180deg,#0f2027 0%,#203a43 100%)',
-        paddingTop: 0,
-        paddingBottom: 0,
-        gap: 0,
-        overflow: 'hidden',
-      }}
-    >
-      <header
-        id="tour-meu-header"
-        style={{
-          width: '100%',
-          padding: '18px 56px 18px 20px',
-          background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          boxSizing: 'border-box',
-          flexShrink: 0,
-        }}
-      >
-        <img
-          src={logoInternoUrl()}
-          alt="Ponto Fácil"
-          style={{ maxHeight: 64, width: 'auto', maxWidth: 'min(340px, 82vw)', objectFit: 'contain' }}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            logout();
-            navigate('/login');
-          }}
-          style={{
-            position: 'absolute',
-            right: 16,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'rgba(0,0,0,0.15)',
-            border: 'none',
-            color: 'rgba(255,255,255,0.95)',
-            padding: '8px 12px',
-            borderRadius: 8,
-            fontSize: 12,
-            cursor: 'pointer',
-          }}
-        >
-          Sair
-        </button>
-      </header>
-
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '0 24px',
-          gap: 24,
-          width: '100%',
-          boxSizing: 'border-box',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          paddingTop: 18,
-          paddingBottom: 88, // espaço para o menu inferior (mobile)
-          minHeight: 0,
-        }}
-      >
+    <div className="colaborador-page">
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%' }}>
-        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: 0 }}>Meu ponto</h1>
-        <button
-          type="button"
-          onClick={() => runMeuPontoTour({ force: true })}
+        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: '-0.02em', textAlign: 'center' }}>
+          {aba === 'pendencias' ? 'Pendências' : 'Registrar ponto'}
+        </h1>
+        {aba === 'bater' ? (
+          <button
+            type="button"
+            onClick={() => runMeuPontoTour({ force: true })}
+            style={{
+              padding: '8px 14px',
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#e2e8f0',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: 999,
+              cursor: 'pointer',
+            }}
+          >
+            Como usar
+          </button>
+        ) : null}
+      </div>
+      {aba === 'bater' ? (
+        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', maxWidth: 340, margin: '4px 0 0', lineHeight: 1.45 }}>
+          {usuario.tenant?.nomeFantasia}
+        </p>
+      ) : (
+        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', margin: '4px 0 0' }}>
+          Batidas faltantes e justificativas enviadas ao RH.
+        </p>
+      )}
+      {aba === 'bater' ? (
+        <p
           style={{
-            padding: '6px 12px',
-            fontSize: 12,
-            fontWeight: 600,
-            color: '#e2e8f0',
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: 8,
-            cursor: 'pointer',
+            color: '#fde047',
+            fontSize: 14,
+            fontWeight: 700,
+            textAlign: 'center',
+            maxWidth: 340,
+            margin: '6px 0 0',
+            letterSpacing: 0.02,
           }}
         >
-          Como usar o Meu ponto
-        </button>
-      </div>
-      <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', maxWidth: 320, margin: 0 }}>
-        {usuario.tenant?.nomeFantasia}
-      </p>
-      <p
-        style={{
-          color: '#facc15',
-          fontSize: 15,
-          fontWeight: 800,
-          textAlign: 'center',
-          maxWidth: 320,
-          margin: 0,
-          letterSpacing: 0.2,
-          textShadow: '0 1px 10px rgba(0,0,0,0.25)',
-        }}
-      >
-        {usuario.nome}
-      </p>
-      {cercaVirtualAtiva ? (
+          {usuario.nome}
+        </p>
+      ) : null}
+      {aba === 'bater' && cercaVirtualAtiva ? (
         <p
           style={{
             color: '#86efac',
-            fontSize: 13,
+            fontSize: 12,
             textAlign: 'center',
-            maxWidth: 340,
-            margin: 0,
+            maxWidth: 360,
+            margin: '8px 0 0',
             lineHeight: 1.45,
             padding: '0 8px',
           }}
         >
-          Cerca virtual ativa: o ponto só é aceito dentro da área permitida pela empresa.
+          Cerca virtual ativa: o ponto só é aceito na área permitida pela empresa.
         </p>
       ) : null}
       {aba === 'bater' ? (
-        <button
-          type="button"
-          onClick={() => {
-            setAba('ausencias');
-            try {
-              const el = document.scrollingElement;
-              if (el) el.scrollTop = 0;
-            } catch {}
-          }}
-          style={{
-            marginTop: 12,
-            background: 'rgba(255,255,255,0.1)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#e2e8f0',
-            padding: '10px 18px',
-            borderRadius: 10,
-            fontSize: 14,
-            cursor: 'pointer',
-            fontWeight: 500,
-          }}
-        >
-          📎 Atestado ou abono de ausência
-        </button>
+        <div className="colaborador-page__quick">
+          <Link to="/comprovantes">
+            <span>📎</span>
+            <span>Atestado</span>
+          </Link>
+          <Link to="/minhas-ferias">
+            <span>🌴</span>
+            <span>Férias</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                'https://wa.me/5592994764780?text=' +
+                  encodeURIComponent('Olá! Preciso de ajuda com o PontoFácil (colaborador).'),
+                '_blank'
+              )
+            }
+          >
+            <span>💬</span>
+            <span>Ajuda</span>
+          </button>
+        </div>
       ) : null}
 
       {aba === 'bater' ? (
@@ -949,42 +896,6 @@ export default function MeuPonto() {
       </div>
       ) : null}
 
-      {/* Ausências / comprovantes */}
-      {aba === 'ausencias' ? (
-        <div style={{ width: '100%', maxWidth: 520 }}>
-          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)' }}>
-            <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>📎 Atestado / abono de ausência</p>
-            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
-              Envie um comprovante (atestado/declaração) para análise do administrador/RH.
-            </p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-              <button type="button" className="btn btn-primary" onClick={() => navigate('/comprovantes')}>
-                Abrir meus comprovantes
-              </button>
-              <button type="button" className="btn btn-primary" onClick={() => navigate('/minhas-ferias')} style={{ background: 'rgba(29,158,117,0.85)' }}>
-                Solicitar férias
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => window.open('https://wa.me/5592994764780?text=' + encodeURIComponent('Olá! Preciso de ajuda com envio de comprovante/abono no PontoFácil.'), '_blank')}
-              >
-                Preciso de ajuda
-              </button>
-            </div>
-          </div>
-          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)', marginTop: 14 }}>
-            <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>Férias</p>
-            <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
-              Envie o período para análise do gestor/RH. Após aprovação, o espelho de ponto deixa de cobrar batidas nesses dias.
-            </p>
-            <button type="button" className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => navigate('/minhas-ferias')}>
-              Abrir minhas férias
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {/* Modal de justificativa */}
       {justificarModal ? (
         <div
@@ -1146,72 +1057,6 @@ export default function MeuPonto() {
           </div>
         </div>
       ) : null}
-
-      {/* Menu inferior (mobile) */}
-      <div
-        style={{
-          position: 'fixed',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          background: 'rgba(2,6,23,0.92)',
-          borderTop: '1px solid rgba(148,163,184,0.18)',
-          zIndex: 9998,
-        }}
-      >
-        <div style={{ maxWidth: 520, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: '10px 12px' }}>
-          <button
-            type="button"
-            onClick={() => setAba('bater')}
-            style={{
-              background: aba === 'bater' ? 'rgba(29,158,117,0.22)' : 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(148,163,184,0.18)',
-              color: 'white',
-              borderRadius: 12,
-              padding: '10px 8px',
-              fontSize: 12,
-              fontWeight: 800,
-              cursor: 'pointer',
-            }}
-          >
-            🕐 Bater ponto
-          </button>
-          <button
-            type="button"
-            onClick={() => setAba('pendencias')}
-            style={{
-              background: aba === 'pendencias' ? 'rgba(251,191,36,0.18)' : 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(148,163,184,0.18)',
-              color: 'white',
-              borderRadius: 12,
-              padding: '10px 8px',
-              fontSize: 12,
-              fontWeight: 800,
-              cursor: 'pointer',
-            }}
-          >
-            🧾 Pendências
-          </button>
-          <button
-            type="button"
-            onClick={() => setAba('ausencias')}
-            style={{
-              background: aba === 'ausencias' ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(148,163,184,0.18)',
-              color: 'white',
-              borderRadius: 12,
-              padding: '10px 8px',
-              fontSize: 12,
-              fontWeight: 800,
-              cursor: 'pointer',
-            }}
-          >
-            📎 Ausências
-          </button>
-        </div>
-      </div>
-      </div>
     </div>
   );
 }

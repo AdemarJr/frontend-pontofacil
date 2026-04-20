@@ -12,7 +12,8 @@ function buildSteps() {
       element: '#tour-meu-header',
       popover: {
         title: 'Seu ponto digital',
-        description: 'Aqui aparecem a empresa e o atalho para sair. O registro segue as regras definidas pelo administrador.',
+        description:
+          'Seu nome, empresa e menu (⋮) para sair. Em baixo, navegue entre Início, Pendências, Atestado e Férias. O registro segue as regras do administrador.',
         side: 'bottom',
         align: 'center',
       },
