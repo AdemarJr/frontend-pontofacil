@@ -152,6 +152,22 @@ export const localRegistroService = {
   remover: (id) => api.delete(`/locais-registro/${id}`),
 };
 
+// ---- FERIADOS ----
+export const feriadoService = {
+  listar: (params) => api.get('/feriados', { params }),
+  criar: (dados) => api.post('/feriados', dados),
+  atualizar: (id, dados) => api.put(`/feriados/${id}`, dados),
+  remover: (id) => api.delete(`/feriados/${id}`),
+};
+
+// ---- FÉRIAS ----
+export const feriasService = {
+  listar: (params) => api.get('/ferias', { params }),
+  criar: (dados) => api.post('/ferias', dados),
+  atualizar: (id, dados) => api.put(`/ferias/${id}`, dados),
+  remover: (id) => api.delete(`/ferias/${id}`),
+};
+
 // ---- RELATÓRIOS ----
 export const relatorioService = {
   espelhoPonto: (params) => api.get('/relatorios/espelho', { params }),

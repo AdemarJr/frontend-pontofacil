@@ -8,6 +8,8 @@ const MENU = [
   { path: '/colaboradores', label: 'Colaboradores', icon: '👥' },
   { path: '/escalas', label: 'Jornadas', icon: '🕐' },
   { path: '/ausencias', label: 'Ausências', icon: '📎' },
+  { path: '/feriados', label: 'Feriados', icon: '📅' },
+  { path: '/ferias', label: 'Férias', icon: '🌴' },
   { path: '/relatorios', label: 'Relatórios', icon: '📋' },
   { path: '/ajustes-ponto', label: 'Ajustes de ponto', icon: '🛠️' },
   { path: '/solicitacoes', label: 'Solicitações', icon: '🧾' },

@@ -94,13 +94,33 @@ export default function Colaboradores() {
   }
 
   function abrirCriar() {
-    setForm({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR', localRegistroId:'' });
+    setForm({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR', localRegistroId:'', dataAdmissao:'', dataDemissao:'' });
     setErro('');
     setModal('criar');
   }
 
   function abrirEditar(u) {
-    setForm({ nome:u.nome, email:u.email, pin:'', cargo:u.cargo||'', departamento:u.departamento||'', role:u.role, ativo:u.ativo, localRegistroId: u.localRegistroId || '' });
+    const toLocalDate = (v) => {
+      if (!v) return '';
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+    setForm({
+      nome:u.nome,
+      email:u.email,
+      pin:'',
+      cargo:u.cargo||'',
+      departamento:u.departamento||'',
+      role:u.role,
+      ativo:u.ativo,
+      localRegistroId: u.localRegistroId || '',
+      dataAdmissao: toLocalDate(u.dataAdmissao),
+      dataDemissao: toLocalDate(u.dataDemissao),
+    });
     setErro('');
     setModal(u);
   }
@@ -115,6 +135,8 @@ export default function Colaboradores() {
         if (modal === 'criar') delete payload.localRegistroId;
         else payload.localRegistroId = null;
       }
+      if (payload.dataAdmissao === '') delete payload.dataAdmissao;
+      if (payload.dataDemissao === '') delete payload.dataDemissao;
       if (modal === 'criar') {
         const { data } = await usuarioService.criar(payload);
         if (data.conviteEmailEnviado) {
@@ -358,6 +380,31 @@ export default function Colaboradores() {
                   )}
                 </div>
               ))}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>
+                    Data de admissão
+                  </label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={form.dataAdmissao || ''}
+                    onChange={(e) => setForm((p) => ({ ...p, dataAdmissao: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>
+                    Data de demissão (opcional)
+                  </label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={form.dataDemissao || ''}
+                    onChange={(e) => setForm((p) => ({ ...p, dataDemissao: e.target.value }))}
+                  />
+                </div>
+              </div>
 
               <div>
                 <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>Função</label>

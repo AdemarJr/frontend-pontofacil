@@ -282,6 +282,21 @@ export default function Relatorios() {
                   {format(new Date(dia + 'T12:00:00'), "dd/MM - EEE", { locale:ptBR })}
                 </span>
                 <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
+                {dados?.contextoDia?.feriado?.nome && dados?.contextoDia?.feriado?.suspendeExpediente !== false ? (
+                  <span className="badge" style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--azul)', fontSize: 10 }}>
+                    Feriado: {dados.contextoDia.feriado.nome}
+                  </span>
+                ) : null}
+                {dados?.contextoDia?.ferias ? (
+                  <span className="badge" style={{ background: 'rgba(16,185,129,0.15)', color: 'var(--verde-escuro)', fontSize: 10 }}>
+                    Férias
+                  </span>
+                ) : null}
+                {dados?.contextoDia?.suspendeExpediente && !dados?.contextoDia?.feriado && !dados?.contextoDia?.ferias ? (
+                  <span className="badge" style={{ background: 'rgba(148,163,184,0.18)', color: 'var(--cinza-700)', fontSize: 10 }}>
+                    Sem expediente
+                  </span>
+                ) : null}
               </div>
               <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', paddingLeft:'108px', marginBottom: 6 }}>
                 {[

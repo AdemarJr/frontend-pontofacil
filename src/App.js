@@ -21,6 +21,8 @@ import Landing from './pages/Landing';
 import MeuPonto from './pages/MeuPonto';
 import ComprovantesColaborador from './pages/ComprovantesColaborador';
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
+import Feriados from './pages/Feriados';
+import Ferias from './pages/Ferias';
 
 function RotaProtegida({ children, apenasAdmin = false, apenasColaborador = false }) {
   const { usuario, carregando, isAdmin } = useAuth();
@@ -114,6 +116,16 @@ export default function App() {
           <Route path="/ausencias" element={
             <RotaProtegida apenasAdmin>
               <AusenciasEmpresa />
+            </RotaProtegida>
+          } />
+          <Route path="/feriados" element={
+            <RotaProtegida apenasAdmin>
+              <Feriados />
+            </RotaProtegida>
+          } />
+          <Route path="/ferias" element={
+            <RotaProtegida apenasAdmin>
+              <Ferias />
             </RotaProtegida>
           } />
           <Route path="/configuracoes" element={
