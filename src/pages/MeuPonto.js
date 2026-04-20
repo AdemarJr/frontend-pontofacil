@@ -721,7 +721,18 @@ export default function MeuPonto() {
       ) : null}
 
       {aba === 'bater' ? (
-        <div id="tour-meu-proximo" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, textAlign: 'center', minWidth: 280 }}>
+        <div
+          id="tour-meu-proximo"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            borderRadius: 16,
+            padding: 'clamp(16px, 4vw, 28px)',
+            textAlign: 'center',
+            width: '100%',
+            maxWidth: 'min(420px, 100%)',
+            boxSizing: 'border-box',
+          }}
+        >
           <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>Próximo registro</p>
           <p style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
             {tipoInfo?.emoji} {tipoInfo?.label}

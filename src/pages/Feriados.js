@@ -215,14 +215,14 @@ export default function Feriados() {
       `}</style>
 
       {vista === 'calendario' ? (
-        <div className="feriados-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 20, alignItems: 'start' }}>
-          <div className="card" style={{ padding: 20 }}>
+        <div className="feriados-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 320px)', gap: 20, alignItems: 'start', width: '100%', minWidth: 0 }}>
+          <div className="card" style={{ padding: 20, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', flex: '1 1 auto', minWidth: 0 }}>
                 <button type="button" className="btn btn-secondary" style={{ padding: '8px 12px' }} onClick={() => setViewDate((d) => subMonths(d, 1))} aria-label="Mês anterior">
                   ‹
                 </button>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, minWidth: 200, textAlign: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: 'clamp(15px, 3.5vw, 18px)', fontWeight: 800, minWidth: 0, textAlign: 'center', flex: '1 1 12rem' }}>
                   {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
                 </h2>
                 <button type="button" className="btn btn-secondary" style={{ padding: '8px 12px' }} onClick={() => setViewDate((d) => addMonths(d, 1))} aria-label="Próximo mês">
@@ -244,13 +244,14 @@ export default function Feriados() {
                 <div className="spinner" />
               </div>
             ) : (
-              <>
+              <div className="table-scroll" style={{ marginLeft: -4, marginRight: -4, paddingLeft: 4, paddingRight: 4 }}>
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
                     gap: 6,
                     marginBottom: 8,
+                    minWidth: 300,
                   }}
                 >
                   {WEEKDAYS.map((w) => (
@@ -259,7 +260,7 @@ export default function Feriados() {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, minWidth: 300 }}>
                   {cells.map((d, idx) => {
                     if (!d) {
                       return <div key={`e-${idx}`} style={{ minHeight: 72 }} />;
@@ -310,7 +311,7 @@ export default function Feriados() {
                     );
                   })}
                 </div>
-              </>
+              </div>
             )}
           </div>
 

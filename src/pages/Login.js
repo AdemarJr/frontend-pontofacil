@@ -31,8 +31,8 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg, #1D9E75 0%, #085041 100%)', padding:'20px' }}>
-      <div className="card" style={{ width:'100%', maxWidth:'400px', padding:'40px' }}>
+    <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg, #1D9E75 0%, #085041 100%)', padding:'max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))', boxSizing:'border-box', width:'100%', maxWidth:'100%', overflowX:'clip' }}>
+      <div className="card" style={{ width:'100%', maxWidth:'400px', padding:'clamp(24px, 5vw, 40px)', boxSizing:'border-box' }}>
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:'32px' }}>
           <img

@@ -238,11 +238,11 @@ export default function Colaboradores() {
       </div>
 
       {/* Tabela */}
-      <div id="tour-colab-tabela" className="card" style={{ padding:0, overflow:'hidden' }}>
+      <div id="tour-colab-tabela" className="card" style={{ padding: 0, overflowX: 'auto', maxWidth: '100%' }}>
         {carregando ? (
           <div style={{ display:'flex', justifyContent:'center', padding:'60px' }}><div className="spinner" /></div>
         ) : (
-          <table className="tabela">
+          <table className="tabela" style={{ minWidth: 640 }}>
             <thead><tr>
               <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Departamento</th><th>Função</th><th id="tour-colab-th-pin">PIN</th><th>Status</th><th id="tour-colab-th-acoes">Ações</th>
             </tr></thead>

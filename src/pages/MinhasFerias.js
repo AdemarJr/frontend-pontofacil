@@ -139,7 +139,7 @@ export default function MinhasFerias() {
   }
 
   return (
-    <div className="colaborador-page" style={{ maxWidth: 1080, color: '#e2e8f0' }}>
+    <div className="colaborador-page" style={{ maxWidth: 1080, color: '#e2e8f0', width: '100%', minWidth: 0 }}>
       <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em', color: '#fff' }}>Minhas férias</h1>
       <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 22 }}>
         {usuario?.nome} · solicitações e calendário
@@ -153,16 +153,18 @@ export default function MinhasFerias() {
             gap: 24,
             alignItems: 'start',
             marginBottom: 28,
+            width: '100%',
+            minWidth: 0,
           }}
         >
-          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, border: '1px solid rgba(148,163,184,0.14)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, border: '1px solid rgba(148,163,184,0.14)', minWidth: 0 }}>
             <h1 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900 }}>Nova solicitação</h1>
             <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
               Informe o período desejado. O gestor aprova ou recusa — padrão de RH. Enquanto estiver <strong>aguardando</strong>, o espelho ainda não considera férias; após <strong>aprovada</strong>, os dias aparecem em verde no calendário ao lado.
             </p>
 
             <form onSubmit={enviar} style={{ marginTop: 18, display: 'grid', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>Início</label>
                   <input className="input" type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} required />
@@ -183,15 +185,15 @@ export default function MinhasFerias() {
             </form>
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, border: '1px solid rgba(148,163,184,0.14)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, border: '1px solid rgba(148,163,184,0.14)', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div>
+              <div style={{ minWidth: 0, flex: '1 1 200px' }}>
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 900 }}>Calendário e linha do tempo</h2>
                 <p style={{ margin: '6px 0 0', fontSize: 12, color: '#94a3b8', lineHeight: 1.45 }}>
                   Visualização tipo sistemas de RH: períodos proporcionais ao mês e destaque no dia.
                 </p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -200,7 +202,7 @@ export default function MinhasFerias() {
                 >
                   ←
                 </button>
-                <span style={{ fontWeight: 800, fontSize: 14, minWidth: 140, textAlign: 'center' }}>
+                <span style={{ fontWeight: 800, fontSize: 'clamp(12px, 3vw, 14px)', minWidth: 0, textAlign: 'center', flex: '1 1 8rem' }}>
                   {format(viewMonth, 'MMMM yyyy', { locale: ptBR })}
                 </span>
                 <button
@@ -214,12 +216,13 @@ export default function MinhasFerias() {
               </div>
             </div>
 
+            <div className="table-scroll" style={{ marginBottom: 14 }}>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(7, 1fr)',
+                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
                 gap: 4,
-                marginBottom: 14,
+                minWidth: 280,
               }}
             >
               {WEEKDAYS.map((w) => (
@@ -256,6 +259,7 @@ export default function MinhasFerias() {
                   </div>
                 );
               })}
+            </div>
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 11, color: '#94a3b8', marginBottom: 16 }}>

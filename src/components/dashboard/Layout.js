@@ -240,7 +240,9 @@ export default function Layout({ children }) {
           >
             ☰
           </button>
-          <span className="admin-shell__topbar-title">{tituloPagina}</span>
+          <span className="admin-shell__topbar-title" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {tituloPagina}
+          </span>
         </header>
         <main className="admin-shell__main">{children}</main>
       </div>

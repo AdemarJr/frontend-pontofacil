@@ -1,6 +1,12 @@
 /* src/styles/global.css */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Evita “quebra” horizontal: rolagem só onde faz sentido (ex.: tabelas) */
+html {
+  overflow-x: clip;
+  max-width: 100%;
+}
+
 :root {
   --verde: #1D9E75;
   --verde-escuro: #085041;
@@ -31,6 +37,18 @@ html, body, #root {
   background: var(--cinza-100);
   color: var(--cinza-900);
   -webkit-font-smoothing: antialiased;
+}
+
+body, #root {
+  overflow-x: clip;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Imagens fluidas (logos com height no CSS continuam ok) */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
 /* ---- TOTEM: tela cheia sem scroll ---- */
@@ -106,6 +124,14 @@ html, body, #root {
 .tabela td { padding: 12px; border-bottom: 1px solid var(--cinza-200); }
 .tabela tbody tr:hover { background: var(--cinza-100); }
 
+/** Contêiner para tabelas largas no painel (mobile / janelas estreitas) */
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ---- LOADING ---- */
 .spinner {
   width: 40px; height: 40px;
@@ -138,12 +164,15 @@ html, body, #root {
 .colaborador-app {
   min-height: 100vh;
   min-height: 100dvh;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   background: linear-gradient(165deg, #0f2027 0%, #1a3a42 42%, #0f172a 100%);
   color: #e2e8f0;
   position: relative;
   padding-top: env(safe-area-inset-top, 0px);
+  overflow-x: clip;
 }
 
 .colaborador-app__header {
@@ -244,6 +273,8 @@ html, body, #root {
 .colaborador-app__main {
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  overflow-x: clip;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
@@ -259,6 +290,9 @@ html, body, #root {
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   z-index: 10040;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -311,11 +345,13 @@ html, body, #root {
 }
 
 .colaborador-page {
-  max-width: 560px;
+  max-width: min(560px, 100%);
   margin: 0 auto;
-  padding: 20px 18px 24px;
+  padding: 20px max(14px, env(safe-area-inset-right, 0px)) 24px max(14px, env(safe-area-inset-left, 0px));
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  overflow-wrap: break-word;
 }
 
 .colaborador-page__quick {
@@ -369,7 +405,11 @@ html, body, #root {
 .admin-shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .admin-shell__overlay {
@@ -434,7 +474,10 @@ html, body, #root {
   background: var(--cinza-100);
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  overflow-x: auto;
+  overflow-wrap: break-word;
 }
 
 @media (max-width: 900px) {

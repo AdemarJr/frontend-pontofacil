@@ -176,7 +176,7 @@ export default function Ferias() {
 
       <div className="card" style={{ marginBottom: 16, padding: 16 }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div style={{ minWidth: 220, flex: 1 }}>
+          <div style={{ minWidth: 0, flex: '1 1 220px' }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--cinza-400)', marginBottom: 6 }}>COLABORADOR</label>
             <select className="input" value={usuarioId} onChange={(e) => setUsuarioId(e.target.value)}>
               <option value="">Todos</option>
@@ -268,7 +268,7 @@ export default function Ferias() {
         </div>
       )}
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card" style={{ padding: 0, overflowX: 'auto', maxWidth: '100%' }}>
         {carregando ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
             <div className="spinner" />
@@ -276,7 +276,7 @@ export default function Ferias() {
         ) : filtrados.length === 0 ? (
           <p style={{ padding: 28, textAlign: 'center', color: 'var(--cinza-400)' }}>Nenhum registro neste filtro.</p>
         ) : (
-          <table className="tabela">
+          <table className="tabela" style={{ minWidth: 720 }}>
             <thead>
               <tr>
                 <th>Colaborador</th>

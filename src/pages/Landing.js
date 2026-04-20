@@ -84,8 +84,6 @@ export default function Landing() {
               src={publicUrl(LOGO_LANDING)}
               alt="Ponto Fácil"
               className="landing-logo-img"
-              width={360}
-              height={80}
             />
           </Link>
           <nav className="landing-nav" aria-label="Seções">

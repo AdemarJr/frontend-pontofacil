@@ -2,6 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap');
 
 .landing {
+  overflow-x: clip;
+  max-width: 100%;
+  width: 100%;
   --lp-bg: #070b10;
   --lp-bg-elevated: #0c1219;
   --lp-surface: rgba(255, 255, 255, 0.035);
@@ -43,11 +46,13 @@
 .landing-header-inner {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 16px min(24px, 4vw);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .landing-logo {
@@ -91,6 +96,8 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .landing-btn-header {
