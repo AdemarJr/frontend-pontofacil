@@ -230,6 +230,47 @@ export const relatorioService = {
   },
 };
 
+// ---- COLABORADOR: ESPELHO + FECHAMENTO ----
+export const colaboradorService = {
+  espelhoMeu: (params) => api.get('/colaborador/espelho', { params }),
+  fechamentoStatus: (params) => api.get('/colaborador/espelho/fechamento', { params }),
+  fecharMes: (dados) => api.post('/colaborador/espelho/fechamento', dados),
+  downloadEspelhoMeuExport: async ({ mes, ano, format }) => {
+    try {
+      const res = await api.get('/colaborador/espelho/export', {
+        params: { mes, ano, format },
+        responseType: 'blob',
+      });
+      const disposition = res.headers['content-disposition'];
+      const ext = format === 'xlsx' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv';
+      let filename = `espelho_ponto_${mes}_${ano}.${ext}`;
+      if (disposition && /filename=/i.test(disposition)) {
+        const m = /filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i.exec(disposition);
+        if (m && m[1]) filename = decodeURIComponent(m[1].trim());
+      }
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      const data = err.response?.data;
+      if (data instanceof Blob) {
+        const text = await data.text();
+        try {
+          const j = JSON.parse(text);
+          throw new Error(j.error || 'Erro ao exportar');
+        } catch (e) {
+          if (e instanceof SyntaxError) throw new Error(text || 'Erro ao exportar');
+          throw e;
+        }
+      }
+      throw err;
+    }
+  },
+};
+
 // ---- TENANT ----
 export const tenantService = {
   meu: () => api.get('/tenants/meu'),

@@ -14,6 +14,7 @@ const NAV = [
   { to: '/meu-ponto?tab=pendencias', match: (p, s) => p === '/meu-ponto' && s.get('tab') === 'pendencias', label: 'Pendências', icon: '!' },
   { to: '/comprovantes', match: (p) => p === '/comprovantes', label: 'Atestado', icon: '📎' },
   { to: '/minhas-ferias', match: (p) => p === '/minhas-ferias', label: 'Férias', icon: '🌴' },
+  { to: '/fechamento', match: (p) => p === '/fechamento', label: 'Fechar', icon: '🖊️' },
 ];
 
 export default function ColaboradorAppLayout() {

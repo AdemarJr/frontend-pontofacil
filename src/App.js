@@ -21,6 +21,7 @@ import Landing from './pages/Landing';
 import MeuPonto from './pages/MeuPonto';
 import MinhasFerias from './pages/MinhasFerias';
 import ComprovantesColaborador from './pages/ComprovantesColaborador';
+import FechamentoMes from './pages/FechamentoMes';
 import ColaboradorAppLayout from './components/colaborador/ColaboradorAppLayout';
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="meu-ponto" element={<MeuPonto />} />
             <Route path="comprovantes" element={<ComprovantesColaborador />} />
             <Route path="minhas-ferias" element={<MinhasFerias />} />
+            <Route path="fechamento" element={<FechamentoMes />} />
           </Route>
           <Route path="/totem" element={
             <RotaProtegida>

@@ -305,7 +305,7 @@ img {
   box-sizing: border-box;
   z-index: 10040;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   background: rgba(15, 23, 42, 0.92);
