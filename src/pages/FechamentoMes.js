@@ -193,6 +193,8 @@ export default function FechamentoMes() {
   const [espelho, setEspelho] = useState(null);
   const [espelhoHash, setEspelhoHash] = useState('');
   const [fechamento, setFechamento] = useState(null);
+  const [assinaturaPadrao, setAssinaturaPadrao] = useState({ existe: false, atualizadaEm: null });
+  const [alterandoAssinatura, setAlterandoAssinatura] = useState(false);
 
   const [assinatura, setAssinatura] = useState({ dataUrl: '', strokes: [] });
   const [salvando, setSalvando] = useState(false);
@@ -207,10 +209,14 @@ export default function FechamentoMes() {
       setEspelho(data.espelho || null);
       setEspelhoHash(data.espelhoHash || '');
       setFechamento(data.fechamento || null);
+      setAssinaturaPadrao(data.assinaturaPadrao || { existe: false, atualizadaEm: null });
+      setAlterandoAssinatura(false);
     } catch (e) {
       setEspelho(null);
       setEspelhoHash('');
       setFechamento(null);
+      setAssinaturaPadrao({ existe: false, atualizadaEm: null });
+      setAlterandoAssinatura(false);
       setErro(e?.response?.data?.error || e?.message || 'Não foi possível carregar o espelho.');
     } finally {
       setCarregando(false);
@@ -232,10 +238,13 @@ export default function FechamentoMes() {
   async function aprovar() {
     setSalvando(true);
     try {
+      const precisaEnviarAssinatura = !assinaturaPadrao?.existe || alterandoAssinatura;
       await colaboradorService.fecharMes({
         ...competencia,
-        assinaturaDataUrl: assinatura?.dataUrl || undefined,
-        assinaturaStrokes: assinatura?.strokes?.length ? assinatura.strokes : undefined,
+        ...(precisaEnviarAssinatura && {
+          assinaturaDataUrl: assinatura?.dataUrl || undefined,
+          assinaturaStrokes: assinatura?.strokes?.length ? assinatura.strokes : undefined,
+        }),
         deviceId: localStorage.getItem('deviceId') || undefined,
       });
       await carregar();
@@ -422,12 +431,38 @@ export default function FechamentoMes() {
       >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
           <h2 style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 900, margin: 0 }}>Aceite com assinatura</h2>
-          <span style={{ color: '#94a3b8', fontSize: 12 }}>Opcional (mas recomendado)</span>
+          <span style={{ color: '#94a3b8', fontSize: 12 }}>
+            {assinaturaPadrao?.existe ? 'Assinatura salva' : 'Primeira vez: crie sua assinatura'}
+          </span>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <CanvasAssinatura onChange={setAssinatura} />
-        </div>
+        {assinaturaPadrao?.existe && !alterandoAssinatura ? (
+          <div
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 14,
+              border: '1px solid rgba(148,163,184,0.16)',
+              background: 'rgba(15,23,42,0.25)',
+              color: '#cbd5e1',
+              fontSize: 13,
+              lineHeight: 1.55,
+            }}
+          >
+            Você já tem uma assinatura salva{assinaturaPadrao?.atualizadaEm ? ` (atualizada em ${new Date(assinaturaPadrao.atualizadaEm).toLocaleDateString('pt-BR')})` : ''}.
+            <br />
+            Neste mês, basta clicar em <strong style={{ color: '#fff' }}>Aprovar e assinar</strong> para homologar.
+            <div style={{ marginTop: 10 }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setAlterandoAssinatura(true)} style={{ padding: '10px 14px', fontSize: 13 }}>
+                Alterar assinatura
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginTop: 12 }}>
+            <CanvasAssinatura onChange={setAssinatura} />
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
           <button

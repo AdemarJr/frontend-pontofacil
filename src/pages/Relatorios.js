@@ -21,6 +21,62 @@ function fmtMinutos(m) {
 }
 const TIPOS_COR = { ENTRADA:'var(--verde)', SAIDA_ALMOCO:'var(--amarelo)', RETORNO_ALMOCO:'var(--azul)', SAIDA:'var(--vermelho)' };
 
+function BadgeFechamento({ fechamento }) {
+  const st = fechamento?.status;
+  if (st === 'ASSINADO') {
+    return (
+      <span
+        className="badge"
+        title={fechamento?.aprovadoEm ? `Assinado em ${new Date(fechamento.aprovadoEm).toLocaleString('pt-BR')}` : 'Assinado'}
+        style={{
+          background: 'rgba(29,158,117,0.14)',
+          border: '1px solid rgba(29,158,117,0.30)',
+          color: 'var(--verde-escuro)',
+          fontSize: 11,
+          fontWeight: 800,
+          padding: '3px 10px',
+        }}
+      >
+        ✓ Assinado
+      </span>
+    );
+  }
+  if (st === 'AGUARDANDO_ASSINATURA') {
+    return (
+      <span
+        className="badge"
+        title={fechamento?.solicitadoEm ? `Solicitado em ${new Date(fechamento.solicitadoEm).toLocaleString('pt-BR')}` : 'Aguardando assinatura'}
+        style={{
+          background: 'rgba(245,158,11,0.14)',
+          border: '1px solid rgba(245,158,11,0.30)',
+          color: '#92400e',
+          fontSize: 11,
+          fontWeight: 800,
+          padding: '3px 10px',
+        }}
+      >
+        ⏳ Aguardando assinatura
+      </span>
+    );
+  }
+  return (
+    <span
+      className="badge"
+      title="Sem solicitação de assinatura / sem homologação"
+      style={{
+        background: 'rgba(148,163,184,0.12)',
+        border: '1px solid rgba(148,163,184,0.22)',
+        color: 'var(--cinza-400)',
+        fontSize: 11,
+        fontWeight: 800,
+        padding: '3px 10px',
+      }}
+    >
+      — Sem assinatura
+    </span>
+  );
+}
+
 export default function Relatorios() {
   const hoje = new Date();
   const [mes, setMes] = useState(hoje.getMonth() + 1);
@@ -116,7 +172,7 @@ export default function Relatorios() {
         ano,
       });
       alert(
-        'Solicitação registrada. O colaborador verá o pedido no app (aba Fechar) e poderá conferir e assinar o espelho deste mês.'
+        'Solicitação registrada. O colaborador verá o pedido no app (aba Assinar) e poderá conferir e assinar o espelho deste mês.'
       );
     } catch (e) {
       alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar a solicitação.');
@@ -212,7 +268,7 @@ export default function Relatorios() {
               className="btn btn-primary"
               disabled={solicitandoAssinatura || carregando}
               onClick={solicitarAssinaturaEspelho}
-              title="O colaborador deve revisar e assinar o espelho deste mês no app (aba Fechar)"
+              title="O colaborador deve revisar e assinar o espelho deste mês no app (aba Assinar)"
             >
               {solicitandoAssinatura ? 'Registrando…' : '🖊 Solicitar assinatura do espelho'}
             </button>
@@ -298,7 +354,11 @@ export default function Relatorios() {
                 <p style={{ fontSize:'13px', color:'var(--cinza-400)', overflowWrap: 'anywhere' }}>{r.usuario.cargo}</p>
               </div>
             </div>
-            <div style={{ display:'flex', gap:'16px', flexWrap:'wrap', flex: '1 1 auto', justifyContent: 'flex-start' }}>
+            <div style={{ display:'flex', gap:'16px', flexWrap:'wrap', flex: '1 1 auto', justifyContent: 'flex-start', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 6 }}>
+                <span style={{ fontSize: 11, color: 'var(--cinza-400)', fontWeight: 900 }}>Assinatura</span>
+                <BadgeFechamento fechamento={r.fechamento} />
+              </div>
               <div style={{ textAlign:'center' }}>
                 <p style={{ fontSize:'20px', fontWeight:'700', color:'var(--azul)' }}>{r.totalHoras}</p>
                 <p style={{ fontSize:'11px', color:'var(--cinza-400)' }}>Total trabalhado</p>
