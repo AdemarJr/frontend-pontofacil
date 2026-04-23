@@ -232,14 +232,14 @@ export default function FechamentoMes() {
   async function aprovar() {
     setSalvando(true);
     try {
-      const { data } = await colaboradorService.fecharMes({
+      await colaboradorService.fecharMes({
         ...competencia,
         assinaturaDataUrl: assinatura?.dataUrl || undefined,
         assinaturaStrokes: assinatura?.strokes?.length ? assinatura.strokes : undefined,
         deviceId: localStorage.getItem('deviceId') || undefined,
       });
-      setFechamento(data.fechamento || null);
-      alert('Fechamento registrado com sucesso.');
+      await carregar();
+      alert('Espelho homologado com sucesso.');
     } catch (e) {
       alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar o fechamento.');
     } finally {
@@ -247,7 +247,8 @@ export default function FechamentoMes() {
     }
   }
 
-  const fechado = Boolean(fechamento?.id);
+  const homologado = fechamento?.status === 'ASSINADO';
+  const aguardandoGestor = fechamento?.status === 'AGUARDANDO_ASSINATURA';
 
   return (
     <div className="colaborador-page">
@@ -257,6 +258,28 @@ export default function FechamentoMes() {
       <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 18, lineHeight: 1.55 }}>
         Revise seu espelho de ponto e registre o aceite. Você pode baixar o PDF para arquivar.
       </p>
+
+      {aguardandoGestor ? (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: 14,
+            borderRadius: 14,
+            border: '1px solid rgba(245,158,11,0.35)',
+            background: 'rgba(245,158,11,0.10)',
+            color: '#fde68a',
+            fontSize: 13,
+            lineHeight: 1.55,
+          }}
+        >
+          <strong style={{ color: '#fff' }}>Seu RH solicitou assinatura</strong> do espelho deste mês
+          {fechamento?.solicitadoPor?.nome ? ` (${fechamento.solicitadoPor.nome})` : ''}.
+          {fechamento?.solicitadoEm
+            ? ` Pedido em ${new Date(fechamento.solicitadoEm).toLocaleString('pt-BR')}.`
+            : ''}{' '}
+          Confira as batidas, baixe o PDF se quiser e assine abaixo para homologar.
+        </div>
+      ) : null}
 
       <div
         style={{
@@ -361,7 +384,7 @@ export default function FechamentoMes() {
               <div style={{ color: '#94a3b8', fontSize: 12 }}>
                 Hash do espelho: <span style={{ color: '#e2e8f0', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{shortHash(espelhoHash)}</span>
               </div>
-              {fechado ? (
+              {homologado ? (
                 <span
                   style={{
                     display: 'inline-flex',
@@ -375,12 +398,14 @@ export default function FechamentoMes() {
                     fontSize: 12,
                     fontWeight: 900,
                   }}
-                  title="Aceite registrado"
+                  title="Espelho homologado (assinado)"
                 >
-                  ✓ Fechado em {fechamento?.aprovadoEm ? new Date(fechamento.aprovadoEm).toLocaleString('pt-BR') : '—'}
+                  ✓ Homologado em {fechamento?.aprovadoEm ? new Date(fechamento.aprovadoEm).toLocaleString('pt-BR') : '—'}
                 </span>
+              ) : aguardandoGestor ? (
+                <span style={{ color: '#fbbf24', fontSize: 12, fontWeight: 900 }}>Aguardando sua assinatura (RH)</span>
               ) : (
-                <span style={{ color: '#fbbf24', fontSize: 12, fontWeight: 900 }}>Pendente de aceite</span>
+                <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 800 }}>Sem homologação ainda</span>
               )}
             </div>
           </div>
@@ -412,7 +437,7 @@ export default function FechamentoMes() {
             disabled={salvando || carregando || !!erro || !espelho}
             style={{ flex: '1 1 220px' }}
           >
-            {salvando ? 'Salvando…' : (fechado ? 'Assinar novamente / Atualizar aceite' : 'Aprovar e assinar')}
+            {salvando ? 'Salvando…' : (homologado ? 'Assinar novamente / Atualizar aceite' : 'Aprovar e assinar')}
           </button>
           <button type="button" className="btn btn-secondary" onClick={carregar} disabled={carregando || salvando} style={{ flex: '0 0 auto' }}>
             Atualizar

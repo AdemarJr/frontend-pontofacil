@@ -185,6 +185,8 @@ export const relatorioService = {
   inserirPontoManual: (dados) => api.post('/relatorios/inserir', dados),
   solicitacoesAjuste: (params) => api.get('/relatorios/solicitacoes-ajuste', { params }),
   decidirSolicitacaoAjuste: (id, dados) => api.post(`/relatorios/solicitacoes-ajuste/${id}/decidir`, dados),
+  /** Gestor: colaborador deve revisar e assinar o espelho do mês (status AGUARDANDO_ASSINATURA no app). */
+  solicitarAssinaturaEspelho: (dados) => api.post('/relatorios/espelho/solicitar-assinatura', dados),
   /**
    * Exporta espelho com colunas para contador (regras básicas no servidor).
    * format: csv | xlsx | pdf

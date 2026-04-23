@@ -30,6 +30,7 @@ export default function Relatorios() {
   const [relatorio, setRelatorio] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [solicitandoAssinatura, setSolicitandoAssinatura] = useState(false);
   const [bancoResumo, setBancoResumo] = useState(null);
   const [bancoPage, setBancoPage] = useState(1);
   const [bancoPageSize, setBancoPageSize] = useState(10);
@@ -99,6 +100,28 @@ export default function Relatorios() {
       alert(e?.message || 'Não foi possível exportar. Verifique se o backend está atualizado.');
     } finally {
       setExportando(false);
+    }
+  }
+
+  async function solicitarAssinaturaEspelho() {
+    if (!usuarioFiltro) {
+      alert('Selecione um colaborador no filtro para solicitar a assinatura do espelho.');
+      return;
+    }
+    setSolicitandoAssinatura(true);
+    try {
+      await relatorioService.solicitarAssinaturaEspelho({
+        usuarioId: usuarioFiltro,
+        mes,
+        ano,
+      });
+      alert(
+        'Solicitação registrada. O colaborador verá o pedido no app (aba Fechar) e poderá conferir e assinar o espelho deste mês.'
+      );
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar a solicitação.');
+    } finally {
+      setSolicitandoAssinatura(false);
     }
   }
 
@@ -182,6 +205,23 @@ export default function Relatorios() {
             </select>
           </div>
         </div>
+        {usuarioFiltro ? (
+          <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={solicitandoAssinatura || carregando}
+              onClick={solicitarAssinaturaEspelho}
+              title="O colaborador deve revisar e assinar o espelho deste mês no app (aba Fechar)"
+            >
+              {solicitandoAssinatura ? 'Registrando…' : '🖊 Solicitar assinatura do espelho'}
+            </button>
+            <span style={{ fontSize: 12, color: 'var(--cinza-400)', maxWidth: 520, lineHeight: 1.45 }}>
+              Envia o pedido para o colaborador assinar digitalmente o espelho do mês selecionado. Se o espelho já estava assinado,
+              a solicitação reabre o fluxo até nova assinatura.
+            </span>
+          </div>
+        ) : null}
       </div>
 
       <div id="tour-rel-conteudo">
