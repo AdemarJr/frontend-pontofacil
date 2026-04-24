@@ -1,11 +1,12 @@
 // src/pages/Relatorios.js
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { relatorioService, usuarioService } from '../services/api';
 import { runRelatoriosTour } from '../tours/relatoriosTour';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 const TIPOS_LABEL = { ENTRADA:'Entrada', SAIDA_ALMOCO:'Saída Almoço', RETORNO_ALMOCO:'Retorno', SAIDA:'Saída' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
@@ -79,6 +80,8 @@ function BadgeFechamento({ fechamento }) {
 
 export default function Relatorios() {
   const hoje = new Date();
+  const navigate = useNavigate();
+  const detalhesRef = useRef(null);
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [usuarioFiltro, setUsuarioFiltro] = useState('');
@@ -181,6 +184,22 @@ export default function Relatorios() {
     }
   }
 
+  const usuarioSelecionado = useMemo(
+    () => (usuarioFiltro ? usuarios.find((u) => String(u.id) === String(usuarioFiltro)) : null),
+    [usuarios, usuarioFiltro]
+  );
+
+  function verDetalhes() {
+    if (detalhesRef.current && typeof detalhesRef.current.scrollIntoView === 'function') {
+      detalhesRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function registrarPontoEmAtraso() {
+    if (!usuarioFiltro) return;
+    navigate(`/ajustes-ponto?usuarioId=${encodeURIComponent(usuarioFiltro)}&mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`);
+  }
+
   return (
     <Layout>
       {/* Header */}
@@ -280,6 +299,63 @@ export default function Relatorios() {
         ) : null}
       </div>
 
+      {usuarioFiltro ? (
+        <div
+          className="card"
+          style={{
+            marginBottom: 16,
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ fontSize: 13, color: 'var(--cinza-400)' }}>
+            Vendo resultados para: <strong style={{ color: 'var(--cinza-700)' }}>{usuarioSelecionado?.nome || '—'}</strong>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={registrarPontoEmAtraso}
+              disabled={carregando}
+              title="Abrir Ajustes de ponto já filtrado para este colaborador"
+            >
+              Registrar ponto em atraso
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={solicitarAssinaturaEspelho}
+              disabled={solicitandoAssinatura || carregando}
+            >
+              {solicitandoAssinatura ? 'Registrando…' : 'Solicitar assinatura'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => exportarDoServidor('pdf')}
+              disabled={exportando}
+              title="Imprimir / PDF do período filtrado"
+            >
+              {exportando ? '…' : 'Imprimir'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={verDetalhes}
+              disabled={carregando}
+              title="Ir para os detalhes abaixo"
+              style={{ textDecoration: 'underline' }}
+            >
+              Ver detalhes
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div id="tour-rel-conteudo">
       {bancoResumo?.resumo?.length > 0 && (
         <div className="card" style={{ marginBottom: '20px' }}>
@@ -342,7 +418,12 @@ export default function Relatorios() {
       ) : (
         <>
           {relatorioPagina.map((r) => (
-        <div key={r.usuario.nome} className="card" style={{ marginBottom:'16px', minWidth: 0 }}>
+        <div
+          key={r.usuario.nome}
+          ref={usuarioFiltro && String(r.usuario?.id) === String(usuarioFiltro) ? detalhesRef : null}
+          className="card"
+          style={{ marginBottom:'16px', minWidth: 0 }}
+        >
           {/* Header do colaborador */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid var(--cinza-200)', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display:'flex', alignItems:'center', gap:'12px', minWidth: 0, flex: '1 1 200px' }}>

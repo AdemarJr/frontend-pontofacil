@@ -1,10 +1,11 @@
 // src/pages/AjustesPonto.js
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { pontoService, relatorioService, usuarioService } from '../services/api';
+import { useSearchParams } from 'react-router-dom';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
@@ -20,6 +21,8 @@ function datetimeLocalParaIsoUtc(valor) {
 
 export default function AjustesPonto() {
   const hoje = new Date();
+  const [searchParams] = useSearchParams();
+  const initFromQueryDone = useRef(false);
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [usuarioFiltro, setUsuarioFiltro] = useState('');
@@ -41,6 +44,18 @@ export default function AjustesPonto() {
   useEffect(() => {
     usuarioService.listar().then(({ data }) => setUsuarios(data));
   }, []);
+
+  // Permite abrir esta tela já filtrada via query string (atalhos vindos de Espelho/Assinaturas).
+  useEffect(() => {
+    if (initFromQueryDone.current) return;
+    initFromQueryDone.current = true;
+    const uid = searchParams.get('usuarioId') || '';
+    const qMes = parseInt(searchParams.get('mes') || '', 10);
+    const qAno = parseInt(searchParams.get('ano') || '', 10);
+    if (uid) setUsuarioFiltro(uid);
+    if (!Number.isNaN(qMes) && qMes >= 1 && qMes <= 12) setMes(qMes);
+    if (!Number.isNaN(qAno) && qAno >= 2000 && qAno <= 2100) setAno(qAno);
+  }, [searchParams]);
 
   useEffect(() => {
     setEspelhoPage(1);
