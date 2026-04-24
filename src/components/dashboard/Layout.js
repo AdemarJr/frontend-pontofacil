@@ -12,7 +12,7 @@ const MENU = [
   { path: '/ausencias', label: 'Ausências', icon: '📎' },
   { path: '/feriados', label: 'Feriados', icon: '📅' },
   { path: '/ferias', label: 'Férias', icon: '🌴' },
-  { path: '/relatorios', label: 'Espelho / Assinaturas', icon: '🖊️' },
+  { path: '/relatorios', label: 'Relatórios / Espelho de ponto', icon: '📋' },
   { path: '/ajustes-ponto', label: 'Ajustes de ponto', icon: '🛠️' },
   { path: '/solicitacoes', label: 'Solicitações', icon: '🧾' },
   { path: '/configuracoes', label: 'Configurações', icon: '⚙️' },

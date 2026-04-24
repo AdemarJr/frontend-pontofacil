@@ -90,6 +90,7 @@ export default function Relatorios() {
   const [carregando, setCarregando] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [solicitandoAssinatura, setSolicitandoAssinatura] = useState(false);
+  const [abertos, setAbertos] = useState(() => ({}));
   const [bancoResumo, setBancoResumo] = useState(null);
   const [bancoPage, setBancoPage] = useState(1);
   const [bancoPageSize, setBancoPageSize] = useState(10);
@@ -184,10 +185,50 @@ export default function Relatorios() {
     }
   }
 
+  async function solicitarAssinaturaDireto(usuarioId) {
+    if (!usuarioId) return;
+    setSolicitandoAssinatura(true);
+    try {
+      await relatorioService.solicitarAssinaturaEspelho({ usuarioId, mes, ano });
+      buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar a solicitação.');
+    } finally {
+      setSolicitandoAssinatura(false);
+    }
+  }
+
   const usuarioSelecionado = useMemo(
     () => (usuarioFiltro ? usuarios.find((u) => String(u.id) === String(usuarioFiltro)) : null),
     [usuarios, usuarioFiltro]
   );
+
+  const assinaturaLista = useMemo(() => {
+    const rows = (relatorio || []).map((r) => ({
+      id: r?.usuario?.id,
+      nome: r?.usuario?.nome,
+      cargo: r?.usuario?.cargo,
+      fechamento: r?.fechamento || null,
+    })).filter((x) => x.id && x.nome);
+    rows.sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+    return rows;
+  }, [relatorio]);
+
+  const assinaturaResumo = useMemo(() => {
+    const acc = { assinados: 0, aguardando: 0, sem: 0, total: 0 };
+    for (const r of assinaturaLista) {
+      acc.total += 1;
+      const st = r?.fechamento?.status;
+      if (st === 'ASSINADO') acc.assinados += 1;
+      else if (st === 'AGUARDANDO_ASSINATURA') acc.aguardando += 1;
+      else acc.sem += 1;
+    }
+    return acc;
+  }, [assinaturaLista]);
+
+  function toggleAberto(usuarioId) {
+    setAbertos((prev) => ({ ...prev, [usuarioId]: !prev?.[usuarioId] }));
+  }
 
   function verDetalhes() {
     if (detalhesRef.current && typeof detalhesRef.current.scrollIntoView === 'function') {
@@ -297,6 +338,66 @@ export default function Relatorios() {
             </span>
           </div>
         ) : null}
+      </div>
+
+      {/* Assinaturas (resumo + lista) */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Assinaturas do mês</h2>
+            <p style={{ fontSize: 12, color: 'var(--cinza-400)' }}>
+              Competência: <strong style={{ color: 'var(--cinza-700)' }}>{String(mes).padStart(2, '0')}/{ano}</strong>
+              {' '}· Assinados: <strong style={{ color: 'var(--verde-escuro)' }}>{assinaturaResumo.assinados}</strong>
+              {' '}· Aguardando: <strong style={{ color: '#92400e' }}>{assinaturaResumo.aguardando}</strong>
+              {' '}· Sem assinatura: <strong style={{ color: 'var(--cinza-400)' }}>{assinaturaResumo.sem}</strong>
+            </p>
+          </div>
+        </div>
+
+        {carregando ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 18 }}>
+            <div className="spinner" />
+          </div>
+        ) : assinaturaLista.length === 0 ? (
+          <div style={{ color: 'var(--cinza-400)', fontSize: 13 }}>Sem colaboradores no período.</div>
+        ) : (
+          <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
+            {assinaturaLista.map((r) => (
+              <div
+                key={r.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  border: '1px solid var(--cinza-200)',
+                  background: 'rgba(255,255,255,0.35)',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: 'var(--cinza-700)', overflowWrap: 'anywhere' }}>{r.nome}</div>
+                  <div style={{ fontSize: 12, color: 'var(--cinza-400)', overflowWrap: 'anywhere' }}>{r.cargo || '—'}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <BadgeFechamento fechamento={r.fechamento} />
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={solicitandoAssinatura}
+                    onClick={() => solicitarAssinaturaDireto(r.id)}
+                    title="Enviar pedido para o colaborador assinar o espelho deste mês"
+                    style={{ padding: '8px 12px', fontSize: 13 }}
+                  >
+                    Solicitar assinatura
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {usuarioFiltro ? (
@@ -424,7 +525,21 @@ export default function Relatorios() {
           className="card"
           style={{ marginBottom:'16px', minWidth: 0 }}
         >
-          {/* Header do colaborador */}
+          {/* Header do colaborador (dropdown) */}
+          <button
+            type="button"
+            onClick={() => toggleAberto(r.usuario.id)}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+            aria-expanded={Boolean(abertos?.[r.usuario.id])}
+            title="Abrir/fechar detalhes do colaborador"
+          >
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid var(--cinza-200)', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display:'flex', alignItems:'center', gap:'12px', minWidth: 0, flex: '1 1 200px' }}>
               <div style={{ width:'40px', height:'40px', borderRadius:'50%', background:'var(--verde-claro)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'600', color:'var(--verde-escuro)', flexShrink: 0 }}>
@@ -452,11 +567,16 @@ export default function Relatorios() {
                 <p style={{ fontSize:'20px', fontWeight:'700', color: r.horaExtraMes && r.horaExtraMes !== '00:00' ? 'var(--amarelo)' : 'var(--cinza-400)' }}>{r.horaExtraMes ?? r.totalExtras}</p>
                 <p style={{ fontSize:'11px', color:'var(--cinza-400)' }}>Hora extra (acima do esperado)</p>
               </div>
+              <div style={{ marginLeft: 'auto', color: 'var(--cinza-400)', fontSize: 12, fontWeight: 900 }}>
+                {abertos?.[r.usuario.id] ? '▲' : '▼'}
+              </div>
             </div>
           </div>
+          </button>
 
           {/* Dias */}
-          {Object.entries(r.diasTrabalhados).map(([dia, dados]) => (
+          {(abertos?.[r.usuario.id] || (usuarioFiltro && String(r.usuario?.id) === String(usuarioFiltro))) ? (
+            Object.entries(r.diasTrabalhados).map(([dia, dados]) => (
             <div key={dia} style={{ marginBottom:'12px', minWidth: 0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize:'12px', fontWeight:'600', color:'var(--cinza-700)', flexShrink: 0 }}>
@@ -541,7 +661,12 @@ export default function Relatorios() {
                 ))}
               </div>
             </div>
-          ))}
+          ))
+          ) : (
+            <div style={{ marginTop: 12, color: 'var(--cinza-400)', fontSize: 13 }}>
+              Detalhes recolhidos. Clique no cabeçalho para abrir.
+            </div>
+          )}
         </div>
           ))}
           {!carregando && totalEspelho > 0 && (
