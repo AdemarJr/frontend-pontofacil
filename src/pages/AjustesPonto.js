@@ -238,7 +238,7 @@ export default function AjustesPonto() {
                   </div>
 
                   <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-                    {keys.slice(0, 10).map((dia) => {
+                    {keys.map((dia) => {
                       const dados = dias[dia];
                       const pontos = dados?.pontos || [];
                       const faltando = dados?.flags?.faltandoMarcacao;
