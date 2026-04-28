@@ -15,8 +15,20 @@ export default function RedefinirSenha() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    const t = searchParams.get('token') || '';
-    setToken(t);
+    // Suporta 2 formatos:
+    // 1) Link legado do backend: /redefinir-senha?token=...
+    // 2) Link do Supabase: /redefinir-senha#access_token=...&type=recovery
+    const tQuery = searchParams.get('token') || searchParams.get('access_token') || '';
+    if (tQuery) {
+      setToken(tQuery);
+      return;
+    }
+
+    const hash = window.location.hash || '';
+    const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+    const hashParams = new URLSearchParams(raw);
+    const tHash = hashParams.get('access_token') || hashParams.get('token') || '';
+    if (tHash) setToken(tHash);
   }, [searchParams]);
 
   async function handleSubmit(e) {
