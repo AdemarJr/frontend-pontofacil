@@ -1,5 +1,5 @@
 // src/App.js
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import './styles/global.css';
 import './styles/tour-overrides.css';
@@ -26,6 +26,7 @@ import ColaboradorAppLayout from './components/colaborador/ColaboradorAppLayout'
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
+import { useEffect } from 'react';
 
 function RotaProtegida({ children, apenasAdmin = false, apenasColaborador = false }) {
   const { usuario, carregando, isAdmin } = useAuth();
@@ -57,10 +58,41 @@ function RedirecionarInicio() {
   return <Navigate to="/meu-ponto" replace />;
 }
 
+function SupabaseRecoveryRedirect() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Supabase redirects to `redirect_to` with the token in the URL hash:
+    // `#access_token=...&type=recovery`
+    // If redirect_to is set to the site root, we still want to route the user
+    // to the password reset screen.
+    const rawHash = window.location.hash || '';
+    const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
+    if (!hash) return;
+
+    const params = new URLSearchParams(hash);
+    const type = (params.get('type') || '').toLowerCase();
+    const accessToken = params.get('access_token') || '';
+    const refreshToken = params.get('refresh_token') || '';
+
+    if (type === 'recovery' && accessToken) {
+      const nextHash = new URLSearchParams({
+        access_token: accessToken,
+        ...(refreshToken ? { refresh_token: refreshToken } : {}),
+        type: 'recovery',
+      }).toString();
+      navigate(`/redefinir-senha#${nextHash}`, { replace: true });
+    }
+  }, [navigate]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <SupabaseRecoveryRedirect />
         <Routes>
           <Route path="/" element={<RedirecionarInicio />} />
           <Route path="/landing" element={<Landing />} />
