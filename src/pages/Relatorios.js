@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
+import AppIcon from '../components/AppIcon';
 import { relatorioService, usuarioService } from '../services/api';
 import { runRelatoriosTour } from '../tours/relatoriosTour';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
@@ -513,7 +514,9 @@ export default function Relatorios() {
         <div style={{ display:'flex', justifyContent:'center', padding:'60px' }}><div className="spinner" /></div>
       ) : relatorio.length === 0 ? (
         <div className="card" style={{ textAlign:'center', padding:'60px', color:'var(--cinza-400)' }}>
-          <p style={{ fontSize:'32px' }}>📋</p>
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:'8px' }}>
+            <AppIcon name="relatorios" size={34} color="var(--cinza-400)" aria-hidden />
+          </div>
           <p style={{ marginTop:'8px' }}>Nenhum registro no período</p>
         </div>
       ) : (

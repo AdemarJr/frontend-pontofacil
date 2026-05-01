@@ -4,18 +4,19 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
 import { feriasService } from '../../services/api';
+import AppIcon from '../AppIcon';
 
 const MENU = [
-  { path: '/dashboard', label: 'Início', icon: '📊' },
-  { path: '/colaboradores', label: 'Colaboradores', icon: '👥' },
-  { path: '/escalas', label: 'Jornadas', icon: '🕐' },
-  { path: '/ausencias', label: 'Ausências', icon: '📎' },
-  { path: '/feriados', label: 'Feriados', icon: '📅' },
-  { path: '/ferias', label: 'Férias', icon: '🌴' },
-  { path: '/relatorios', label: 'Relatórios / Espelho de ponto', icon: '📋' },
-  { path: '/ajustes-ponto', label: 'Ajustes de ponto', icon: '🛠️' },
-  { path: '/solicitacoes', label: 'Solicitações', icon: '🧾' },
-  { path: '/configuracoes', label: 'Configurações', icon: '⚙️' },
+  { path: '/dashboard', label: 'Início', icon: 'dashboard' },
+  { path: '/colaboradores', label: 'Colaboradores', icon: 'colaboradores' },
+  { path: '/escalas', label: 'Jornadas', icon: 'jornadas' },
+  { path: '/ausencias', label: 'Ausências', icon: 'ausencias' },
+  { path: '/feriados', label: 'Feriados', icon: 'feriados' },
+  { path: '/ferias', label: 'Férias', icon: 'ferias' },
+  { path: '/relatorios', label: 'Relatórios / Espelho de ponto', icon: 'relatorios' },
+  { path: '/ajustes-ponto', label: 'Ajustes de ponto', icon: 'ajustes' },
+  { path: '/solicitacoes', label: 'Solicitações', icon: 'solicitacoes' },
+  { path: '/configuracoes', label: 'Configurações', icon: 'configuracoes' },
 ];
 
 export default function Layout({ children }) {
@@ -150,7 +151,9 @@ export default function Layout({ children }) {
                 transition: 'all 0.15s',
               })}
             >
-              <span style={{ fontSize: '18px' }}>{item.icon}</span>
+              <span style={{ width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AppIcon name={item.icon} size={18} />
+              </span>
               <span style={{ flex: 1, minWidth: 0 }}>{item.label}</span>
               {item.path === '/ferias' && isAdmin && feriasPendentes > 0 ? (
                 <span
@@ -238,7 +241,7 @@ export default function Layout({ children }) {
             aria-label="Abrir menu"
             onClick={() => setNavAberto(true)}
           >
-            ☰
+            <AppIcon name="menu" size={20} aria-label="Abrir menu" />
           </button>
           <span className="admin-shell__topbar-title" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {tituloPagina}

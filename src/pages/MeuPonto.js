@@ -7,12 +7,13 @@ import { useColaboradorChrome } from '../context/ColaboradorChromeContext';
 import { pontoService, tenantService, escalaService } from '../services/api';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
 import { publicUrl } from '../utils/branding';
+import AppIcon from '../components/AppIcon';
 
 const TIPOS_LABEL = {
-  ENTRADA: { label: 'Entrada', cor: '#1D9E75', emoji: '🟢' },
-  SAIDA_ALMOCO: { label: 'Saída Almoço', cor: '#BA7517', emoji: '🟡' },
-  RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', emoji: '🔵' },
-  SAIDA: { label: 'Saída', cor: '#E24B4A', emoji: '🔴' },
+  ENTRADA: { label: 'Entrada', cor: '#1D9E75', icon: 'dot' },
+  SAIDA_ALMOCO: { label: 'Saída Almoço', cor: '#BA7517', icon: 'dot' },
+  RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', icon: 'dot' },
+  SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
 
 /** Texto do lembrete por horário (entrada, intervalos, saída) */
@@ -585,7 +586,9 @@ export default function MeuPonto() {
   if (etapa === 'sucesso') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#052e16', gap: 24, padding: 20 }}>
-        <div style={{ fontSize: 72 }}>✅</div>
+        <div>
+          <AppIcon name="ok" size={80} color="#86efac" aria-label="Sucesso" />
+        </div>
         <div style={{ color: 'white', fontSize: 22, fontWeight: 700, textAlign: 'center', whiteSpace: 'pre-line' }}>{mensagem}</div>
         <p style={{ color: '#86efac', fontSize: 15 }}>Olá, {usuario.nome}</p>
       </div>
@@ -595,7 +598,9 @@ export default function MeuPonto() {
   if (etapa === 'erro') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#1c0202', gap: 20, padding: 20 }}>
-        <div style={{ fontSize: 64 }}>❌</div>
+        <div>
+          <AppIcon name="erro" size={70} color="#fca5a5" aria-label="Erro" />
+        </div>
         <div style={{ color: 'white', fontSize: 18, fontWeight: 600, textAlign: 'center' }}>{mensagem}</div>
       </div>
     );
@@ -605,8 +610,9 @@ export default function MeuPonto() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 20 }}>
         <p style={{ color: '#94a3b8', fontSize: 14 }}>Registro pelo app — {usuario.tenant?.nomeFantasia}</p>
-        <h2 style={{ color: 'white', fontSize: 22, marginTop: 0 }}>
-          {tipoInfo?.emoji} {tipoInfo?.label}
+        <h2 style={{ color: 'white', fontSize: 22, marginTop: 0, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
+          {tipoInfo?.label}
         </h2>
         <div style={{ borderRadius: 16, overflow: 'hidden', border: '3px solid var(--verde)', width: '100%', maxWidth: 400, aspectRatio: '4/3' }}>
           <Webcam
@@ -623,7 +629,14 @@ export default function MeuPonto() {
             Voltar
           </button>
           <button type="button" className="btn btn-primary btn-full btn-lg" onClick={registrarFoto} disabled={carregando}>
-            {carregando ? <span className="spinner" style={{ width: 22, height: 22, borderWidth: 2, borderTopColor: 'white' }} /> : '📸 Registrar'}
+            {carregando ? (
+              <span className="spinner" style={{ width: 22, height: 22, borderWidth: 2, borderTopColor: 'white' }} />
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                <AppIcon name="camera" size={18} aria-hidden />
+                Registrar
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -697,11 +710,15 @@ export default function MeuPonto() {
       {aba === 'bater' ? (
         <div className="colaborador-page__quick">
           <Link to="/comprovantes">
-            <span>📎</span>
+            <span style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AppIcon name="ausencias" size={18} aria-hidden />
+            </span>
             <span>Atestado</span>
           </Link>
           <Link to="/minhas-ferias">
-            <span>🌴</span>
+            <span style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AppIcon name="ferias" size={18} aria-hidden />
+            </span>
             <span>Férias</span>
           </Link>
           <button
@@ -714,7 +731,9 @@ export default function MeuPonto() {
               )
             }
           >
-            <span>💬</span>
+            <span style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AppIcon name="whatsapp" size={18} aria-hidden />
+            </span>
             <span>Ajuda</span>
           </button>
         </div>
@@ -734,8 +753,9 @@ export default function MeuPonto() {
           }}
         >
           <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>Próximo registro</p>
-          <p style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
-            {tipoInfo?.emoji} {tipoInfo?.label}
+          <p style={{ color: 'white', fontSize: 26, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
+            {tipoInfo?.label}
           </p>
           <p style={{ color: '#64748b', fontSize: 13, marginTop: 12 }}>
             {new Date().toLocaleString('pt-BR')}

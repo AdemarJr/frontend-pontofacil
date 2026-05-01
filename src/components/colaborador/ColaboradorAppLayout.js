@@ -3,6 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
 import { ColaboradorChromeContext } from '../../context/ColaboradorChromeContext';
+import AppIcon from '../AppIcon';
 
 function primeiroNome(nome) {
   if (!nome) return '';
@@ -10,11 +11,11 @@ function primeiroNome(nome) {
 }
 
 const NAV = [
-  { to: '/meu-ponto', match: (p, s) => p === '/meu-ponto' && (!s.get('tab') || s.get('tab') === 'bater'), label: 'Início', icon: '◉' },
-  { to: '/meu-ponto?tab=pendencias', match: (p, s) => p === '/meu-ponto' && s.get('tab') === 'pendencias', label: 'Pendências', icon: '!' },
-  { to: '/fechamento', match: (p) => p === '/fechamento', label: 'Assinar', icon: '🖊️' },
-  { to: '/comprovantes', match: (p) => p === '/comprovantes', label: 'Atestado', icon: '📎' },
-  { to: '/minhas-ferias', match: (p) => p === '/minhas-ferias', label: 'Férias', icon: '🌴' },
+  { to: '/meu-ponto', match: (p, s) => p === '/meu-ponto' && (!s.get('tab') || s.get('tab') === 'bater'), label: 'Início', icon: 'home' },
+  { to: '/meu-ponto?tab=pendencias', match: (p, s) => p === '/meu-ponto' && s.get('tab') === 'pendencias', label: 'Pendências', icon: 'alert' },
+  { to: '/fechamento', match: (p) => p === '/fechamento', label: 'Assinar', icon: 'assinar' },
+  { to: '/comprovantes', match: (p) => p === '/comprovantes', label: 'Atestado', icon: 'ausencias' },
+  { to: '/minhas-ferias', match: (p) => p === '/minhas-ferias', label: 'Férias', icon: 'ferias' },
 ];
 
 export default function ColaboradorAppLayout() {
@@ -52,7 +53,7 @@ export default function ColaboradorAppLayout() {
                 aria-expanded={menuAberto}
                 onClick={() => setMenuAberto((v) => !v)}
               >
-                ⋮
+                <AppIcon name="more" size={20} aria-label="Menu" />
               </button>
               {menuAberto ? (
                 <div className="colaborador-app__menu-pop" role="menu">
@@ -81,7 +82,7 @@ export default function ColaboradorAppLayout() {
                   onClick={() => setMenuAberto(false)}
                 >
                   <span className="colaborador-app__tab-icon" aria-hidden>
-                    {item.icon}
+                    <AppIcon name={item.icon} size={18} />
                   </span>
                   <span className="colaborador-app__tab-label">{item.label}</span>
                 </NavLink>

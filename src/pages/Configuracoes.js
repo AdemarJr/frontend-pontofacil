@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
+import AppIcon from '../components/AppIcon';
 import { tenantService, localRegistroService } from '../services/api';
 import { runConfiguracoesTour } from '../tours/configuracoesTour';
 
@@ -157,7 +158,10 @@ export default function Configuracoes() {
 
         {/* Geofencing */}
         <div id="tour-cfg-geofence" className="card">
-          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>📍 Geofencing</h2>
+          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px', display:'inline-flex', alignItems:'center', gap: 10 }}>
+            <AppIcon name="mapa" size={18} aria-hidden />
+            Geofencing
+          </h2>
 
           <label style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px', cursor:'pointer' }}>
             <input type="checkbox" checked={form.geofenceAtivo} onChange={e => setForm(p => ({...p, geofenceAtivo: e.target.checked}))} style={{ width:'18px', height:'18px', accentColor:'var(--verde)' }} />
@@ -282,7 +286,10 @@ export default function Configuracoes() {
 
         {/* Registro */}
         <div id="tour-cfg-registro" className="card">
-          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>📸 Registro de Ponto</h2>
+          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px', display:'inline-flex', alignItems:'center', gap: 10 }}>
+            <AppIcon name="camera" size={18} aria-hidden />
+            Registro de Ponto
+          </h2>
 
           <label style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px', cursor:'pointer' }}>
             <input type="checkbox" checked={form.fotoObrigatoria} onChange={e => setForm(p => ({...p, fotoObrigatoria: e.target.checked}))} style={{ width:'18px', height:'18px', accentColor:'var(--verde)' }} />

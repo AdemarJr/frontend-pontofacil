@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../utils/branding';
 import { trackLandingPageView } from '../utils/googleAnalyticsLanding';
+import AppIcon from '../components/AppIcon';
 import '../styles/landing.css';
 
 const WA_NUMBER = '5592994764780';
@@ -17,46 +18,46 @@ const LOGO_LANDING = '/logo-landing.png';
 /** Ordem e tamanhos otimizados para o grid Bento (desktop). */
 const FEATURES = [
   {
-    icon: '📊',
+    icon: 'dashboard',
     title: 'Dashboard do gestor',
     text: 'Visão do dia, colaboradores, configurações da empresa e gestão de equipe em um só lugar.',
     bento: '2x2',
     highlight: true,
   },
   {
-    icon: '📍',
+    icon: 'mapa',
     title: 'Cerca virtual',
     text: 'Defina as áreas permitidas para registro de ponto e evite fraudes.',
     bento: '2x1',
     highlight: true,
   },
   {
-    icon: '🕐',
+    icon: 'jornadas',
     title: 'Jornadas e escalas',
     text: 'Configure horários e escalas com flexibilidade, de acordo com a necessidade da sua empresa.',
     bento: '2x1',
     highlight: true,
   },
   {
-    icon: '🖥️',
+    icon: 'monitor',
     title: 'Totem com PIN',
     text: 'Tablet na entrada com teclado numérico, registro rápido por PIN e foto opcional — ideal para recepção.',
     bento: '2x1',
   },
   {
-    icon: '📋',
+    icon: 'relatorios',
     title: 'Espelho de ponto e relatórios',
     text: 'Espelho mensal por colaborador, exportação CSV, ajustes manuais com motivo e auditoria.',
     bento: '2x1',
   },
   {
-    icon: '📷',
+    icon: 'camera',
     title: 'Foto no registro',
     text: 'Evidência visual integrada (armazenamento seguro; modo desenvolvimento sem S3 também disponível).',
     bento: '2x1',
   },
   {
-    icon: '🏢',
+    icon: 'empresa',
     title: 'Multi-empresa (SaaS)',
     text: 'Isolamento total por tenant: cada cliente com seus dados, usuários e políticas próprias.',
     bento: '2x1',
@@ -64,10 +65,10 @@ const FEATURES = [
 ];
 
 const SECURITY = [
-  { icon: '🔐', title: 'Acesso seguro', desc: 'Login com renovação automática de sessão e proteção extra no totem, para quem só bate ponto.' },
-  { icon: '🔒', title: 'Senhas e PIN protegidos', desc: 'Credenciais armazenadas com padrão de mercado; PIN numérico rápido para o colaborador no totem.' },
-  { icon: '🛡️', title: 'Proteção contra abuso', desc: 'Limites de uso que ajudam a evitar registros em massa ou tentativas suspeitas.' },
-  { icon: '📸', title: 'Privacidade das fotos', desc: 'Evidências com acesso restrito; dados de rede tratados de forma a apoiar auditoria sem expor informação sensível.' },
+  { icon: 'shield', title: 'Acesso seguro', desc: 'Login com renovação automática de sessão e proteção extra no totem, para quem só bate ponto.' },
+  { icon: 'lock', title: 'Senhas e PIN protegidos', desc: 'Credenciais armazenadas com padrão de mercado; PIN numérico rápido para o colaborador no totem.' },
+  { icon: 'key', title: 'Proteção contra abuso', desc: 'Limites de uso que ajudam a evitar registros em massa ou tentativas suspeitas.' },
+  { icon: 'camera', title: 'Privacidade das fotos', desc: 'Evidências com acesso restrito; dados de rede tratados de forma a apoiar auditoria sem expor informação sensível.' },
 ];
 
 export default function Landing() {
@@ -123,7 +124,9 @@ export default function Landing() {
             </div>
             <div className="landing-hero-ctas">
               <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="landing-btn-wa">
-                <span className="landing-btn-wa-icon" aria-hidden>💬</span>
+                <span className="landing-btn-wa-icon" aria-hidden>
+                  <AppIcon name="whatsapp" size={18} />
+                </span>
                 Fale com um de nossos consultores
               </a>
               <Link to="/login" className="landing-btn-outline-light">
@@ -247,7 +250,9 @@ export default function Landing() {
                   .join(' ')}
               >
                 <div className="landing-bento-card-inner">
-                  <div className="icon" aria-hidden>{f.icon}</div>
+                  <div className="icon" aria-hidden>
+                    <AppIcon name={f.icon} size={22} />
+                  </div>
                   <h3>{f.title}</h3>
                   <p>{f.text}</p>
                 </div>
@@ -354,7 +359,9 @@ export default function Landing() {
           <div className="landing-security">
             {SECURITY.map((s) => (
               <div key={s.title} className="landing-security-item">
-                <span className="landing-security-icon" aria-hidden>{s.icon}</span>
+                <span className="landing-security-icon" aria-hidden>
+                  <AppIcon name={s.icon} size={18} />
+                </span>
                 <div>
                   <strong>{s.title}</strong>
                   <span>{s.desc}</span>
@@ -456,7 +463,10 @@ export default function Landing() {
             próximos passos e tudo o que precisa para decidir com segurança.
           </p>
           <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="landing-btn-wa landing-btn-wa--lg">
-            💬 Fale com um de nossos consultores
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <AppIcon name="whatsapp" size={20} aria-hidden />
+              Fale com um de nossos consultores
+            </span>
           </a>
           <p className="landing-cta-wa">
             WhatsApp: <strong>(92) 99476-4780</strong>

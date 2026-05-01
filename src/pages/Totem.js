@@ -3,14 +3,15 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { authService, pontoService } from '../services/api';
 import { logoInternoUrl } from '../utils/branding';
+import AppIcon from '../components/AppIcon';
 
 const TENANT_ID = localStorage.getItem('totemTenantId') || '';
 
 const TIPOS_LABEL = {
-  ENTRADA: { label: 'Entrada', cor: '#1D9E75', emoji: '🟢' },
-  SAIDA_ALMOCO: { label: 'Saída Almoço', cor: '#BA7517', emoji: '🟡' },
-  RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', emoji: '🔵' },
-  SAIDA: { label: 'Saída', cor: '#E24B4A', emoji: '🔴' },
+  ENTRADA: { label: 'Entrada', cor: '#1D9E75', icon: 'dot' },
+  SAIDA_ALMOCO: { label: 'Saída Almoço', cor: '#BA7517', icon: 'dot' },
+  RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', icon: 'dot' },
+  SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
 
 export default function Totem() {
@@ -149,7 +150,9 @@ export default function Totem() {
   if (configTenant || !tenantId) {
     return (
       <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f2027', padding:'40px', gap:'20px' }}>
-        <div style={{ fontSize:'48px' }}>⚙️</div>
+        <div>
+          <AppIcon name="configuracoes" size={52} color="white" aria-label="Configuração" />
+        </div>
         <h2 style={{ color:'white', fontSize:'22px', textAlign:'center' }}>Configuração do Totem</h2>
         <p style={{ color:'#9CA3AF', fontSize:'14px', textAlign:'center' }}>Cole o ID da empresa fornecido pelo administrador</p>
         <input
@@ -168,7 +171,9 @@ export default function Totem() {
   if (etapa === 'sucesso') {
     return (
       <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#052e16', gap:'24px' }}>
-        <div style={{ fontSize:'80px' }}>✅</div>
+        <div>
+          <AppIcon name="ok" size={88} color="#86efac" aria-label="Sucesso" />
+        </div>
         <div style={{ color:'white', fontSize:'28px', fontWeight:'700', textAlign:'center', whiteSpace:'pre-line' }}>{mensagem}</div>
         <p style={{ color:'#86efac', fontSize:'16px' }}>Obrigado, {usuario?.nome}!</p>
       </div>
@@ -179,7 +184,9 @@ export default function Totem() {
   if (etapa === 'erro') {
     return (
       <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#1c0202', gap:'24px' }}>
-        <div style={{ fontSize:'80px' }}>❌</div>
+        <div>
+          <AppIcon name="erro" size={88} color="#fca5a5" aria-label="Erro" />
+        </div>
         <div style={{ color:'white', fontSize:'24px', fontWeight:'600', textAlign:'center' }}>{mensagem}</div>
         <p style={{ color:'#fca5a5', fontSize:'14px' }}>Retornando em instantes...</p>
       </div>
@@ -192,7 +199,10 @@ export default function Totem() {
       <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f172a', gap:'24px', padding:'20px' }}>
         <div style={{ textAlign:'center' }}>
           <p style={{ color:'#94a3b8', fontSize:'14px' }}>Olhe para a câmera</p>
-          <h2 style={{ color:'white', fontSize:'22px', marginTop:'4px' }}>{tipoInfo?.emoji} {tipoInfo?.label}</h2>
+          <h2 style={{ color:'white', fontSize:'22px', marginTop:'4px', display:'inline-flex', alignItems:'center', gap: 10 }}>
+            <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
+            {tipoInfo?.label}
+          </h2>
         </div>
 
         <div style={{ borderRadius:'16px', overflow:'hidden', border:'3px solid var(--verde)', width:'100%', maxWidth:'400px', aspectRatio:'4/3' }}>
@@ -209,7 +219,14 @@ export default function Totem() {
         <div style={{ display:'flex', gap:'16px', width:'100%', maxWidth:'400px' }}>
           <button className="btn btn-secondary btn-full btn-lg" onClick={resetar}>Cancelar</button>
           <button className="btn btn-primary btn-full btn-lg" onClick={capturarFoto} disabled={carregando}>
-            {carregando ? <span className="spinner" style={{ width:'22px', height:'22px', borderWidth:'2px', borderTopColor:'white' }} /> : '📸 Registrar'}
+            {carregando ? (
+              <span className="spinner" style={{ width:'22px', height:'22px', borderWidth:'2px', borderTopColor:'white' }} />
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                <AppIcon name="camera" size={18} aria-hidden />
+                Registrar
+              </span>
+            )}
           </button>
         </div>
       </div>
