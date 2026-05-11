@@ -127,15 +127,12 @@ export default function Landing() {
                 <span className="landing-btn-wa-icon" aria-hidden>
                   <AppIcon name="whatsapp" size={18} />
                 </span>
-                Fale com um de nossos consultores
+                Fale com nossos consultores
               </a>
               <Link to="/login" className="landing-btn-outline-light">
-                Já sou cliente — Entrar
+                Já sou cliente!
               </Link>
             </div>
-            <p className="landing-hero-wa-note">
-              WhatsApp: <strong>(92) 99476-4780</strong>
-            </p>
           </div>
           <div className="landing-hero-bento" aria-hidden>
             <div className="landing-hero-glass landing-hero-glass--a">
