@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { colaboradorService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 function mesAnoAtual() {
   const d = new Date();
@@ -29,6 +30,31 @@ function shortHash(h) {
   const s = String(h || '');
   if (s.length <= 12) return s;
   return `${s.slice(0, 8)}…${s.slice(-4)}`;
+}
+
+function assinaturaAutomaticaDataUrl(nome) {
+  const safe = String(nome || '').trim();
+  const text = safe || 'Assinatura';
+  const canvas = document.createElement('canvas');
+  const w = 760;
+  const h = 220;
+  canvas.width = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(15,23,42,0.00)';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = 'rgba(226,232,240,0.95)';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+
+  // Fontes cursivas comuns; cai para o "cursive" do sistema.
+  ctx.font = '64px "Brush Script MT", "Segoe Script", "Apple Chancery", cursive';
+  ctx.fillText(text, 28, h / 2);
+
+  return canvas.toDataURL('image/png');
 }
 
 function CanvasAssinatura({ onChange }) {
@@ -186,6 +212,7 @@ function CanvasAssinatura({ onChange }) {
 }
 
 export default function FechamentoMes() {
+  const { usuario } = useAuth();
   const [competencia, setCompetencia] = useState(mesAnoAtual);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -197,6 +224,8 @@ export default function FechamentoMes() {
   const [alterandoAssinatura, setAlterandoAssinatura] = useState(false);
 
   const [assinatura, setAssinatura] = useState({ dataUrl: '', strokes: [] });
+  const [modoAssinatura, setModoAssinatura] = useState('auto'); // auto | desenhar
+  const [aceite, setAceite] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   const titulo = useMemo(() => fmtCompetencia(competencia), [competencia]);
@@ -236,14 +265,22 @@ export default function FechamentoMes() {
   }
 
   async function aprovar() {
+    if (!aceite) {
+      alert('Marque o aceite para confirmar a assinatura do espelho.');
+      return;
+    }
     setSalvando(true);
     try {
       const precisaEnviarAssinatura = !assinaturaPadrao?.existe || alterandoAssinatura;
+      const assinaturaAuto =
+        modoAssinatura === 'auto'
+          ? { dataUrl: assinaturaAutomaticaDataUrl(usuario?.nome), strokes: [] }
+          : null;
       await colaboradorService.fecharMes({
         ...competencia,
         ...(precisaEnviarAssinatura && {
-          assinaturaDataUrl: assinatura?.dataUrl || undefined,
-          assinaturaStrokes: assinatura?.strokes?.length ? assinatura.strokes : undefined,
+          assinaturaDataUrl: (assinaturaAuto?.dataUrl || assinatura?.dataUrl) || undefined,
+          assinaturaStrokes: assinaturaAuto ? undefined : (assinatura?.strokes?.length ? assinatura.strokes : undefined),
         }),
         deviceId: localStorage.getItem('deviceId') || undefined,
       });
@@ -258,6 +295,7 @@ export default function FechamentoMes() {
 
   const homologado = fechamento?.status === 'ASSINADO';
   const aguardandoGestor = fechamento?.status === 'AGUARDANDO_ASSINATURA';
+  const precisaAssinatura = !assinaturaPadrao?.existe || alterandoAssinatura;
 
   return (
     <div className="colaborador-page">
@@ -430,7 +468,7 @@ export default function FechamentoMes() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-          <h2 style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 900, margin: 0 }}>Aceite com assinatura</h2>
+          <h2 style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 900, margin: 0 }}>Aceite do espelho (assinatura)</h2>
           <span style={{ color: '#94a3b8', fontSize: 12 }}>
             {assinaturaPadrao?.existe ? 'Assinatura salva' : 'Primeira vez: crie sua assinatura'}
           </span>
@@ -460,16 +498,105 @@ export default function FechamentoMes() {
           </div>
         ) : (
           <div style={{ marginTop: 12 }}>
-            <CanvasAssinatura onChange={setAssinatura} />
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 800 }}>Como você quer assinar?</div>
+                <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="modo-assinatura"
+                    checked={modoAssinatura === 'auto'}
+                    onChange={() => setModoAssinatura('auto')}
+                    style={{ marginTop: 3 }}
+                  />
+                  <span style={{ color: '#e2e8f0', fontSize: 13, lineHeight: 1.45 }}>
+                    Assinatura automática com meu nome (<strong>{usuario?.nome || '—'}</strong>) — recomendado
+                  </span>
+                </label>
+                <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="modo-assinatura"
+                    checked={modoAssinatura === 'desenhar'}
+                    onChange={() => setModoAssinatura('desenhar')}
+                    style={{ marginTop: 3 }}
+                  />
+                  <span style={{ color: '#e2e8f0', fontSize: 13, lineHeight: 1.45 }}>
+                    Desenhar assinatura (dedo/mouse)
+                  </span>
+                </label>
+              </div>
+
+              {modoAssinatura === 'desenhar' ? (
+                <CanvasAssinatura onChange={setAssinatura} />
+              ) : (
+                <div
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid rgba(148,163,184,0.18)',
+                    background: 'rgba(15,23,42,0.35)',
+                    padding: 14,
+                  }}
+                >
+                  <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 10 }}>Prévia da assinatura</div>
+                  <div style={{ color: '#e2e8f0', fontSize: 34, fontFamily: '"Brush Script MT", "Segoe Script", "Apple Chancery", cursive' }}>
+                    {usuario?.nome || 'Assinatura'}
+                  </div>
+                </div>
+              )}
+
+              <label
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                  cursor: 'pointer',
+                  marginTop: 4,
+                  paddingTop: 8,
+                  borderTop: '1px solid rgba(148,163,184,0.12)',
+                }}
+              >
+                <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} style={{ marginTop: 3 }} />
+                <span style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.45 }}>
+                  Li e concordo com o espelho desta competência e confirmo a assinatura/homologação.
+                </span>
+              </label>
+            </div>
           </div>
         )}
+
+        {assinaturaPadrao?.existe && !alterandoAssinatura ? (
+          <label
+            style={{
+              display: 'flex',
+              gap: 10,
+              alignItems: 'flex-start',
+              cursor: 'pointer',
+              marginTop: 12,
+              paddingTop: 10,
+              borderTop: '1px solid rgba(148,163,184,0.12)',
+            }}
+          >
+            <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} style={{ marginTop: 3 }} />
+            <span style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.45 }}>
+              Li e concordo com o espelho desta competência e confirmo a assinatura/homologação.
+            </span>
+          </label>
+        ) : null}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
           <button
             type="button"
             className="btn btn-primary"
             onClick={aprovar}
-            disabled={salvando || carregando || !!erro || !espelho}
+            disabled={
+              salvando ||
+              carregando ||
+              !!erro ||
+              !espelho ||
+              !aceite ||
+              (precisaAssinatura && modoAssinatura === 'desenhar' && !assinatura?.dataUrl)
+            }
             style={{ flex: '1 1 220px' }}
           >
             {salvando ? 'Salvando…' : (homologado ? 'Assinar novamente / Atualizar aceite' : 'Aprovar e assinar')}

@@ -1,0 +1,96 @@
+/* Pequenos ajustes para a página "Como usar" reaproveitando o tema da landing */
+.como-usar-hero .landing-hero-inner {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 960px) {
+  .como-usar-hero .landing-hero-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  }
+}
+
+.como-usar-jump {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.como-usar-jump__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(232, 237, 244, 0.92);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.como-usar-jump__item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(16, 185, 129, 0.22);
+  transform: translateY(-1px);
+}
+
+.como-usar-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 920px) {
+  .como-usar-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+}
+
+.como-usar-card {
+  text-align: left;
+}
+
+.como-usar-card__body {
+  margin-top: 10px;
+}
+
+.como-usar-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--lp-muted);
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.como-usar-list li {
+  margin: 10px 0;
+}
+
+.como-usar-list strong {
+  color: var(--lp-text);
+  font-weight: 800;
+}
+
+.como-usar .como-usar-list a {
+  color: var(--lp-emerald-bright);
+  font-weight: 800;
+}
+
+.como-usar-tip {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  background: rgba(16, 185, 129, 0.08);
+  color: rgba(232, 237, 244, 0.92);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
