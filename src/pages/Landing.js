@@ -112,7 +112,9 @@ export default function Landing() {
         <div className="landing-hero-inner">
           <div className="landing-hero-copy">
             <p className="landing-hero-kicker">Para empresas que querem ponto simples, seguro e sob controle</p>
-            <h1>Controle de ponto digital que sua empresa merece</h1>
+            <h1>
+              Controle de ponto <span className="landing-text-brand">digital</span> que sua empresa merece
+            </h1>
             <p className="lead">
               Com o PontoFácil você organiza jornadas e escalas, reduz risco de registro fora do local com cerca
               virtual e acompanha tudo em um painel — totem com PIN, relatórios e multi-empresa em uma solução que
@@ -485,7 +487,7 @@ export default function Landing() {
           />
         </div>
         <p>
-          <strong>PontoFácil</strong> — Sistema SaaS de controle de ponto digital
+          <strong>PontoFácil</strong> — Sistema SaaS de controle de ponto digital - Desenvolvido pela <a href="https://www.pyrou.com.br" target="_blank" rel="noopener noreferrer">Pyrou Web</a>
         </p>
         <p className="landing-footer-links">
           <Link to="/login">Acesso ao sistema</Link>

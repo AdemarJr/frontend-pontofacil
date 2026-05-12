@@ -14,6 +14,50 @@ const STATUS_BADGE = {
 };
 const PLANO_LABEL = { BASICO:'Básico', PROFISSIONAL:'Profissional', ENTERPRISE:'Enterprise' };
 
+const MODAL_OVERLAY = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,0.5)',
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  zIndex: 1000,
+  padding: 16,
+  overflowY: 'auto',
+  WebkitOverflowScrolling: 'touch',
+};
+
+function modalCardStyle(maxWidth) {
+  return {
+    width: '100%',
+    maxWidth,
+    maxHeight: 'min(calc(100dvh - 32px), 920px)',
+    margin: '12px auto',
+    padding: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+  };
+}
+
+const MODAL_BODY = {
+  padding: '0 clamp(20px, 4vw, 32px)',
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  WebkitOverflowScrolling: 'touch',
+};
+
+const MODAL_FOOTER = {
+  flexShrink: 0,
+  display: 'flex',
+  gap: 12,
+  padding: '16px clamp(20px, 4vw, 32px) clamp(20px, 4vw, 28px)',
+  borderTop: '1px solid var(--cinza-200)',
+  background: 'var(--branco, #fff)',
+};
+
 export default function SuperAdmin() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
@@ -341,46 +385,85 @@ export default function SuperAdmin() {
 
       {/* Modal nova empresa */}
       {modal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'480px', padding:'32px' }}>
-            <h2 style={{ fontSize:'18px', fontWeight:'600', marginBottom:'24px' }}>Nova Empresa</h2>
-            <div style={{ display:'grid', gap:'14px' }}>
-              <p style={{ fontSize:'12px', color:'var(--cinza-400)', marginBottom:'8px' }}>Dados da empresa</p>
-              {[
-                { key:'razaoSocial', label:'Razão Social', type:'text' },
-                { key:'nomeFantasia', label:'Nome Fantasia', type:'text' },
-                { key:'cnpj', label:'CNPJ', type:'text', placeholder:'00.000.000/0001-00' },
-                { key:'email', label:'E-mail da empresa', type:'email' },
-                { key:'telefone', label:'Telefone (opcional)', type:'text' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>{f.label}</label>
-                  <input className="input" type={f.type} placeholder={f.placeholder} value={form[f.key]} onChange={e => setForm(p => ({...p, [f.key]: e.target.value}))} />
-                </div>
-              ))}
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>Plano</label>
-                <select className="input" value={form.plano} onChange={e => setForm(p => ({...p, plano: e.target.value}))}>
-                  <option value="BASICO">Básico (até 10 usuários)</option>
-                  <option value="PROFISSIONAL">Profissional (até 50 usuários)</option>
-                  <option value="ENTERPRISE">Enterprise (ilimitado)</option>
-                </select>
-              </div>
-              <p style={{ fontSize:'12px', color:'var(--cinza-400)', margin:'16px 0 8px', paddingTop:'12px', borderTop:'1px solid var(--cinza-200)' }}>Administrador da empresa (acesso ao painel / dashboard)</p>
-              {[
-                { key:'adminNome', label:'Nome do administrador', type:'text' },
-                { key:'adminEmail', label:'E-mail de login', type:'email' },
-                { key:'adminSenha', label:'Senha inicial (opcional — em branco = convite por e-mail)', type:'password' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>{f.label}</label>
-                  <input className="input" type={f.type} autoComplete="new-password" value={form[f.key]} onChange={e => setForm(p => ({...p, [f.key]: e.target.value}))} />
-                </div>
-              ))}
+        <div style={MODAL_OVERLAY} role="presentation" onClick={(e) => e.target === e.currentTarget && setModal(false)}>
+          <div
+            className="card"
+            style={modalCardStyle(480)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="superadmin-modal-nova-empresa-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ flexShrink: 0, padding: 'clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px) 12px' }}>
+              <h2 id="superadmin-modal-nova-empresa-title" style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+                Nova Empresa
+              </h2>
             </div>
-            <div style={{ display:'flex', gap:'12px', marginTop:'24px' }}>
-              <button className="btn btn-secondary btn-full" onClick={() => setModal(false)}>Cancelar</button>
-              <button className="btn btn-primary btn-full" onClick={criarTenant} disabled={salvando}>{salvando ? 'Criando...' : 'Criar Empresa'}</button>
+            <div style={MODAL_BODY}>
+              <div style={{ display: 'grid', gap: '14px', paddingBottom: 8 }}>
+                <p style={{ fontSize: '12px', color: 'var(--cinza-400)', marginBottom: '8px' }}>Dados da empresa</p>
+                {[
+                  { key: 'razaoSocial', label: 'Razão Social', type: 'text' },
+                  { key: 'nomeFantasia', label: 'Nome Fantasia', type: 'text' },
+                  { key: 'cnpj', label: 'CNPJ', type: 'text', placeholder: '00.000.000/0001-00' },
+                  { key: 'email', label: 'E-mail da empresa', type: 'email' },
+                  { key: 'telefone', label: 'Telefone (opcional)', type: 'text' },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>{f.label}</label>
+                    <input
+                      className="input"
+                      type={f.type}
+                      placeholder={f.placeholder}
+                      value={form[f.key]}
+                      onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Plano</label>
+                  <select className="input" value={form.plano} onChange={(e) => setForm((p) => ({ ...p, plano: e.target.value }))}>
+                    <option value="BASICO">Básico (até 10 usuários)</option>
+                    <option value="PROFISSIONAL">Profissional (até 50 usuários)</option>
+                    <option value="ENTERPRISE">Enterprise (ilimitado)</option>
+                  </select>
+                </div>
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: 'var(--cinza-400)',
+                    margin: '16px 0 8px',
+                    paddingTop: '12px',
+                    borderTop: '1px solid var(--cinza-200)',
+                  }}
+                >
+                  Administrador da empresa (acesso ao painel / dashboard)
+                </p>
+                {[
+                  { key: 'adminNome', label: 'Nome do administrador', type: 'text' },
+                  { key: 'adminEmail', label: 'E-mail de login', type: 'email' },
+                  { key: 'adminSenha', label: 'Senha inicial (opcional — em branco = convite por e-mail)', type: 'password' },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>{f.label}</label>
+                    <input
+                      className="input"
+                      type={f.type}
+                      autoComplete="new-password"
+                      value={form[f.key]}
+                      onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={MODAL_FOOTER}>
+              <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="btn btn-primary btn-full" onClick={criarTenant} disabled={salvando}>
+                {salvando ? 'Criando...' : 'Criar Empresa'}
+              </button>
             </div>
           </div>
         </div>
@@ -388,35 +471,59 @@ export default function SuperAdmin() {
 
       {/* Modal editar empresa */}
       {modalEditar && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'480px', padding:'32px' }}>
-            <h2 style={{ fontSize:'18px', fontWeight:'600', marginBottom:'8px' }}>Editar empresa</h2>
-            <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'20px' }}>Altere os dados cadastrais. O status (suspenso/ativo) continua nas ações da tabela.</p>
-            <div style={{ display:'grid', gap:'14px' }}>
-              {[
-                { key:'razaoSocial', label:'Razão Social', type:'text' },
-                { key:'nomeFantasia', label:'Nome Fantasia', type:'text' },
-                { key:'cnpj', label:'CNPJ', type:'text' },
-                { key:'email', label:'E-mail da empresa', type:'email' },
-                { key:'telefone', label:'Telefone', type:'text' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>{f.label}</label>
-                  <input className="input" type={f.type} value={formEditar[f.key]} onChange={e => setFormEditar(p => ({...p, [f.key]: e.target.value}))} />
+        <div style={MODAL_OVERLAY} role="presentation" onClick={(e) => e.target === e.currentTarget && setModalEditar(null)}>
+          <div
+            className="card"
+            style={modalCardStyle(480)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="superadmin-modal-editar-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ flexShrink: 0, padding: 'clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px) 12px' }}>
+              <h2 id="superadmin-modal-editar-title" style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 8px' }}>
+                Editar empresa
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--cinza-400)', margin: 0 }}>
+                Altere os dados cadastrais. O status (suspenso/ativo) continua nas ações da tabela.
+              </p>
+            </div>
+            <div style={MODAL_BODY}>
+              <div style={{ display: 'grid', gap: '14px', paddingBottom: 8 }}>
+                {[
+                  { key: 'razaoSocial', label: 'Razão Social', type: 'text' },
+                  { key: 'nomeFantasia', label: 'Nome Fantasia', type: 'text' },
+                  { key: 'cnpj', label: 'CNPJ', type: 'text' },
+                  { key: 'email', label: 'E-mail da empresa', type: 'email' },
+                  { key: 'telefone', label: 'Telefone', type: 'text' },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>{f.label}</label>
+                    <input
+                      className="input"
+                      type={f.type}
+                      value={formEditar[f.key]}
+                      onChange={(e) => setFormEditar((p) => ({ ...p, [f.key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Plano</label>
+                  <select className="input" value={formEditar.plano} onChange={(e) => setFormEditar((p) => ({ ...p, plano: e.target.value }))}>
+                    <option value="BASICO">Básico</option>
+                    <option value="PROFISSIONAL">Profissional</option>
+                    <option value="ENTERPRISE">Enterprise</option>
+                  </select>
                 </div>
-              ))}
-              <div>
-                <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>Plano</label>
-                <select className="input" value={formEditar.plano} onChange={e => setFormEditar(p => ({...p, plano: e.target.value}))}>
-                  <option value="BASICO">Básico</option>
-                  <option value="PROFISSIONAL">Profissional</option>
-                  <option value="ENTERPRISE">Enterprise</option>
-                </select>
               </div>
             </div>
-            <div style={{ display:'flex', gap:'12px', marginTop:'24px' }}>
-              <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalEditar(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-full" type="button" onClick={salvarEdicao} disabled={salvando}>{salvando ? 'Salvando...' : 'Salvar'}</button>
+            <div style={MODAL_FOOTER}>
+              <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalEditar(null)}>
+                Cancelar
+              </button>
+              <button className="btn btn-primary btn-full" type="button" onClick={salvarEdicao} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Salvar'}
+              </button>
             </div>
           </div>
         </div>
@@ -424,27 +531,51 @@ export default function SuperAdmin() {
 
       {/* Modal cadastrar administrador em empresa existente */}
       {modalAdmin && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'440px', padding:'32px' }}>
-            <h2 style={{ fontSize:'18px', fontWeight:'600', marginBottom:'8px' }}>Administrador da empresa</h2>
-            <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'20px' }}>
-              {modalAdmin.nomeFantasia} — este usuário acessa o painel em <strong>/login</strong> com e-mail e senha (mesmo fluxo do gerente).
-            </p>
-            <div style={{ display:'grid', gap:'14px' }}>
-              {[
-                { key:'nome', label:'Nome completo', type:'text' },
-                { key:'email', label:'E-mail de login', type:'email' },
-                { key:'senha', label:'Senha (opcional — em branco = convite por e-mail; se preencher, mín. 6 caracteres)', type:'password' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'5px' }}>{f.label}</label>
-                  <input className="input" type={f.type} autoComplete="new-password" value={formAdmin[f.key]} onChange={e => setFormAdmin(p => ({...p, [f.key]: e.target.value}))} />
-                </div>
-              ))}
+        <div style={MODAL_OVERLAY} role="presentation" onClick={(e) => e.target === e.currentTarget && setModalAdmin(null)}>
+          <div
+            className="card"
+            style={modalCardStyle(440)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="superadmin-modal-admin-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ flexShrink: 0, padding: 'clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px) 12px' }}>
+              <h2 id="superadmin-modal-admin-title" style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 8px' }}>
+                Administrador da empresa
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--cinza-400)', margin: 0 }}>
+                {modalAdmin.nomeFantasia} — este usuário acessa o painel em <strong>/login</strong> com e-mail e senha (mesmo fluxo do
+                gerente).
+              </p>
             </div>
-            <div style={{ display:'flex', gap:'12px', marginTop:'24px' }}>
-              <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalAdmin(null)}>Cancelar</button>
-              <button className="btn btn-primary btn-full" type="button" onClick={salvarAdmin} disabled={salvando}>{salvando ? 'Salvando...' : 'Cadastrar'}</button>
+            <div style={MODAL_BODY}>
+              <div style={{ display: 'grid', gap: '14px', paddingBottom: 8 }}>
+                {[
+                  { key: 'nome', label: 'Nome completo', type: 'text' },
+                  { key: 'email', label: 'E-mail de login', type: 'email' },
+                  { key: 'senha', label: 'Senha (opcional — em branco = convite por e-mail; se preencher, mín. 6 caracteres)', type: 'password' },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>{f.label}</label>
+                    <input
+                      className="input"
+                      type={f.type}
+                      autoComplete="new-password"
+                      value={formAdmin[f.key]}
+                      onChange={(e) => setFormAdmin((p) => ({ ...p, [f.key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={MODAL_FOOTER}>
+              <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalAdmin(null)}>
+                Cancelar
+              </button>
+              <button className="btn btn-primary btn-full" type="button" onClick={salvarAdmin} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Cadastrar'}
+              </button>
             </div>
           </div>
         </div>

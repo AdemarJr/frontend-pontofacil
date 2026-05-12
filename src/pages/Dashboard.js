@@ -20,6 +20,16 @@ function CardMetrica({ label, valor, cor, icon }) {
   );
 }
 
+const FILTRO_SITUACAO_OPCOES = [
+  { value: '', label: 'Selecione…' },
+  { value: 'presentes', label: 'Presentes agora' },
+  { value: 'ausentes', label: 'Ausentes' },
+  { value: 'atrasados', label: 'Atrasados (entrada)' },
+  { value: 'falta', label: 'Falta (sem entrada após tolerância)' },
+  { value: 'ferias', label: 'Férias' },
+  { value: 'dispensados', label: 'Dispensados (atestado / ausência aprovada)' },
+];
+
 export default function Dashboard() {
   const [resumo, setResumo] = useState(null);
   const [registros, setRegistros] = useState([]);
@@ -27,6 +37,7 @@ export default function Dashboard() {
   const [pagina, setPagina] = useState(1);
   const [limite, setLimite] = useState(10);
   const [totalRegistros, setTotalRegistros] = useState(0);
+  const [filtroSituacao, setFiltroSituacao] = useState('');
 
   const ORIGEM_LABEL = {
     TOTEM: 'Totem',
@@ -80,6 +91,31 @@ export default function Dashboard() {
     SAIDA: 'Saída',
   };
 
+  const listas = resumo?.listas || {};
+  const linhasSituacao = filtroSituacao ? listas[filtroSituacao] || [] : [];
+
+  function detalheSituacao(row, tipo) {
+    if (!row) return '—';
+    if (tipo === 'atrasados' && row.entradaEm) {
+      const ent = format(new Date(row.entradaEm), 'HH:mm');
+      const esp = row.esperadoEntrada ? `Previsto: ${row.esperadoEntrada}` : '';
+      return `Entrada às ${ent}${esp ? ` — ${esp}` : ''}`;
+    }
+    if ((tipo === 'ausentes' || tipo === 'falta') && row.esperadoEntrada) {
+      return `Entrada prevista (escala): ${row.esperadoEntrada}`;
+    }
+    if (tipo === 'ausentes' || tipo === 'falta') return 'Sem registro de entrada no expediente ou ainda fora do ponto.';
+    if (tipo === 'ferias') {
+      return `Período: ${row.dataInicio} a ${row.dataFim}${row.observacao ? ` — ${row.observacao}` : ''}`;
+    }
+    if (tipo === 'dispensados') {
+      const fim = row.dataFim ? ` a ${row.dataFim}` : '';
+      return `Comprovante: ${row.dataReferencia}${fim}${row.descricao ? ` — ${row.descricao}` : ''}`;
+    }
+    if (tipo === 'presentes') return 'No expediente (entrada ou retorno ativo).';
+    return '—';
+  }
+
   if (carregando) {
     return <Layout><div style={{ display:'flex', justifyContent:'center', padding:'80px' }}><div className="spinner" /></div></Layout>;
   }
@@ -118,6 +154,70 @@ export default function Dashboard() {
         <CardMetrica label="Presentes Agora" valor={resumo?.presentes ?? '-'} cor="var(--verde)" icon="ok" />
         <CardMetrica label="Ausentes" valor={resumo?.ausentes ?? '-'} cor="var(--vermelho)" icon="erro" />
         <CardMetrica label="Registros Hoje" valor={resumo?.registrosHoje ?? '-'} cor="var(--amarelo)" icon="jornadas" />
+      </div>
+
+      {resumo?.contextoDia?.feriado ? (
+        <div className="card" style={{ marginBottom: 20, padding: 16, background: 'rgba(24, 95, 165, 0.08)', border: '1px solid rgba(24, 95, 165, 0.25)' }}>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--cinza-700)' }}>
+            <strong>Feriado:</strong> {resumo.contextoDia.feriado.nome} — presença e ausência não são contabilizadas neste dia. Ainda assim você pode consultar férias e comprovantes aprovados abaixo.
+          </p>
+        </div>
+      ) : null}
+
+      {/* Filtro por situação no dia */}
+      <div className="card" style={{ marginBottom: 20, padding: '18px 20px', maxWidth: '100%', minWidth: 0 }}>
+        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 12px' }}>Situação no dia</h2>
+        <p style={{ fontSize: '13px', color: 'var(--cinza-400)', margin: '0 0 14px', lineHeight: 1.45 }}>
+          Liste colaboradores por ausência, atraso na entrada, falta após o horário previsto (+ tolerância), férias aprovadas ou ausência com comprovante aprovado (dispensado).
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+          <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--cinza-600)' }} htmlFor="dashboard-filtro-situacao">
+            Filtrar por
+          </label>
+          <select
+            id="dashboard-filtro-situacao"
+            className="input"
+            style={{ maxWidth: '100%', width: 'min(420px, 100%)' }}
+            value={filtroSituacao}
+            onChange={(e) => setFiltroSituacao(e.target.value)}
+          >
+            {FILTRO_SITUACAO_OPCOES.map((op) => (
+              <option key={op.value || 'empty'} value={op.value}>
+                {op.value
+                  ? `${op.label} (${(listas[op.value] || []).length})`
+                  : op.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        {!filtroSituacao ? (
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--cinza-400)' }}>Escolha um tipo de situação para exibir a lista.</p>
+        ) : linhasSituacao.length === 0 ? (
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--cinza-400)' }}>Nenhum colaborador nesta categoria no momento.</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="tabela" style={{ minWidth: 520 }}>
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  <th>Cargo / Depto</th>
+                  <th>Detalhes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhasSituacao.map((row) => (
+                  <tr key={`${filtroSituacao}-${row.id}`}>
+                    <td style={{ fontWeight: 500 }}>{row.nome}</td>
+                    <td style={{ fontSize: 13, color: 'var(--cinza-500)' }}>
+                      {[row.cargo, row.departamento].filter(Boolean).join(' · ') || '—'}
+                    </td>
+                    <td style={{ fontSize: 13, lineHeight: 1.45, maxWidth: 360 }}>{detalheSituacao(row, filtroSituacao)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Últimos registros */}

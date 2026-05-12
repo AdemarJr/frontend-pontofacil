@@ -5,6 +5,14 @@ import { Navigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useColaboradorChrome } from '../context/ColaboradorChromeContext';
 import { pontoService, tenantService, escalaService } from '../services/api';
+import {
+  enqueueMeuPontoOffline,
+  flushMeuPontoOfflineQueue,
+  getMeuPontoOfflineQueueCount,
+  isMeuPontoOfflineTransportError,
+  subscribeMeuPontoOfflineQueue,
+} from '../services/meuPontoOfflineQueue';
+import { getMeuPontoDeviceId } from '../utils/meuPontoDeviceId';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
 import { publicUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
@@ -15,6 +23,16 @@ const TIPOS_LABEL = {
   RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', icon: 'dot' },
   SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
+
+function proximoTipoApos(tipo) {
+  const seq = {
+    ENTRADA: 'SAIDA_ALMOCO',
+    SAIDA_ALMOCO: 'RETORNO_ALMOCO',
+    RETORNO_ALMOCO: 'SAIDA',
+    SAIDA: 'ENTRADA',
+  };
+  return seq[tipo] || 'ENTRADA';
+}
 
 /** Texto do lembrete por horário (entrada, intervalos, saída) */
 function textoLembreteHorario(tipo) {
@@ -80,6 +98,7 @@ export default function MeuPonto() {
   const webcamRef = useRef(null);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
+  const [offlinePendentes, setOfflinePendentes] = useState(0);
 
   /** Erro típico de extensão do navegador — não vem do PontoFácil. */
   function humanizarErroRegistro(err) {
@@ -360,6 +379,7 @@ export default function MeuPonto() {
       if (typeof Notification !== 'undefined') setPermissaoNotificacao(Notification.permission);
       if (document.visibilityState === 'visible' && usuario?.id) {
         carregarProximo({ silent: false });
+        flushMeuPontoOfflineQueue().then(() => carregarProximo({ silent: true }));
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
@@ -372,6 +392,31 @@ export default function MeuPonto() {
     const id = setInterval(() => carregarProximo({ silent: false }), 4 * 60 * 1000);
     return () => clearInterval(id);
   }, [usuario?.id, carregarProximo]);
+
+  /** Contador da fila offline (IndexedDB). */
+  useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return undefined;
+    return subscribeMeuPontoOfflineQueue(setOfflinePendentes);
+  }, [usuario?.id, usuario?.role]);
+
+  /** Envia fila quando voltar a rede ou periodicamente. */
+  useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return undefined;
+    const runFlush = () => {
+      flushMeuPontoOfflineQueue().then(() => {
+        carregarProximo({ silent: true });
+      });
+    };
+    window.addEventListener('online', runFlush);
+    const id = setInterval(runFlush, 60 * 1000);
+    getMeuPontoOfflineQueueCount().then((n) => {
+      if (n > 0) runFlush();
+    });
+    return () => {
+      window.removeEventListener('online', runFlush);
+      clearInterval(id);
+    };
+  }, [usuario?.id, usuario?.role, carregarProximo]);
 
   async function salvarJustificativa() {
     if (!justificarModal?.dia || !justificarModal?.tipo) return;
@@ -438,6 +483,7 @@ export default function MeuPonto() {
   const enviarRegistro = useCallback(
     async (fotoBase64, opts = {}) => {
       setCarregando(true);
+      let irParaFilaOffline = null;
       try {
         const tipoParaEnviar = opts.tipo || proximoTipo;
         const forcarNovoTurno = opts.forcarNovoTurno === true;
@@ -481,15 +527,57 @@ export default function MeuPonto() {
           }
         }
 
+        const clientRequestId =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `pf-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        const dataHoraCapturada = new Date().toISOString();
+        const deviceId = getMeuPontoDeviceId();
+
         const payload = {
           tipo: tipoParaEnviar,
           latitude,
           longitude,
           origem: 'APP_INDIVIDUAL',
           fotoBase64,
+          deviceId,
+          clientRequestId,
+          dataHoraCapturada,
           ...(forcarNovoTurno ? { forcarNovoTurno: true } : {}),
           ...(confirmarRegistroCurto ? { confirmarRegistroCurto: true } : {}),
         };
+
+        const queueItem = {
+          clientRequestId,
+          dataHoraCapturada,
+          payload: { ...payload },
+        };
+
+        irParaFilaOffline = async () => {
+          await enqueueMeuPontoOffline(queueItem);
+          lastSelfRegistroAt.current = Date.now();
+          setProximoTipo(proximoTipoApos(tipoParaEnviar));
+          proximoTipoRef.current = proximoTipoApos(tipoParaEnviar);
+          setMensagem(
+            `Ponto guardado neste aparelho (${TIPOS_LABEL[tipoParaEnviar]?.label}).\n\nSerá enviado automaticamente quando houver internet.`
+          );
+          setEtapa('sucesso');
+          setTimeout(() => {
+            setEtapa('confirmar');
+            carregarProximo({ silent: true });
+          }, 2800);
+        };
+
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          try {
+            await irParaFilaOffline();
+          } catch (e) {
+            setMensagem(e?.message || 'Não foi possível guardar o registro neste aparelho.');
+            setEtapa('erro');
+            setTimeout(() => setEtapa('confirmar'), 4000);
+          }
+          return;
+        }
 
         const res = await pontoService.registrar(payload);
         const aviso = res?.data?.aviso;
@@ -526,6 +614,16 @@ export default function MeuPonto() {
           if (ok) {
             return await enviarRegistro(fotoBase64, { ...opts, confirmarRegistroCurto: true });
           }
+        }
+        if (isMeuPontoOfflineTransportError(err) && irParaFilaOffline) {
+          try {
+            await irParaFilaOffline();
+          } catch (e) {
+            setMensagem(e?.message || 'Sem conexão. Não foi possível guardar neste aparelho.');
+            setEtapa('erro');
+            setTimeout(() => setEtapa('confirmar'), 4000);
+          }
+          return;
         }
         const msg = humanizarErroRegistro(err);
         setMensagem(msg);
@@ -705,6 +803,51 @@ export default function MeuPonto() {
           }}
         >
           Cerca virtual ativa: o ponto só é aceito na área permitida pela empresa.
+        </p>
+      ) : null}
+      {aba === 'bater' && offlinePendentes > 0 ? (
+        <div
+          style={{
+            marginTop: 10,
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: 'rgba(251, 191, 36, 0.12)',
+            border: '1px solid rgba(251, 191, 36, 0.35)',
+            maxWidth: 380,
+            width: '100%',
+          }}
+        >
+          <p style={{ color: '#fde68a', fontSize: 13, margin: 0, lineHeight: 1.45, textAlign: 'center' }}>
+            {offlinePendentes === 1
+              ? '1 registro guardado neste aparelho aguardando envio.'
+              : `${offlinePendentes} registros guardados neste aparelho aguardando envio.`}{' '}
+            Com internet, o envio é feito automaticamente; com cerca virtual, você precisa estar na área permitida.
+          </p>
+          <button
+            type="button"
+            className="btn btn-secondary btn-full"
+            style={{ marginTop: 10, fontSize: 13 }}
+            onClick={() => {
+              flushMeuPontoOfflineQueue().then(() => carregarProximo({ silent: true }));
+            }}
+          >
+            Tentar enviar agora
+          </button>
+        </div>
+      ) : null}
+      {aba === 'bater' && typeof navigator !== 'undefined' && !navigator.onLine ? (
+        <p
+          style={{
+            color: '#fde047',
+            fontSize: 12,
+            textAlign: 'center',
+            maxWidth: 360,
+            margin: '10px 0 0',
+            lineHeight: 1.45,
+            padding: '0 8px',
+          }}
+        >
+          Sem conexão no momento: o ponto pode ser guardado neste aparelho e enviado depois.
         </p>
       ) : null}
       {aba === 'bater' ? (
