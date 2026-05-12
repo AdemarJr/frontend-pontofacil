@@ -13,8 +13,8 @@ const WA_TEXT = encodeURIComponent(
 );
 const WA_HREF = `https://wa.me/${WA_NUMBER}?text=${WA_TEXT}`;
 
-/** Logo horizontal (fundo escuro) — `public/logo-landing.png` */
-const LOGO_LANDING = '/logo-landing.png';
+/** Logo no header (fundo claro) — `public/logo-horizontal.png`; rodapé usa filtro claro em CSS */
+const LOGO_LANDING = '/logo-horizontal.png';
 
 /** Ordem e tamanhos otimizados para o grid Bento (desktop). */
 const FEATURES = [
