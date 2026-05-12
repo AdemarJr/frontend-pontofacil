@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { publicUrl } from '../utils/branding';
 import { trackLandingPageView } from '../utils/googleAnalyticsLanding';
 import AppIcon from '../components/AppIcon';
+import LandingSeo from '../components/seo/LandingSeo';
 import '../styles/landing.css';
 
 const WA_NUMBER = '5592994764780';
@@ -78,6 +79,7 @@ export default function Landing() {
 
   return (
     <div className="landing">
+      <LandingSeo />
       <header className="landing-header">
         <div className="landing-header-inner">
           <Link to="/" className="landing-logo" aria-label="Ponto Fácil — início">
