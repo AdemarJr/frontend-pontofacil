@@ -1,6 +1,8 @@
 // src/App.js
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { publicUrl } from './utils/branding';
 import './styles/global.css';
 import './styles/tour-overrides.css';
 
@@ -88,10 +90,23 @@ function SupabaseRecoveryRedirect() {
   return null;
 }
 
+/** Manifest correto por rota: Totem instalável abre em /totem; demais fluxos usam o manifest padrão. */
+function ManifestPorRota() {
+  const { pathname } = useLocation();
+  const totem = pathname === '/totem' || pathname.startsWith('/totem/');
+  const href = publicUrl(totem ? '/manifest-totem.json' : '/manifest.json');
+  return (
+    <Helmet>
+      <link rel="manifest" href={href} key={href} />
+    </Helmet>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ManifestPorRota />
         <SupabaseRecoveryRedirect />
         <Routes>
           <Route path="/" element={<RedirecionarInicio />} />
@@ -111,11 +126,7 @@ export default function App() {
             <Route path="minhas-ferias" element={<MinhasFerias />} />
             <Route path="fechamento" element={<FechamentoMes />} />
           </Route>
-          <Route path="/totem" element={
-            <RotaProtegida>
-              <Totem />
-            </RotaProtegida>
-          } />
+          <Route path="/totem" element={<Totem />} />
 
           {/* Dashboard do gerente */}
           <Route path="/dashboard" element={
