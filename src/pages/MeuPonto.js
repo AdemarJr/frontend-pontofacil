@@ -258,8 +258,11 @@ export default function MeuPonto() {
         setProximoTipo(novo);
         const pend = data.pendenciaCheckin || null;
         setPendenciaCheckin(pend);
+        // Modal só para turno aberto há muitas horas no MESMO dia (não bloqueia virada de dia).
         if (!silent && pend?.aberta) {
           setPendenciaModalAberto(true);
+        } else {
+          setPendenciaModalAberto(false);
         }
         setEtapa('confirmar');
 
@@ -316,6 +319,12 @@ export default function MeuPonto() {
   useEffect(() => {
     carregarPendencias();
   }, [carregarPendencias]);
+
+  useEffect(() => {
+    if (pendenciaCheckin?.diaAnteriorEmAberto) {
+      carregarPendencias();
+    }
+  }, [pendenciaCheckin?.diaAnteriorEmAberto, carregarPendencias]);
 
   /** Tour guiado na tela principal do Meu ponto (primeira visita) */
   useEffect(() => {
@@ -805,6 +814,28 @@ export default function MeuPonto() {
           Cerca virtual ativa: o ponto só é aceito na área permitida pela empresa.
         </p>
       ) : null}
+      {aba === 'bater' && pendenciaCheckin?.diaAnteriorEmAberto ? (
+        <div
+          style={{
+            marginTop: 10,
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
+            maxWidth: 380,
+            width: '100%',
+          }}
+        >
+          <p style={{ margin: 0, color: '#bfdbfe', fontSize: 13, lineHeight: 1.5 }}>
+            O dia anterior ficou com batidas em aberto. Registre o ponto de <strong>hoje</strong> normalmente abaixo.
+            Batidas faltantes do dia anterior estão em{' '}
+            <Link to="/meu-ponto?tab=pendencias" style={{ color: '#93c5fd', fontWeight: 700 }}>
+              Pendências
+            </Link>{' '}
+            para justificar ou solicitar ajuste ao RH.
+          </p>
+        </div>
+      ) : null}
       {aba === 'bater' && offlinePendentes > 0 ? (
         <div
           style={{
@@ -1179,45 +1210,47 @@ export default function MeuPonto() {
             onClick={(e) => e.stopPropagation()}
           >
             <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 800 }}>
-              Identificamos um registro em aberto
+              Turno de hoje ainda em aberto
             </p>
             <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
-              Seu último registro foi há aproximadamente <b>{pendenciaCheckin.horasAberto}h</b>. Isso pode indicar que a saída não foi registrada.
+              Seu último registro foi há aproximadamente <b>{pendenciaCheckin.horasAberto}h</b> e pode faltar a saída de hoje.
             </p>
             <p style={{ marginTop: 10, marginBottom: 0, color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
-              Você pode registrar a saída agora (se fizer sentido) ou iniciar um novo turno e o sistema sinaliza pendência para ajuste pelo gestor/RH.
+              {pendenciaCheckin.sugerirNovoTurno
+                ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
+                : 'Registre a próxima batida do dia de hoje na sequência normal.'}
             </p>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-              {!pendenciaCheckin.sugerirNovoTurno ? (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={carregando}
-                  onClick={() => {
-                    setPendenciaModalAberto(false);
-                    setRegistroOpts(null);
-                    if (fotoObrigatoria) setEtapa('camera');
-                    else enviarRegistro(null, {});
-                  }}
-                >
-                  Registrar saída agora
-                </button>
-              ) : null}
-
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-primary"
                 disabled={carregando}
                 onClick={() => {
                   setPendenciaModalAberto(false);
-                  setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
+                  setRegistroOpts(null);
                   if (fotoObrigatoria) setEtapa('camera');
-                  else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
+                  else enviarRegistro(null, {});
                 }}
               >
-                Iniciar novo turno
+                Continuar ponto de hoje
               </button>
+
+              {pendenciaCheckin.sugerirNovoTurno ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={carregando}
+                  onClick={() => {
+                    setPendenciaModalAberto(false);
+                    setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
+                    if (fotoObrigatoria) setEtapa('camera');
+                    else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
+                  }}
+                >
+                  Nova entrada (encerrar turno)
+                </button>
+              ) : null}
 
               <button
                 type="button"
