@@ -1,7 +1,14 @@
 // Registro de ponto pelo celular (login e-mail + mesmas regras: geofence, foto, etc.)
 import { useState, useRef, useEffect, useCallback } from 'react';
-import Webcam from 'react-webcam';
 import { Navigate, useSearchParams, Link } from 'react-router-dom';
+import MeuPontoCamera, { pararStreamCamera } from '../components/meuPonto/MeuPontoCamera';
+import {
+  obterPosicaoAtual,
+  preaquecerDispositivos,
+  capturarFotoDoStream,
+  obterStreamCamera,
+  statusPermissoesDispositivo,
+} from '../utils/meuPontoDeviceAccess';
 import { useAuth } from '../hooks/useAuth';
 import { useColaboradorChrome } from '../context/ColaboradorChromeContext';
 import { pontoService, tenantService, escalaService } from '../services/api';
@@ -95,7 +102,8 @@ export default function MeuPonto() {
   const [justificarModal, setJustificarModal] = useState(null); // { dia, tipo }
   const [justificarForm, setJustificarForm] = useState({ dataHoraSugerida: '', justificativa: '' });
   const [salvandoJustificativa, setSalvandoJustificativa] = useState(false);
-  const webcamRef = useRef(null);
+  const [permDispositivo, setPermDispositivo] = useState({ localizacao: 'unknown', camera: 'unknown' });
+  const [liberandoPermissoes, setLiberandoPermissoes] = useState(false);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
   const [offlinePendentes, setOfflinePendentes] = useState(0);
@@ -357,6 +365,64 @@ export default function MeuPonto() {
       });
   }, [usuario?.id, usuario?.role, usuario?.tenant?.geofenceAtivo, usuario?.tenant?.fotoObrigatoria]);
 
+  const fotoObrigatoriaCfg = tenantCfg ? tenantCfg.fotoObrigatoria : usuario?.tenant?.fotoObrigatoria !== false;
+  const cercaVirtualCfg = tenantCfg?.geofenceAtivo ?? usuario?.tenant?.geofenceAtivo;
+
+  useEffect(() => {
+    statusPermissoesDispositivo().then(setPermDispositivo);
+    if (!navigator?.permissions?.query) return undefined;
+    let geoPerm;
+    let camPerm;
+    (async () => {
+      try {
+        geoPerm = await navigator.permissions.query({ name: 'geolocation' });
+        geoPerm.onchange = () => statusPermissoesDispositivo().then(setPermDispositivo);
+      } catch {
+        /* ignore */
+      }
+      try {
+        camPerm = await navigator.permissions.query({ name: 'camera' });
+        camPerm.onchange = () => statusPermissoesDispositivo().then(setPermDispositivo);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      if (geoPerm) geoPerm.onchange = null;
+      if (camPerm) camPerm.onchange = null;
+    };
+  }, []);
+
+  /** Pré-autoriza GPS/câmera ao abrir a aba Bater ponto (permissão persiste no PWA). */
+  useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR' || aba !== 'bater') return;
+    preaquecerDispositivos({ precisaGps: true, precisaCamera: Boolean(fotoObrigatoriaCfg) })
+      .then(() => {
+        localStorage.setItem('meuPontoPermissoesOk', '1');
+        return statusPermissoesDispositivo();
+      })
+      .then((st) => {
+        if (st) setPermDispositivo(st);
+      })
+      .catch(() => {});
+  }, [usuario?.id, usuario?.role, aba, fotoObrigatoriaCfg]);
+
+  useEffect(() => {
+    return () => pararStreamCamera();
+  }, []);
+
+  async function liberarPermissoesDispositivo() {
+    setLiberandoPermissoes(true);
+    try {
+      await preaquecerDispositivos({ precisaGps: true, precisaCamera: Boolean(fotoObrigatoriaCfg) });
+      localStorage.setItem('meuPontoPermissoesOk', '1');
+      const st = await statusPermissoesDispositivo();
+      setPermDispositivo(st);
+    } finally {
+      setLiberandoPermissoes(false);
+    }
+  }
+
   // Aviso quando a escala foi criada/atualizada para o colaborador
   useEffect(() => {
     if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
@@ -502,35 +568,27 @@ export default function MeuPonto() {
         let longitude = null;
 
         if (cercaAtiva) {
-          if (typeof navigator === 'undefined' || !navigator.geolocation) {
-            setMensagem('Este dispositivo não oferece GPS. Não é possível registrar com cerca virtual ativa.');
-            setEtapa('erro');
-            setTimeout(() => setEtapa('confirmar'), 4000);
-            return;
-          }
           try {
-            const pos = await new Promise((res, rej) => {
-              navigator.geolocation.getCurrentPosition(res, rej, {
-                timeout: 15000,
-                enableHighAccuracy: true,
-                maximumAge: 0,
-              });
-            });
-            latitude = pos.coords.latitude;
-            longitude = pos.coords.longitude;
+            const pos = await obterPosicaoAtual({ obrigatorio: true, cercaVirtual: true });
+            latitude = pos.latitude;
+            longitude = pos.longitude;
           } catch (geoErr) {
-            setMensagem(mensagemErroGeolocalizacao(geoErr));
+            if (geoErr?.code === 'GEO_UNAVAILABLE') {
+              setMensagem('Este dispositivo não oferece GPS. Não é possível registrar com cerca virtual ativa.');
+            } else {
+              setMensagem(mensagemErroGeolocalizacao(geoErr));
+            }
             setEtapa('erro');
             setTimeout(() => setEtapa('confirmar'), 4500);
             return;
           }
         } else {
           try {
-            const pos = await new Promise((res, rej) =>
-              navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, enableHighAccuracy: true })
-            );
-            latitude = pos.coords.latitude;
-            longitude = pos.coords.longitude;
+            const pos = await obterPosicaoAtual({ obrigatorio: false, cercaVirtual: false });
+            if (pos) {
+              latitude = pos.latitude;
+              longitude = pos.longitude;
+            }
           } catch {
             /* sem cerca: localização opcional */
           }
@@ -655,8 +713,16 @@ export default function MeuPonto() {
 
   const registrarFoto = useCallback(async () => {
     let fotoBase64 = null;
-    if (webcamRef.current) {
-      fotoBase64 = webcamRef.current.getScreenshot();
+    try {
+      const stream = await obterStreamCamera();
+      fotoBase64 = await capturarFotoDoStream(stream);
+    } catch {
+      setMensagem(
+        'Não foi possível usar a câmera. Toque em "Liberar câmera e localização" ou permita o acesso nas configurações do aparelho.'
+      );
+      setEtapa('erro');
+      setTimeout(() => setEtapa('camera'), 3500);
+      return;
     }
     const opts = registroOpts || {};
     setRegistroOpts(null);
@@ -679,8 +745,15 @@ export default function MeuPonto() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const fotoObrigatoria = tenantCfg ? tenantCfg.fotoObrigatoria : usuario.tenant?.fotoObrigatoria !== false;
-  const cercaVirtualAtiva = tenantCfg?.geofenceAtivo ?? usuario?.tenant?.geofenceAtivo;
+  const fotoObrigatoria = fotoObrigatoriaCfg;
+  const cercaVirtualAtiva = cercaVirtualCfg;
+
+  const permissoesNegadas =
+    permDispositivo.localizacao === 'denied' || permDispositivo.camera === 'denied';
+  const mostrarCardPermissoes =
+    aba === 'bater' &&
+    etapa === 'confirmar' &&
+    localStorage.getItem('meuPontoPermissoesOk') !== '1';
 
   if (etapa === 'carregando') {
     return (
@@ -722,14 +795,7 @@ export default function MeuPonto() {
           {tipoInfo?.label}
         </h2>
         <div style={{ borderRadius: 16, overflow: 'hidden', border: '3px solid var(--verde)', width: '100%', maxWidth: 400, aspectRatio: '4/3' }}>
-          <Webcam
-            ref={webcamRef}
-            audio={false}
-            screenshotFormat="image/jpeg"
-            screenshotQuality={0.72}
-            videoConstraints={{ facingMode: 'user', width: 640, height: 480 }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          <MeuPontoCamera />
         </div>
         <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 400 }}>
           <button type="button" className="btn btn-secondary btn-full btn-lg" onClick={() => setEtapa('confirmar')}>
@@ -798,6 +864,40 @@ export default function MeuPonto() {
         >
           {usuario.nome}
         </p>
+      ) : null}
+      {mostrarCardPermissoes ? (
+        <div
+          style={{
+            marginTop: 10,
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: 'rgba(251, 191, 36, 0.12)',
+            border: '1px solid rgba(251, 191, 36, 0.35)',
+            maxWidth: 380,
+            width: '100%',
+          }}
+        >
+          <p style={{ margin: 0, color: '#fde68a', fontSize: 13, lineHeight: 1.5 }}>
+            {permissoesNegadas
+              ? 'O acesso foi bloqueado. Libere localização e câmera nas configurações do aparelho ou do navegador.'
+              : (
+                <>
+                  Autorize <strong>localização</strong>
+                  {fotoObrigatoria ? ' e <strong>câmera</strong>' : ''} uma vez neste aparelho. Nas próximas batidas o
+                  app reutiliza o acesso, sem pedir de novo.
+                </>
+              )}
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ marginTop: 12, width: '100%' }}
+            disabled={liberandoPermissoes}
+            onClick={liberarPermissoesDispositivo}
+          >
+            {liberandoPermissoes ? 'Aguarde…' : 'Liberar câmera e localização'}
+          </button>
+        </div>
       ) : null}
       {aba === 'bater' && cercaVirtualAtiva ? (
         <p
