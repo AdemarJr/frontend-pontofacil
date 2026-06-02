@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import AppIcon from '../components/AppIcon';
-import { relatorioService, usuarioService } from '../services/api';
+import { relatorioService, usuarioService, comprovanteAusenciaService } from '../services/api';
 import { runRelatoriosTour } from '../tours/relatoriosTour';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,6 +22,30 @@ function fmtMinutos(m) {
   return `${sign}${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
 }
 const TIPOS_COR = { ENTRADA:'var(--verde)', SAIDA_ALMOCO:'var(--amarelo)', RETORNO_ALMOCO:'var(--azul)', SAIDA:'var(--vermelho)' };
+
+const STATUS_DIA_COR = {
+  TRABALHADO: { bg: 'rgba(29,158,117,0.14)', fg: 'var(--verde-escuro)' },
+  PARCIAL: { bg: 'rgba(245,158,11,0.16)', fg: '#92400e' },
+  FALTA: { bg: 'rgba(226,75,74,0.14)', fg: 'var(--vermelho)' },
+  FOLGA: { bg: 'rgba(99,102,241,0.16)', fg: '#4338ca' },
+  JUSTIFICADA: { bg: 'rgba(14,165,233,0.16)', fg: '#0369a1' },
+  FERIAS: { bg: 'rgba(16,185,129,0.16)', fg: 'var(--verde-escuro)' },
+  FERIADO: { bg: 'rgba(59,130,246,0.16)', fg: 'var(--azul)' },
+  ANTES_ADMISSAO: { bg: 'rgba(148,163,184,0.18)', fg: 'var(--cinza-700)' },
+  POS_DEMISSAO: { bg: 'rgba(148,163,184,0.18)', fg: 'var(--cinza-700)' },
+  EM_ABERTO: { bg: 'rgba(148,163,184,0.16)', fg: 'var(--cinza-400)' },
+  FUTURO: { bg: 'rgba(148,163,184,0.10)', fg: 'var(--cinza-400)' },
+};
+
+function StatusDiaBadge({ status, label }) {
+  if (!status) return null;
+  const c = STATUS_DIA_COR[status] || { bg: 'rgba(148,163,184,0.16)', fg: 'var(--cinza-400)' };
+  return (
+    <span className="badge" style={{ background: c.bg, color: c.fg, fontSize: 10, fontWeight: 800, padding: '2px 8px' }}>
+      {label || status}
+    </span>
+  );
+}
 
 function BadgeFechamento({ fechamento }) {
   const st = fechamento?.status;
@@ -92,11 +116,15 @@ export default function Relatorios() {
   const [exportando, setExportando] = useState(false);
   const [solicitandoAssinatura, setSolicitandoAssinatura] = useState(false);
   const [abertos, setAbertos] = useState(() => ({}));
-  const [bancoResumo, setBancoResumo] = useState(null);
   const [bancoPage, setBancoPage] = useState(1);
   const [bancoPageSize, setBancoPageSize] = useState(10);
   const [espelhoPage, setEspelhoPage] = useState(1);
   const [espelhoPageSize, setEspelhoPageSize] = useState(5);
+  const [showFolgaForm, setShowFolgaForm] = useState(false);
+  const [folgaInicio, setFolgaInicio] = useState('');
+  const [folgaFim, setFolgaFim] = useState('');
+  const [folgaDescricao, setFolgaDescricao] = useState('');
+  const [salvandoFolga, setSalvandoFolga] = useState(false);
 
   useEffect(() => {
     usuarioService.listar().then(({ data }) => setUsuarios(data));
@@ -115,17 +143,6 @@ export default function Relatorios() {
     setEspelhoPage(1);
   }, [mes, ano, usuarioFiltro]);
 
-  useEffect(() => {
-    relatorioService
-      .bancoHorasResumo({
-        mes,
-        ano,
-        ...(usuarioFiltro && { usuarioId: usuarioFiltro }),
-      })
-      .then(({ data }) => setBancoResumo(data))
-      .catch(() => setBancoResumo(null));
-  }, [mes, ano, usuarioFiltro]);
-
   async function buscar() {
     setCarregando(true);
     try {
@@ -137,7 +154,22 @@ export default function Relatorios() {
     } finally { setCarregando(false); }
   }
 
-  const bancoRows = bancoResumo?.resumo || [];
+  const bancoRows = useMemo(
+    () =>
+      (relatorio || []).map((r) => ({
+        usuario: r.usuario,
+        totalHoras: r.totalHoras,
+        totalEsperadoMin: r.totalEsperadoMin,
+        saldoMesMin: r.saldoMesMin,
+        saldoMes: r.saldoMes,
+        horaExtraMes: r.horaExtraMes,
+        deficitMesMin: r.deficitMesMin,
+        diasResumo: r.resumo,
+      })),
+    [relatorio]
+  );
+  const BANCO_OBS =
+    'Saldo = trabalhado − esperado. O esperado conta apenas dias úteis devidos; folgas, feriados, férias, faltas justificadas e dias futuros têm esperado 0.';
   const { pageItems: bancoPagina, total: totalBancoRows, safePage: bancoSafePage } = useMemo(
     () => slicePaged(bancoRows, bancoPage, bancoPageSize),
     [bancoRows, bancoPage, bancoPageSize]
@@ -196,6 +228,40 @@ export default function Relatorios() {
       alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar a solicitação.');
     } finally {
       setSolicitandoAssinatura(false);
+    }
+  }
+
+  async function registrarFolga() {
+    if (!usuarioFiltro) {
+      alert('Selecione um colaborador no filtro para registrar a folga.');
+      return;
+    }
+    if (!folgaInicio) {
+      alert('Informe a data da folga.');
+      return;
+    }
+    if (folgaFim && folgaFim < folgaInicio) {
+      alert('A data final não pode ser antes da inicial.');
+      return;
+    }
+    setSalvandoFolga(true);
+    try {
+      await comprovanteAusenciaService.registrarFolga({
+        usuarioId: usuarioFiltro,
+        dataReferencia: folgaInicio,
+        ...(folgaFim ? { dataFim: folgaFim } : {}),
+        ...(folgaDescricao ? { descricao: folgaDescricao } : {}),
+      });
+      setShowFolgaForm(false);
+      setFolgaInicio('');
+      setFolgaFim('');
+      setFolgaDescricao('');
+      buscar();
+      alert('Folga registrada. Esse(s) dia(s) deixam de contar como falta no espelho.');
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar a folga.');
+    } finally {
+      setSalvandoFolga(false);
     }
   }
 
@@ -429,6 +495,15 @@ export default function Relatorios() {
             </button>
             <button
               type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowFolgaForm((v) => !v)}
+              disabled={carregando}
+              title="Marcar um dia (ou período) como folga para este colaborador — não conta como falta"
+            >
+              {showFolgaForm ? 'Cancelar folga' : '🌴 Registrar folga'}
+            </button>
+            <button
+              type="button"
               className="btn btn-primary"
               onClick={solicitarAssinaturaEspelho}
               disabled={solicitandoAssinatura || carregando}
@@ -455,15 +530,57 @@ export default function Relatorios() {
               Ver detalhes
             </button>
           </div>
+          {showFolgaForm ? (
+            <div
+              style={{
+                flexBasis: '100%',
+                marginTop: 12,
+                paddingTop: 12,
+                borderTop: '1px solid var(--cinza-200)',
+                display: 'flex',
+                gap: 12,
+                flexWrap: 'wrap',
+                alignItems: 'flex-end',
+              }}
+            >
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--cinza-400)', marginBottom: 6 }}>
+                  DATA DA FOLGA
+                </label>
+                <input type="date" className="input" value={folgaInicio} onChange={(e) => setFolgaInicio(e.target.value)} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--cinza-400)', marginBottom: 6 }}>
+                  ATÉ (opcional)
+                </label>
+                <input type="date" className="input" value={folgaFim} onChange={(e) => setFolgaFim(e.target.value)} />
+              </div>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--cinza-400)', marginBottom: 6 }}>
+                  MOTIVO (opcional)
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Ex.: folga compensatória, banco de horas…"
+                  value={folgaDescricao}
+                  onChange={(e) => setFolgaDescricao(e.target.value)}
+                />
+              </div>
+              <button type="button" className="btn btn-primary" onClick={registrarFolga} disabled={salvandoFolga}>
+                {salvandoFolga ? 'Salvando…' : 'Salvar folga'}
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
       <div id="tour-rel-conteudo">
-      {bancoResumo?.resumo?.length > 0 && (
+      {bancoRows.length > 0 && (
         <div className="card" style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Banco de horas e hora extra (mês)</h2>
           <p style={{ fontSize: '12px', color: 'var(--cinza-400)', marginBottom: '12px' }}>
-            {bancoResumo.obs}
+            {BANCO_OBS}
           </p>
           <div className="table-scroll">
             <table className="tabela" style={{ fontSize: '13px', minWidth: 520 }}>
@@ -475,6 +592,9 @@ export default function Relatorios() {
                   <th>Saldo</th>
                   <th>Hora extra (max 0)</th>
                   <th>Déficit</th>
+                  <th>Faltas</th>
+                  <th>Folgas</th>
+                  <th>Justif.</th>
                 </tr>
               </thead>
               <tbody>
@@ -488,6 +608,9 @@ export default function Relatorios() {
                     </td>
                     <td style={{ fontFamily: 'monospace' }}>{row.horaExtraMes}</td>
                     <td style={{ fontFamily: 'monospace', color: 'var(--cinza-400)' }}>{fmtMinutos(row.deficitMesMin)}</td>
+                    <td style={{ fontFamily: 'monospace', color: row.diasResumo?.faltas ? 'var(--vermelho)' : 'var(--cinza-400)' }}>{row.diasResumo?.faltas ?? 0}</td>
+                    <td style={{ fontFamily: 'monospace', color: '#4338ca' }}>{row.diasResumo?.folgas ?? 0}</td>
+                    <td style={{ fontFamily: 'monospace', color: '#0369a1' }}>{row.diasResumo?.justificadas ?? 0}</td>
                   </tr>
                 ))}
               </tbody>
@@ -577,6 +700,39 @@ export default function Relatorios() {
           </div>
           </button>
 
+          {/* Resumo do mês (contagem por status) */}
+          {r.resumo ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+              {[
+                { label: 'Trabalhados', val: r.resumo.trabalhados, status: 'TRABALHADO' },
+                { label: 'Faltas', val: r.resumo.faltas, status: 'FALTA' },
+                { label: 'Folgas', val: r.resumo.folgas, status: 'FOLGA' },
+                { label: 'Justificadas', val: r.resumo.justificadas, status: 'JUSTIFICADA' },
+                { label: 'Férias', val: r.resumo.ferias, status: 'FERIAS' },
+                { label: 'Feriados', val: r.resumo.feriados, status: 'FERIADO' },
+              ]
+                .filter((c) => c.val > 0)
+                .map((c) => {
+                  const cor = STATUS_DIA_COR[c.status] || { bg: 'rgba(148,163,184,0.16)', fg: 'var(--cinza-400)' };
+                  return (
+                    <span
+                      key={c.label}
+                      style={{
+                        background: cor.bg,
+                        color: cor.fg,
+                        borderRadius: 999,
+                        padding: '4px 12px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {c.label}: {c.val}
+                    </span>
+                  );
+                })}
+            </div>
+          ) : null}
+
           {/* Dias */}
           {(abertos?.[r.usuario.id] || (usuarioFiltro && String(r.usuario?.id) === String(usuarioFiltro))) ? (
             Object.entries(r.diasTrabalhados).map(([dia, dados]) => (
@@ -586,19 +742,15 @@ export default function Relatorios() {
                   {format(new Date(dia + 'T12:00:00'), "dd/MM - EEE", { locale:ptBR })}
                 </span>
                 <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
+                <StatusDiaBadge status={dados.statusDia} label={dados.statusLabel} />
                 {dados?.contextoDia?.feriado?.nome && dados?.contextoDia?.feriado?.suspendeExpediente !== false ? (
                   <span className="badge" style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--azul)', fontSize: 10 }}>
-                    Feriado: {dados.contextoDia.feriado.nome}
+                    {dados.contextoDia.feriado.nome}
                   </span>
                 ) : null}
-                {dados?.contextoDia?.ferias ? (
-                  <span className="badge" style={{ background: 'rgba(16,185,129,0.15)', color: 'var(--verde-escuro)', fontSize: 10 }}>
-                    Férias
-                  </span>
-                ) : null}
-                {dados?.contextoDia?.suspendeExpediente && !dados?.contextoDia?.feriado && !dados?.contextoDia?.ferias ? (
-                  <span className="badge" style={{ background: 'rgba(148,163,184,0.18)', color: 'var(--cinza-700)', fontSize: 10 }}>
-                    Sem expediente
+                {dados?.contextoDia?.ausencia?.descricao ? (
+                  <span style={{ fontSize: 11, color: 'var(--cinza-400)', fontStyle: 'italic' }}>
+                    {dados.contextoDia.ausencia.descricao}
                   </span>
                 ) : null}
               </div>

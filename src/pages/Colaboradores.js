@@ -94,7 +94,7 @@ export default function Colaboradores() {
   }
 
   function abrirCriar() {
-    setForm({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR', localRegistroId:'', dataAdmissao:'', dataDemissao:'' });
+    setForm({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR', localRegistroId:'', isentoGeofence: false, dataAdmissao:'', dataDemissao:'' });
     setErro('');
     setModal('criar');
   }
@@ -118,6 +118,7 @@ export default function Colaboradores() {
       role:u.role,
       ativo:u.ativo,
       localRegistroId: u.localRegistroId || '',
+      isentoGeofence: Boolean(u.isentoGeofence),
       dataAdmissao: toLocalDate(u.dataAdmissao),
       dataDemissao: toLocalDate(u.dataDemissao),
     });
@@ -414,26 +415,49 @@ export default function Colaboradores() {
                 </select>
               </div>
 
-              {form.role === 'COLABORADOR' && locais.length > 0 && (
-                <div>
-                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>
-                    Local permitido (cerca virtual)
+              {form.role === 'COLABORADOR' && (
+                <div style={{ display: 'grid', gap: 14 }}>
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.isentoGeofence)}
+                      onChange={(e) => setForm((p) => ({ ...p, isentoGeofence: e.target.checked }))}
+                      style={{ width: 18, height: 18, marginTop: 2, accentColor: 'var(--verde)' }}
+                    />
+                    <span>
+                      <span style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--cinza-700)' }}>
+                        Trabalho remoto — isento de cerca virtual
+                      </span>
+                      <span style={{ display: 'block', fontSize: 12, color: 'var(--cinza-400)', marginTop: 4, lineHeight: 1.45 }}>
+                        Pode bater ponto de qualquer lugar (Meu Ponto), sem validar GPS. Use para quem trabalha fora do escritório
+                        ou em home office móvel.
+                      </span>
+                    </span>
                   </label>
-                  <select
-                    className="input"
-                    value={form.localRegistroId || ''}
-                    onChange={(e) => setForm((p) => ({ ...p, localRegistroId: e.target.value }))}
-                  >
-                    <option value="">Qualquer local cadastrado</option>
-                    {locais.filter((l) => l.ativo).map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.nome} ({l.raioMetros}m)
-                      </option>
-                    ))}
-                  </select>
-                  <p style={{ fontSize:'12px', color:'var(--cinza-400)', marginTop:'6px' }}>
-                    Se a cerca virtual estiver ativa, o colaborador só poderá bater ponto dentro deste local.
-                  </p>
+
+                  {!form.isentoGeofence && locais.length > 0 && (
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>
+                        Local permitido (cerca virtual)
+                      </label>
+                      <select
+                        className="input"
+                        value={form.localRegistroId || ''}
+                        onChange={(e) => setForm((p) => ({ ...p, localRegistroId: e.target.value }))}
+                      >
+                        <option value="">Qualquer local cadastrado</option>
+                        {locais.filter((l) => l.ativo).map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.nome} ({l.raioMetros}m)
+                          </option>
+                        ))}
+                      </select>
+                      <p style={{ fontSize:'12px', color:'var(--cinza-400)', marginTop:'6px' }}>
+                        Se a cerca virtual estiver ativa, o colaborador só poderá bater ponto dentro deste local
+                        (ex.: home office fixo — cadastre o endereço em Configurações → Locais).
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
