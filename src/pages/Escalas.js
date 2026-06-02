@@ -3,6 +3,7 @@ import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { escalaService, usuarioService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
+import FolgasCalendario from '../components/FolgasCalendario';
 
 const DIAS = [
   { v: 1, l: 'Seg' },
@@ -152,10 +153,10 @@ export default function Escalas() {
     <Layout>
       <div id="tour-escalas-header" style={{ marginBottom: '28px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
-        <h1 style={{ fontSize: '24px', fontWeight: '700' }}>Jornadas e escalas</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '700' }}>Jornadas, escalas e folgas</h1>
         <p style={{ color: 'var(--cinza-400)', fontSize: '14px', maxWidth: '560px' }}>
-          Defina horário de entrada, intervalo e saída esperados. O espelho de ponto e o resumo de banco de
-          horas usam a escala ativa nos dias da semana marcados.
+          Defina horário de entrada, intervalo e saída esperados, e marque as folgas no calendário. O espelho de
+          ponto e o resumo de banco de horas usam a escala ativa nos dias da semana marcados.
         </p>
         </div>
         <button
@@ -448,6 +449,14 @@ export default function Escalas() {
                 }}
               />
             )}
+          </div>
+
+          <div className="card" style={{ marginTop: '20px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>Folgas de {cols?.nome}</h2>
+            <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 16 }}>
+              Calendário do mês com o status de cada dia. Clique para marcar <strong>folga</strong> ou <strong>justificar falta</strong>.
+            </p>
+            <FolgasCalendario usuarioId={usuarioId} usuarioNome={cols?.nome} />
           </div>
         </>
       )}

@@ -17,7 +17,8 @@ const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  // 30s cobre a 1ª requisição "fria" ao banco remoto (Supabase) sem derrubar a tela.
+  timeout: 30000,
 });
 
 // Injeta token em todas as requisições
@@ -121,6 +122,10 @@ export const comprovanteAusenciaService = {
   listar: (params) => api.get('/comprovantes-ausencia', { params, timeout: 60000 }),
   obter: (id) => api.get(`/comprovantes-ausencia/${id}`, { timeout: 60000 }),
   decidir: (id, dados) => api.put(`/comprovantes-ausencia/${id}/decidir`, dados),
+  /** Admin: registra folga/justificativa (sem documento). dados.tipo = 'FOLGA' | 'JUSTIFICATIVA'. */
+  registrarFolga: (dados) => api.post('/comprovantes-ausencia/folga', dados),
+  /** Admin: remove um marcador manual (folga/justificativa). */
+  removerFolga: (id) => api.delete(`/comprovantes-ausencia/${id}/folga`),
 };
 
 // ---- USUÁRIOS ----
@@ -178,9 +183,10 @@ export const feriasService = {
 
 // ---- RELATÓRIOS ----
 export const relatorioService = {
-  espelhoPonto: (params) => api.get('/relatorios/espelho', { params }),
-  bancoHorasResumo: (params) => api.get('/relatorios/banco-horas', { params }),
-  resumoDia: () => api.get('/relatorios/resumo-dia'),
+  // Espelho/banco reconstroem o mês inteiro e podem demorar na 1ª carga (conexão "fria" do banco).
+  espelhoPonto: (params) => api.get('/relatorios/espelho', { params, timeout: 60000 }),
+  bancoHorasResumo: (params) => api.get('/relatorios/banco-horas', { params, timeout: 60000 }),
+  resumoDia: () => api.get('/relatorios/resumo-dia', { timeout: 45000 }),
   ajustarPonto: (dados) => api.post('/relatorios/ajuste', dados),
   inserirPontoManual: (dados) => api.post('/relatorios/inserir', dados),
   solicitacoesAjuste: (params) => api.get('/relatorios/solicitacoes-ajuste', { params }),
@@ -234,7 +240,7 @@ export const relatorioService = {
 
 // ---- COLABORADOR: ESPELHO + FECHAMENTO ----
 export const colaboradorService = {
-  espelhoMeu: (params) => api.get('/colaborador/espelho', { params }),
+  espelhoMeu: (params) => api.get('/colaborador/espelho', { params, timeout: 60000 }),
   fechamentoStatus: (params) => api.get('/colaborador/espelho/fechamento', { params }),
   fecharMes: (dados) => api.post('/colaborador/espelho/fechamento', dados),
   downloadEspelhoMeuExport: async ({ mes, ano, format }) => {
