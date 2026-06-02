@@ -4,12 +4,36 @@ import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { pontoService, relatorioService, usuarioService } from '../services/api';
+import { comprovanteAusenciaService, pontoService, relatorioService, usuarioService } from '../services/api';
 import { useSearchParams } from 'react-router-dom';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
+
+const STATUS_DIA_COR = {
+  TRABALHADO: { bg: 'rgba(29,158,117,0.14)', fg: 'var(--verde-escuro)' },
+  PARCIAL: { bg: 'rgba(245,158,11,0.16)', fg: '#92400e' },
+  FALTA: { bg: 'rgba(226,75,74,0.14)', fg: 'var(--vermelho)' },
+  FOLGA: { bg: 'rgba(99,102,241,0.16)', fg: '#4338ca' },
+  JUSTIFICADA: { bg: 'rgba(14,165,233,0.16)', fg: '#0369a1' },
+  FERIAS: { bg: 'rgba(16,185,129,0.16)', fg: 'var(--verde-escuro)' },
+  FERIADO: { bg: 'rgba(59,130,246,0.16)', fg: 'var(--azul)' },
+  ANTES_ADMISSAO: { bg: 'rgba(148,163,184,0.18)', fg: 'var(--cinza-700)' },
+  POS_DEMISSAO: { bg: 'rgba(148,163,184,0.18)', fg: 'var(--cinza-700)' },
+  EM_ABERTO: { bg: 'rgba(148,163,184,0.16)', fg: 'var(--cinza-400)' },
+  FUTURO: { bg: 'rgba(148,163,184,0.10)', fg: 'var(--cinza-400)' },
+};
+
+function StatusDiaBadge({ status, label }) {
+  if (!status) return null;
+  const c = STATUS_DIA_COR[status] || { bg: 'rgba(148,163,184,0.16)', fg: 'var(--cinza-400)' };
+  return (
+    <span className="badge" style={{ background: c.bg, color: c.fg, fontSize: 10, fontWeight: 800, padding: '2px 8px' }}>
+      {label || status}
+    </span>
+  );
+}
 
 /** Evita o backend (UTC) interpretar "YYYY-MM-DDTHH:mm" como horário UTC em vez do fuso do gerente. */
 function datetimeLocalParaIsoUtc(valor) {
@@ -156,6 +180,67 @@ export default function AjustesPonto() {
     }
   }
 
+  const [marcandoDia, setMarcandoDia] = useState(null);
+
+  async function marcarFolga(usuarioId, dia) {
+    const descricao = window.prompt('Motivo da folga (opcional):', 'Folga');
+    if (descricao === null) return;
+    setMarcandoDia(`${usuarioId}-${dia}`);
+    try {
+      await comprovanteAusenciaService.registrarFolga({
+        usuarioId,
+        dataReferencia: dia,
+        dataFim: dia,
+        descricao: String(descricao).trim() || undefined,
+        tipo: 'FOLGA',
+      });
+      await buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível registrar a folga.');
+    } finally {
+      setMarcandoDia(null);
+    }
+  }
+
+  async function justificarDia(usuarioId, dia) {
+    const motivo = window.prompt('Motivo da justificativa (obrigatório):', '');
+    if (motivo === null) return;
+    if (!String(motivo).trim()) {
+      alert('Informe o motivo da justificativa.');
+      return;
+    }
+    setMarcandoDia(`${usuarioId}-${dia}`);
+    try {
+      await comprovanteAusenciaService.registrarFolga({
+        usuarioId,
+        dataReferencia: dia,
+        dataFim: dia,
+        descricao: String(motivo).trim(),
+        tipo: 'JUSTIFICATIVA',
+      });
+      await buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível justificar o dia.');
+    } finally {
+      setMarcandoDia(null);
+    }
+  }
+
+  async function removerMarcador(usuarioId, dia, ausencia) {
+    if (!ausencia?.id) return;
+    const tipoTxt = ausencia.tipo === 'FOLGA' ? 'folga' : 'justificativa';
+    if (!window.confirm(`Remover a ${tipoTxt} deste dia? O dia volta a ser calculado normalmente (pode virar falta).`)) return;
+    setMarcandoDia(`${usuarioId}-${dia}`);
+    try {
+      await comprovanteAusenciaService.removerFolga(ausencia.id);
+      await buscar();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Não foi possível remover.');
+    } finally {
+      setMarcandoDia(null);
+    }
+  }
+
   const { pageItems: relatorioPagina, total: totalEspelho, safePage: espelhoSafePage } = useMemo(
     () => slicePaged(relatorio, espelhoPage, espelhoPageSize),
     [relatorio, espelhoPage, espelhoPageSize]
@@ -242,6 +327,10 @@ export default function AjustesPonto() {
                       const dados = dias[dia];
                       const pontos = dados?.pontos || [];
                       const faltando = dados?.flags?.faltandoMarcacao;
+                      const status = dados?.statusDia;
+                      const ausencia = dados?.contextoDia?.ausencia;
+                      const busy = marcandoDia === `${r.usuario.id}-${dia}`;
+                      const podeMarcar = ['FALTA', 'PARCIAL', 'EM_ABERTO'].includes(status);
                       const itens = [
                         { t: 'ENTRADA', label: 'Entrada', v: dados?.marcacoes?.entrada, k: `${dia}-e` },
                         { t: 'SAIDA_ALMOCO', label: 'Saída', v: dados?.marcacoes?.saidaAlmoco, k: `${dia}-sa` },
@@ -252,8 +341,52 @@ export default function AjustesPonto() {
                       return (
                         <div key={dia} style={{ border: '1px solid var(--cinza-100)', borderRadius: 12, padding: 12 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                            <div style={{ fontWeight: 800 }}>{dia}</div>
-                            {faltando ? <span className="badge badge-vermelho">Faltando marcação</span> : <span className="badge badge-verde">OK</span>}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
+                              <span style={{ fontWeight: 800 }}>{dia}</span>
+                              <StatusDiaBadge status={status} label={dados?.statusLabel} />
+                              {faltando ? <span className="badge badge-vermelho">Faltando marcação</span> : null}
+                              {ausencia?.descricao ? (
+                                <span style={{ fontSize: 11, color: 'var(--cinza-400)', overflowWrap: 'anywhere' }}>
+                                  {ausencia.descricao}
+                                </span>
+                              ) : null}
+                            </div>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              {ausencia?.manual ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  style={{ padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                  disabled={busy}
+                                  onClick={() => removerMarcador(r.usuario.id, dia, ausencia)}
+                                >
+                                  {busy ? '...' : `✕ Remover ${ausencia.tipo === 'FOLGA' ? 'folga' : 'justificativa'}`}
+                                </button>
+                              ) : podeMarcar ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    style={{ padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                    disabled={busy}
+                                    onClick={() => marcarFolga(r.usuario.id, dia)}
+                                    title="Marcar este dia como folga (não conta como falta)"
+                                  >
+                                    {busy ? '...' : '🌴 Folga'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    style={{ padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                    disabled={busy}
+                                    onClick={() => justificarDia(r.usuario.id, dia)}
+                                    title="Justificar a falta deste dia (com motivo)"
+                                  >
+                                    {busy ? '...' : '📝 Justificar'}
+                                  </button>
+                                </>
+                              ) : null}
+                            </div>
                           </div>
 
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, width: '100%', minWidth: 0 }}>
