@@ -44,8 +44,7 @@ export default function Layout({ children }) {
       })
       .catch(() => {});
     return () => { cancelado = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- atualiza features ao abrir o painel
-  }, [isAdmin, isSuperAdmin, usuario?.tenant?.id]);
+  }, [isAdmin, isSuperAdmin, usuario?.tenant?.id, atualizarUsuario]);
 
   const atualizarBadgeFerias = useCallback(async () => {
     if (!isAdmin) {
