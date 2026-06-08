@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
-import { feriasService, tenantService } from '../../services/api';
+import { feriasService } from '../../services/api';
 import AppIcon from '../AppIcon';
 
 const MENU = [
@@ -21,30 +21,29 @@ const MENU = [
 ];
 
 export default function Layout({ children }) {
-  const { usuario, logout, isAdmin, isSuperAdmin, atualizarUsuario } = useAuth();
+  const { usuario, logout, isAdmin, isSuperAdmin, refreshTenantFeatures } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [feriasPendentes, setFeriasPendentes] = useState(0);
   const [navAberto, setNavAberto] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [modalUpgrade, setModalUpgrade] = useState(false);
-  const payrollEnabled = usuario?.tenant?.features?.payrollModuleEnabled === true;
+  const payrollEnabled = Boolean(usuario?.tenant?.features?.payrollModuleEnabled);
 
   useEffect(() => {
     if (isSuperAdmin || !isAdmin || !usuario?.tenant?.id) return undefined;
-    let cancelado = false;
-    tenantService.meu()
-      .then(({ data }) => {
-        if (cancelado || !data) return;
-        atualizarUsuario({
-          tenant: {
-            features: data.features ?? null,
-          },
-        });
-      })
-      .catch(() => {});
-    return () => { cancelado = true; };
-  }, [isAdmin, isSuperAdmin, usuario?.tenant?.id, atualizarUsuario]);
+    refreshTenantFeatures();
+    const onFocus = () => refreshTenantFeatures();
+    const onVis = () => {
+      if (document.visibilityState === 'visible') refreshTenantFeatures();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [isAdmin, isSuperAdmin, usuario?.tenant?.id, refreshTenantFeatures]);
 
   const atualizarBadgeFerias = useCallback(async () => {
     if (!isAdmin) {

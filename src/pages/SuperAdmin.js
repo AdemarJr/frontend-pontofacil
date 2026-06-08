@@ -77,6 +77,7 @@ export default function SuperAdmin() {
   const [modalAdmin, setModalAdmin] = useState(null);
   const [formAdmin, setFormAdmin] = useState({ nome:'', email:'', senha:'' });
   const [salvando, setSalvando] = useState(false);
+  const [confirmacaoFolha, setConfirmacaoFolha] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -193,35 +194,51 @@ export default function SuperAdmin() {
         ...tenantData
       } = formEditar;
 
+      const habilitarFolha = Boolean(payrollModuleEnabled);
+      const folhaAnterior = Boolean(modalEditar.features?.payrollModuleEnabled);
+      const folhaMudou = folhaAnterior !== habilitarFolha;
+
       const contratoPayload = {
         contractStartDate: periodoContrato && periodoContrato !== 'SEM_LIMITE' ? contractStartDate : null,
         periodoContrato: periodoContrato === 'SEM_LIMITE' ? null : periodoContrato,
       };
 
-      const [{ data: tenantAtualizado }, { data: features }] = await Promise.all([
-        superAdminService.atualizarTenant(modalEditar.id, {
-          ...tenantData,
-          ...contratoPayload,
-          payrollModuleEnabled,
-        }),
-        superAdminService.atualizarFeatures(modalEditar.id, {
-          payrollModuleEnabled: Boolean(payrollModuleEnabled),
-        }),
-      ]);
+      const { data: tenantAtualizado } = await superAdminService.atualizarTenant(modalEditar.id, {
+        ...tenantData,
+        ...contratoPayload,
+      });
+
+      const { data: features } = await superAdminService.atualizarFeatures(modalEditar.id, {
+        payrollModuleEnabled: habilitarFolha,
+      });
+
+      if (features?.payrollModuleEnabled !== habilitarFolha) {
+        throw Object.assign(new Error('Módulo folha não foi gravado no banco'), {
+          response: {
+            data: {
+              error: `Falha ao gravar folha (esperado: ${habilitarFolha}, retorno: ${String(features?.payrollModuleEnabled)})`,
+              code: 'FEATURE_SAVE_FAILED',
+            },
+          },
+        });
+      }
+
+      const empresaNome = modalEditar.nomeFantasia;
 
       setTenants((prev) => prev.map((t) => {
         if (t.id !== modalEditar.id) return t;
         return {
           ...t,
           ...tenantAtualizado,
-          features: features || tenantAtualizado?.features || {
-            tenantId: modalEditar.id,
-            payrollModuleEnabled: Boolean(payrollModuleEnabled),
-          },
+          features,
         };
       }));
 
       setModalEditar(null);
+
+      if (folhaMudou) {
+        setConfirmacaoFolha({ nomeFantasia: empresaNome, habilitado: habilitarFolha });
+      }
     } catch (e) {
       alert(mensagemErroApi(e, 'Erro ao salvar'));
     } finally { setSalvando(false); }
@@ -713,6 +730,49 @@ export default function SuperAdmin() {
               </button>
               <button className="btn btn-primary btn-full" type="button" onClick={salvarAdmin} disabled={salvando}>
                 {salvando ? 'Salvando...' : 'Cadastrar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmação módulo folha */}
+      {confirmacaoFolha && (
+        <div
+          style={MODAL_OVERLAY}
+          role="presentation"
+          onClick={(e) => e.target === e.currentTarget && setConfirmacaoFolha(null)}
+        >
+          <div
+            className="card"
+            style={modalCardStyle(440)}
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: 'clamp(24px, 4vw, 32px)' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--verde)' }}>
+                {confirmacaoFolha.habilitado ? 'Folha habilitada' : 'Folha desabilitada'}
+              </h2>
+              <p style={{ fontSize: 14, color: 'var(--cinza-700)', lineHeight: 1.55, margin: '0 0 12px' }}>
+                <strong>{confirmacaoFolha.nomeFantasia}</strong>
+                {confirmacaoFolha.habilitado
+                  ? ' agora tem o módulo de Folha de Pagamento ativo.'
+                  : ' não tem mais o módulo de Folha de Pagamento.'}
+              </p>
+              {confirmacaoFolha.habilitado && (
+                <p style={{ fontSize: 13, color: 'var(--cinza-400)', lineHeight: 1.5, margin: 0 }}>
+                  O administrador da empresa verá o menu <strong>Folha de pagamento</strong> ao
+                  acessar o painel (pode ser necessário atualizar a página — F5).
+                </p>
+              )}
+              <button
+                type="button"
+                className="btn btn-primary btn-full"
+                style={{ marginTop: 20 }}
+                onClick={() => setConfirmacaoFolha(null)}
+              >
+                Entendi
               </button>
             </div>
           </div>
