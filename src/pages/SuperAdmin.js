@@ -7,6 +7,7 @@ import { logoInternoUrl } from '../utils/branding';
 import { superAdminService, API_URL } from '../services/api';
 import { isFolhaHabilitada } from '../utils/features';
 import { format } from 'date-fns';
+import Modal from '../components/Modal';
 
 const STATUS_BADGE = {
   ATIVO: { label:'Ativo', classe:'badge-verde' },
@@ -14,50 +15,6 @@ const STATUS_BADGE = {
   CANCELADO: { label:'Cancelado', classe:'badge-vermelho' },
 };
 const PLANO_LABEL = { BASICO:'Básico', PROFISSIONAL:'Profissional', ENTERPRISE:'Enterprise' };
-
-const MODAL_OVERLAY = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  alignItems: 'flex-start',
-  justifyContent: 'center',
-  zIndex: 1000,
-  padding: 16,
-  overflowY: 'auto',
-  WebkitOverflowScrolling: 'touch',
-};
-
-function modalCardStyle(maxWidth) {
-  return {
-    width: '100%',
-    maxWidth,
-    maxHeight: 'min(calc(100dvh - 32px), 920px)',
-    margin: '12px auto',
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    boxSizing: 'border-box',
-  };
-}
-
-const MODAL_BODY = {
-  padding: '0 clamp(20px, 4vw, 32px)',
-  flex: 1,
-  minHeight: 0,
-  overflowY: 'auto',
-  WebkitOverflowScrolling: 'touch',
-};
-
-const MODAL_FOOTER = {
-  flexShrink: 0,
-  display: 'flex',
-  gap: 12,
-  padding: '16px clamp(20px, 4vw, 32px) clamp(20px, 4vw, 28px)',
-  borderTop: '1px solid var(--cinza-200)',
-  background: 'var(--branco, #fff)',
-};
 
 export default function SuperAdmin() {
   const { usuario, logout } = useAuth();
@@ -529,23 +486,21 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      {/* Modal nova empresa */}
-      {modal && (
-        <div style={MODAL_OVERLAY} role="presentation" onClick={(e) => e.target === e.currentTarget && setModal(false)}>
-          <div
-            className="card"
-            style={modalCardStyle(480)}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="superadmin-modal-nova-empresa-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ flexShrink: 0, padding: 'clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px) 12px' }}>
-              <h2 id="superadmin-modal-nova-empresa-title" style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
-                Nova Empresa
-              </h2>
-            </div>
-            <div style={MODAL_BODY}>
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        title="Nova Empresa"
+        titleId="superadmin-modal-nova-empresa-title"
+        maxWidth={480}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(false)}>Cancelar</button>
+            <button type="button" className="btn btn-primary btn-full" onClick={criarTenant} disabled={salvando}>
+              {salvando ? 'Criando...' : 'Criar Empresa'}
+            </button>
+          </>
+        )}
+      >
               <div style={{ display: 'grid', gap: '14px', paddingBottom: 8 }}>
                 <p style={{ fontSize: '12px', color: 'var(--cinza-400)', marginBottom: '8px' }}>Dados da empresa</p>
                 {[
@@ -602,39 +557,24 @@ export default function SuperAdmin() {
                   </div>
                 ))}
               </div>
-            </div>
-            <div style={MODAL_FOOTER}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(false)}>
-                Cancelar
-              </button>
-              <button type="button" className="btn btn-primary btn-full" onClick={criarTenant} disabled={salvando}>
-                {salvando ? 'Criando...' : 'Criar Empresa'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
-      {/* Modal editar empresa */}
-      {modalEditar && (
-        <div style={MODAL_OVERLAY} role="presentation" onClick={(e) => e.target === e.currentTarget && setModalEditar(null)}>
-          <div
-            className="card"
-            style={modalCardStyle(480)}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="superadmin-modal-editar-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ flexShrink: 0, padding: 'clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px) 12px' }}>
-              <h2 id="superadmin-modal-editar-title" style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 8px' }}>
-                Editar empresa
-              </h2>
-              <p style={{ fontSize: '13px', color: 'var(--cinza-400)', margin: 0 }}>
-                Altere os dados cadastrais. O status (suspenso/ativo) continua nas ações da tabela.
-              </p>
-            </div>
-            <div style={MODAL_BODY}>
+      <Modal
+        open={!!modalEditar}
+        onClose={() => setModalEditar(null)}
+        title="Editar empresa"
+        subtitle="Altere os dados cadastrais. O status (suspenso/ativo) continua nas ações da tabela."
+        titleId="superadmin-modal-editar-title"
+        maxWidth={480}
+        footer={(
+          <>
+            <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalEditar(null)}>Cancelar</button>
+            <button className="btn btn-primary btn-full" type="button" onClick={salvarEdicao} disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Salvar'}
+            </button>
+          </>
+        )}
+      >
               <div style={{ display: 'grid', gap: '14px', paddingBottom: 8 }}>
                 {[
                   { key: 'razaoSocial', label: 'Razão Social', type: 'text' },
@@ -703,40 +643,24 @@ export default function SuperAdmin() {
                   </div>
                 )}
               </div>
-            </div>
-            <div style={MODAL_FOOTER}>
-              <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalEditar(null)}>
-                Cancelar
-              </button>
-              <button className="btn btn-primary btn-full" type="button" onClick={salvarEdicao} disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
-      {/* Modal cadastrar administrador em empresa existente */}
-      {modalAdmin && (
-        <div style={MODAL_OVERLAY} role="presentation" onClick={(e) => e.target === e.currentTarget && setModalAdmin(null)}>
-          <div
-            className="card"
-            style={modalCardStyle(440)}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="superadmin-modal-admin-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ flexShrink: 0, padding: 'clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px) 12px' }}>
-              <h2 id="superadmin-modal-admin-title" style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 8px' }}>
-                Administrador da empresa
-              </h2>
-              <p style={{ fontSize: '13px', color: 'var(--cinza-400)', margin: 0 }}>
-                {modalAdmin.nomeFantasia} — este usuário acessa o painel em <strong>/login</strong> com e-mail e senha (mesmo fluxo do
-                gerente).
-              </p>
-            </div>
-            <div style={MODAL_BODY}>
+      <Modal
+        open={!!modalAdmin}
+        onClose={() => setModalAdmin(null)}
+        title="Administrador da empresa"
+        subtitle={modalAdmin ? `${modalAdmin.nomeFantasia} — este usuário acessa o painel em /login com e-mail e senha (mesmo fluxo do gerente).` : ''}
+        titleId="superadmin-modal-admin-title"
+        maxWidth={440}
+        footer={(
+          <>
+            <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalAdmin(null)}>Cancelar</button>
+            <button className="btn btn-primary btn-full" type="button" onClick={salvarAdmin} disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Cadastrar'}
+            </button>
+          </>
+        )}
+      >
               <div style={{ display: 'grid', gap: '14px', paddingBottom: 8 }}>
                 {[
                   { key: 'nome', label: 'Nome completo', type: 'text' },
@@ -755,61 +679,32 @@ export default function SuperAdmin() {
                   </div>
                 ))}
               </div>
-            </div>
-            <div style={MODAL_FOOTER}>
-              <button className="btn btn-secondary btn-full" type="button" onClick={() => setModalAdmin(null)}>
-                Cancelar
-              </button>
-              <button className="btn btn-primary btn-full" type="button" onClick={salvarAdmin} disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Cadastrar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
-      {/* Modal confirmação módulo folha */}
-      {confirmacaoFolha && (
-        <div
-          style={MODAL_OVERLAY}
-          role="presentation"
-          onClick={(e) => e.target === e.currentTarget && setConfirmacaoFolha(null)}
-        >
-          <div
-            className="card"
-            style={modalCardStyle(440)}
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ padding: 'clamp(24px, 4vw, 32px)' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--verde)' }}>
-                {confirmacaoFolha.habilitado ? 'Folha habilitada' : 'Folha desabilitada'}
-              </h2>
-              <p style={{ fontSize: 14, color: 'var(--cinza-700)', lineHeight: 1.55, margin: '0 0 12px' }}>
-                <strong>{confirmacaoFolha.nomeFantasia}</strong>
-                {confirmacaoFolha.habilitado
-                  ? ' agora tem o módulo de Folha de Pagamento ativo.'
-                  : ' não tem mais o módulo de Folha de Pagamento.'}
-              </p>
-              {confirmacaoFolha.habilitado && (
-                <p style={{ fontSize: 13, color: 'var(--cinza-400)', lineHeight: 1.5, margin: 0 }}>
-                  O administrador da empresa verá o menu <strong>Folha de pagamento</strong> ao
-                  acessar o painel (pode ser necessário atualizar a página — F5).
-                </p>
-              )}
-              <button
-                type="button"
-                className="btn btn-primary btn-full"
-                style={{ marginTop: 20 }}
-                onClick={() => setConfirmacaoFolha(null)}
-              >
-                Entendi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!confirmacaoFolha}
+        onClose={() => setConfirmacaoFolha(null)}
+        title={confirmacaoFolha?.habilitado ? 'Folha habilitada' : 'Folha desabilitada'}
+        maxWidth={440}
+        footer={(
+          <button type="button" className="btn btn-primary btn-full" onClick={() => setConfirmacaoFolha(null)}>
+            Entendi
+          </button>
+        )}
+      >
+        <p style={{ fontSize: 14, color: 'var(--cinza-700)', lineHeight: 1.55, margin: '0 0 12px' }}>
+          <strong>{confirmacaoFolha?.nomeFantasia}</strong>
+          {confirmacaoFolha?.habilitado
+            ? ' agora tem o módulo de Folha de Pagamento ativo.'
+            : ' não tem mais o módulo de Folha de Pagamento.'}
+        </p>
+        {confirmacaoFolha?.habilitado && (
+          <p style={{ fontSize: 13, color: 'var(--cinza-400)', lineHeight: 1.5, margin: 0 }}>
+            O administrador da empresa verá o menu <strong>Folha de pagamento</strong> ao
+            acessar o painel (pode ser necessário atualizar a página — F5).
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -23,6 +23,7 @@ import { getMeuPontoDeviceId } from '../utils/meuPontoDeviceId';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
 import { publicUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
+import Modal from '../components/Modal';
 
 const TIPOS_LABEL = {
   ENTRADA: { label: 'Entrada', cor: '#1D9E75', icon: 'dot' },
@@ -1201,169 +1202,108 @@ export default function MeuPonto() {
       </div>
       ) : null}
 
-      {/* Modal de justificativa */}
-      {justificarModal ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(2,6,23,0.72)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            zIndex: 9999,
-          }}
-          onClick={() => setJustificarModal(null)}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 520,
-              background: '#0b1220',
-              border: '1px solid rgba(148,163,184,0.18)',
-              borderRadius: 16,
-              padding: 18,
-              boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 900 }}>
-              Justificar batida faltante
-            </p>
-            <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
-              Dia: <b>{justificarModal.dia}</b> · Tipo: <b>{TIPOS_LABEL[justificarModal.tipo]?.label || justificarModal.tipo}</b>
-            </p>
-
-            <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
-              <div>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
-                  Sugestão de horário (opcional)
-                </label>
-                <input
-                  className="input"
-                  type="datetime-local"
-                  value={justificarForm.dataHoraSugerida}
-                  onChange={(e) => setJustificarForm((p) => ({ ...p, dataHoraSugerida: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
-                  Justificativa *
-                </label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  value={justificarForm.justificativa}
-                  onChange={(e) => setJustificarForm((p) => ({ ...p, justificativa: e.target.value }))}
-                  placeholder="Ex: Esqueci de registrar a saída do intervalo."
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setJustificarModal(null)}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={salvandoJustificativa || !String(justificarForm.justificativa || '').trim()}
-                onClick={salvarJustificativa}
-              >
-                {salvandoJustificativa ? 'Enviando…' : 'Enviar justificativa'}
-              </button>
-            </div>
+      <Modal
+        open={!!justificarModal}
+        onClose={() => setJustificarModal(null)}
+        title="Justificar batida faltante"
+        subtitle={justificarModal ? `Dia: ${justificarModal.dia} · Tipo: ${TIPOS_LABEL[justificarModal.tipo]?.label || justificarModal.tipo}` : ''}
+        variant="dark"
+        maxWidth={520}
+        zIndex={9999}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setJustificarModal(null)}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              disabled={salvandoJustificativa || !String(justificarForm.justificativa || '').trim()}
+              onClick={salvarJustificativa}
+            >
+              {salvandoJustificativa ? 'Enviando…' : 'Enviar justificativa'}
+            </button>
+          </>
+        )}
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div>
+            <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+              Sugestão de horário (opcional)
+            </label>
+            <input
+              className="input"
+              type="datetime-local"
+              value={justificarForm.dataHoraSugerida}
+              onChange={(e) => setJustificarForm((p) => ({ ...p, dataHoraSugerida: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+              Justificativa *
+            </label>
+            <textarea
+              className="input"
+              rows={3}
+              value={justificarForm.justificativa}
+              onChange={(e) => setJustificarForm((p) => ({ ...p, justificativa: e.target.value }))}
+              placeholder="Ex: Esqueci de registrar a saída do intervalo."
+              style={{ resize: 'vertical' }}
+            />
           </div>
         </div>
-      ) : null}
+      </Modal>
 
-      {pendenciaModalAberto && pendenciaCheckin?.aberta ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(2,6,23,0.72)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            zIndex: 9999,
-          }}
-          onClick={() => setPendenciaModalAberto(false)}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 520,
-              background: '#0b1220',
-              border: '1px solid rgba(148,163,184,0.18)',
-              borderRadius: 16,
-              padding: 18,
-              boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 800 }}>
-              Turno de hoje ainda em aberto
-            </p>
-            <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
-              Seu último registro foi há aproximadamente <b>{pendenciaCheckin.horasAberto}h</b> e pode faltar a saída de hoje.
-            </p>
-            <p style={{ marginTop: 10, marginBottom: 0, color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
-              {pendenciaCheckin.sugerirNovoTurno
-                ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
-                : 'Registre a próxima batida do dia de hoje na sequência normal.'}
-            </p>
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+      <Modal
+        open={pendenciaModalAberto && !!pendenciaCheckin?.aberta}
+        onClose={() => setPendenciaModalAberto(false)}
+        title="Turno de hoje ainda em aberto"
+        variant="dark"
+        maxWidth={520}
+        zIndex={9999}
+        footer={(
+          <>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              disabled={carregando}
+              onClick={() => {
+                setPendenciaModalAberto(false);
+                setRegistroOpts(null);
+                if (fotoObrigatoria) setEtapa('camera');
+                else enviarRegistro(null, {});
+              }}
+            >
+              Continuar ponto de hoje
+            </button>
+            {pendenciaCheckin?.sugerirNovoTurno ? (
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-secondary btn-full"
                 disabled={carregando}
                 onClick={() => {
                   setPendenciaModalAberto(false);
-                  setRegistroOpts(null);
+                  setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
                   if (fotoObrigatoria) setEtapa('camera');
-                  else enviarRegistro(null, {});
+                  else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
                 }}
               >
-                Continuar ponto de hoje
+                Nova entrada (encerrar turno)
               </button>
-
-              {pendenciaCheckin.sugerirNovoTurno ? (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={carregando}
-                  onClick={() => {
-                    setPendenciaModalAberto(false);
-                    setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
-                    if (fotoObrigatoria) setEtapa('camera');
-                    else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
-                  }}
-                >
-                  Nova entrada (encerrar turno)
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setPendenciaModalAberto(false)}
-                style={{ marginLeft: 'auto' }}
-              >
-                Agora não
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            ) : null}
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setPendenciaModalAberto(false)}>
+              Agora não
+            </button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
+          Seu último registro foi há aproximadamente <b>{pendenciaCheckin?.horasAberto}h</b> e pode faltar a saída de hoje.
+        </p>
+        <p style={{ margin: '10px 0 0', color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
+          {pendenciaCheckin?.sugerirNovoTurno
+            ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
+            : 'Registre a próxima batida do dia de hoje na sequência normal.'}
+        </p>
+      </Modal>
     </div>
   );
 }

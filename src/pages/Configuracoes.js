@@ -5,8 +5,11 @@ import ListPagination, { slicePaged } from '../components/ListPagination';
 import AppIcon from '../components/AppIcon';
 import { tenantService, localRegistroService } from '../services/api';
 import { runConfiguracoesTour } from '../tours/configuracoesTour';
+import { useAuth } from '../hooks/useAuth';
+import FolhaConfigSection from '../components/folha/FolhaConfigSection';
 
 export default function Configuracoes() {
+  const { folhaHabilitada } = useAuth();
   const [config, setConfig] = useState(null);
   const [form, setForm] = useState({});
   const [salvando, setSalvando] = useState(false);
@@ -48,6 +51,14 @@ export default function Configuracoes() {
     const t = setTimeout(() => runConfiguracoesTour({ force: false }), 600);
     return () => clearTimeout(t);
   }, [config]);
+
+  useEffect(() => {
+    if (!config || !folhaHabilitada || window.location.hash !== '#folha-config') return undefined;
+    const t = setTimeout(() => {
+      document.getElementById('folha-config')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [config, folhaHabilitada]);
 
   async function salvar() {
     setSalvando(true);
@@ -344,6 +355,8 @@ export default function Configuracoes() {
             </div>
           </div>
         </div>
+
+        {folhaHabilitada && <FolhaConfigSection />}
 
         {sucesso && (
           <div style={{ background:'var(--verde-claro)', color:'var(--verde-escuro)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>

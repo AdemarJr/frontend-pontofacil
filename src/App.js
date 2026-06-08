@@ -28,10 +28,22 @@ import ColaboradorAppLayout from './components/colaborador/ColaboradorAppLayout'
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
-import FolhaConfig from './pages/FolhaConfig';
 import FolhaProcessar from './pages/FolhaProcessar';
 import ContratoExpirado from './pages/ContratoExpirado';
 import { useEffect } from 'react';
+
+function RotaFolha({ children }) {
+  const { folhaHabilitada, carregando } = useAuth();
+  if (carregando) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+  if (!folhaHabilitada) return <Navigate to="/dashboard" replace />;
+  return children;
+}
 
 function RotaProtegida({ children, apenasAdmin = false, apenasColaborador = false }) {
   const { usuario, carregando, isAdmin } = useAuth();
@@ -183,15 +195,19 @@ export default function App() {
               <Configuracoes />
             </RotaProtegida>
           } />
-          <Route path="/folha" element={<Navigate to="/folha/processar" replace />} />
-          <Route path="/folha/config" element={
+          <Route path="/folha" element={
             <RotaProtegida apenasAdmin>
-              <FolhaConfig />
+              <RotaFolha>
+                <Navigate to="/folha/processar" replace />
+              </RotaFolha>
             </RotaProtegida>
           } />
+          <Route path="/folha/config" element={<Navigate to="/configuracoes#folha-config" replace />} />
           <Route path="/folha/processar" element={
             <RotaProtegida apenasAdmin>
-              <FolhaProcessar />
+              <RotaFolha>
+                <FolhaProcessar />
+              </RotaFolha>
             </RotaProtegida>
           } />
 

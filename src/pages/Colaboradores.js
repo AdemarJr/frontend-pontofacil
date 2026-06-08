@@ -1,13 +1,14 @@
 // src/pages/Colaboradores.js
 import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/dashboard/Layout';
+import Modal from '../components/Modal';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { usuarioService, localRegistroService } from '../services/api';
 import { runColaboradoresTour } from '../tours/colaboradoresTour';
 import { useAuth } from '../hooks/useAuth';
 
 export default function Colaboradores() {
-  const { isAdmin, usuario: usuarioLogado } = useAuth();
+  const { isAdmin, usuario: usuarioLogado, folhaHabilitada } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [modal, setModal] = useState(null); // null | 'criar' | {usuario}
@@ -347,21 +348,28 @@ export default function Colaboradores() {
         )}
       </div>
 
-      {/* Modal */}
-      {modal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'480px', padding:'32px' }}>
-            <h2 style={{ fontSize:'18px', fontWeight:'600', marginBottom:'24px' }}>
-              {modal === 'criar' ? 'Novo Colaborador' : `Editar: ${modal.nome}`}
-            </h2>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setConfirmacao('salvar');
-              }}
-              style={{ display:'grid', gap:'16px' }}
-            >
+      <Modal
+        open={!!modal}
+        onClose={() => setModal(null)}
+        title={modal === 'criar' ? 'Novo Colaborador' : modal ? `Editar: ${modal.nome}` : ''}
+        titleId="modal-colaborador-title"
+        maxWidth={520}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)}>Cancelar</button>
+            <button type="submit" form="form-colaborador" className="btn btn-primary btn-full" disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Salvar'}
+            </button>
+          </>
+        )}
+      >
+        <form
+          id="form-colaborador"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setConfirmacao('salvar');
+          }}
+        >
             <div style={{ display:'grid', gap:'16px' }}>
               {[
                 { key:'nome', label:'Nome completo', type:'text', required:true },
@@ -424,7 +432,7 @@ export default function Colaboradores() {
                 </div>
               </div>
 
-              {form.role === 'COLABORADOR' && (
+              {form.role === 'COLABORADOR' && folhaHabilitada && (
                 <div style={{ borderTop: '1px solid var(--cinza-200)', paddingTop: 12, display: 'grid', gap: 12 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Dados para folha de pagamento</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -538,66 +546,59 @@ export default function Colaboradores() {
             </div>
 
             {erro && <div style={{ background:'var(--vermelho-claro)', color:'var(--vermelho)', padding:'10px 14px', borderRadius:'8px', fontSize:'13px', marginTop:'16px' }}>{erro}</div>}
+        </form>
+      </Modal>
 
-            <div style={{ display:'flex', gap:'12px', marginTop:'24px' }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary btn-full" disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmacao === 'salvar'}
+        onClose={() => setConfirmacao(null)}
+        title="Confirmar salvamento"
+        maxWidth={420}
+        zIndex={1100}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={salvando}>Cancelar</button>
+            <button type="button" className="btn btn-primary btn-full" onClick={executarSalvar} disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Confirmar'}
+            </button>
+          </>
+        )}
+      >
+        <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.5, margin: 0 }}>
+          {modal === 'criar'
+            ? 'Deseja cadastrar este colaborador com os dados informados?'
+            : `Deseja salvar as alterações em "${modal?.nome}"?`}
+        </p>
+      </Modal>
 
-      {confirmacao === 'salvar' && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'420px', padding:'28px' }}>
-            <h3 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'12px' }}>Confirmar salvamento</h3>
-            <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.5, marginBottom:'24px' }}>
-              {modal === 'criar'
-                ? 'Deseja cadastrar este colaborador com os dados informados?'
-                : `Deseja salvar as alterações em "${modal.nome}"?`}
-            </p>
-            <div style={{ display:'flex', gap:'12px' }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={salvando}>
-                Cancelar
-              </button>
-              <button type="button" className="btn btn-primary btn-full" onClick={executarSalvar} disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Confirmar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {confirmacao?.tipo === 'excluir' && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, padding:'20px' }}>
-          <div className="card" style={{ width:'100%', maxWidth:'440px', padding:'28px' }}>
-            <h3 style={{ fontSize:'17px', fontWeight:'600', marginBottom:'12px', color:'var(--vermelho)' }}>Excluir definitivamente</h3>
-            <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.55, marginBottom:'16px' }}>
-              O colaborador <strong>{confirmacao.usuario.nome}</strong> será removido do sistema. Esta ação apaga também o histórico de pontos, escalas e ajustes ligados a ele no período — não dá para desfazer.
-            </p>
-            <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'24px' }}>
-              Se quiser só impedir acesso sem apagar histórico, use <strong>Desativar</strong>.
-            </p>
-            <div style={{ display:'flex', gap:'12px' }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={excluindo}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn btn-full"
-                onClick={executarExclusao}
-                disabled={excluindo}
-                style={{ background:'var(--vermelho)', color:'#fff', border:'none' }}
-              >
-                {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmacao?.tipo === 'excluir'}
+        onClose={() => setConfirmacao(null)}
+        title="Excluir definitivamente"
+        maxWidth={440}
+        zIndex={1100}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={excluindo}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-full"
+              onClick={executarExclusao}
+              disabled={excluindo}
+              style={{ background:'var(--vermelho)', color:'#fff', border:'none' }}
+            >
+              {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
+            </button>
+          </>
+        )}
+      >
+        <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.55, margin: '0 0 16px' }}>
+          O colaborador <strong>{confirmacao?.usuario?.nome}</strong> será removido do sistema. Esta ação apaga também o histórico de pontos, escalas e ajustes ligados a ele no período — não dá para desfazer.
+        </p>
+        <p style={{ fontSize:'13px', color:'var(--cinza-400)', margin: 0 }}>
+          Se quiser só impedir acesso sem apagar histórico, use <strong>Desativar</strong>.
+        </p>
+      </Modal>
     </Layout>
   );
 }

@@ -27,7 +27,6 @@ export default function Layout({ children }) {
   const [feriasPendentes, setFeriasPendentes] = useState(0);
   const [navAberto, setNavAberto] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const [modalUpgrade, setModalUpgrade] = useState(false);
   const payrollEnabled = folhaHabilitada;
 
   useEffect(() => {
@@ -149,37 +148,7 @@ export default function Layout({ children }) {
 
         <nav style={{ padding: '16px 12px', flex: 1, overflowY: 'auto' }}>
           {MENU.map((item) => {
-            if (item.folha && !payrollEnabled) {
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => { setModalUpgrade(true); if (mobile) setNavAberto(false); }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    width: '100%',
-                    padding: '11px 12px',
-                    borderRadius: '10px',
-                    marginBottom: '4px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#64748b',
-                    background: 'transparent',
-                    textAlign: 'left',
-                  }}
-                >
-                  <span style={{ width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', opacity: 0.6 }}>
-                    <AppIcon name={item.icon} size={18} />
-                  </span>
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                  <span title="Módulo não contratado">🔒</span>
-                </button>
-              );
-            }
+            if (item.folha && !payrollEnabled) return null;
             return (
             <NavLink
               key={item.path}
@@ -230,23 +199,6 @@ export default function Layout({ children }) {
           );
           })}
         </nav>
-
-        {modalUpgrade && (
-          <div
-            role="presentation"
-            onClick={() => setModalUpgrade(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-          >
-            <div className="card" role="dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Upgrade de plano</h2>
-              <p style={{ fontSize: 14, color: 'var(--cinza-400)', lineHeight: 1.5, marginBottom: 16 }}>
-                O módulo de Folha de Pagamento não está habilitado para sua empresa. Entre em contato com o comercial para contratar este add-on.
-              </p>
-              <a href="mailto:contato@pontofacil.digital" className="btn btn-primary" style={{ marginRight: 8 }}>Falar com comercial</a>
-              <button type="button" className="btn btn-secondary" onClick={() => setModalUpgrade(false)}>Fechar</button>
-            </div>
-          </div>
-        )}
 
         <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>

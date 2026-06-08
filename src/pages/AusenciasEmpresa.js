@@ -1,6 +1,7 @@
 // Administrador: fila de comprovantes de ausência (atestado / declaração)
 import { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/dashboard/Layout';
+import Modal from '../components/Modal';
 import { comprovanteAusenciaService } from '../services/api';
 import { runAusenciasTour } from '../tours/ausenciasTour';
 
@@ -265,52 +266,25 @@ export default function AusenciasEmpresa() {
           role="dialog"
           aria-modal="true"
           aria-label="Visualizar comprovante"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.88)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1100,
-            padding: 16,
-            boxSizing: 'border-box',
-          }}
+          className="modal-overlay"
+          style={{ background: 'rgba(0,0,0,0.88)', zIndex: 1100 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) fecharPreview();
           }}
         >
           <div
-            className="card"
-            style={{
-              width: '100%',
-              maxWidth: 960,
-              maxHeight: '95vh',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: 0,
-              overflow: 'hidden',
-            }}
+            className="card modal-card"
+            style={{ maxWidth: 960 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 12,
-                padding: '14px 16px',
-                borderBottom: '1px solid var(--cinza-100)',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontWeight: 600, fontSize: 15 }}>Visualizar comprovante</span>
+            <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingBottom: 14 }}>
+              <span className="modal-title" style={{ fontSize: 15 }}>Visualizar comprovante</span>
               <button type="button" className="btn btn-secondary" onClick={fecharPreview} style={{ padding: '8px 14px' }}>
                 Fechar
               </button>
             </div>
 
-            <div style={{ padding: 16, overflow: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column' }}>
               {previewArquivo.loading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
                   <div className="spinner" />
@@ -412,34 +386,32 @@ export default function AusenciasEmpresa() {
         </div>
       )}
 
-      {decisaoModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div className="card" style={{ maxWidth: 420, width: '100%', padding: 28 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 12 }}>
-              {decisaoModal.acao === 'APROVADO' ? 'Aprovar comprovante' : 'Rejeitar comprovante'}
-            </h3>
-            <p style={{ fontSize: 14, color: 'var(--cinza-600)', marginBottom: 16 }}>
-              {decisaoModal.item.usuario?.nome} · {decisaoModal.item.dataReferencia}
-            </p>
-            <label style={{ fontSize: 13, color: 'var(--cinza-600)' }}>Observação (opcional, visível ao colaborador)</label>
-            <textarea className="input" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} style={{ width: '100%', marginTop: 8, marginBottom: 20 }} placeholder="Ex.: deferido conforme documento médico" />
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setDecisaoModal(null)} disabled={salvando}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn btn-full"
-                style={decisaoModal.acao === 'REJEITADO' ? { background: 'var(--vermelho)', color: '#fff', border: 'none' } : {}}
-                onClick={confirmarDecisao}
-                disabled={salvando}
-              >
-                {salvando ? 'Salvando…' : 'Confirmar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!decisaoModal}
+        onClose={() => setDecisaoModal(null)}
+        title={decisaoModal?.acao === 'APROVADO' ? 'Aprovar comprovante' : 'Rejeitar comprovante'}
+        maxWidth={420}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setDecisaoModal(null)} disabled={salvando}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-full"
+              style={decisaoModal?.acao === 'REJEITADO' ? { background: 'var(--vermelho)', color: '#fff', border: 'none' } : {}}
+              onClick={confirmarDecisao}
+              disabled={salvando}
+            >
+              {salvando ? 'Salvando…' : 'Confirmar'}
+            </button>
+          </>
+        )}
+      >
+        <p style={{ fontSize: 14, color: 'var(--cinza-600)', margin: '0 0 16px' }}>
+          {decisaoModal?.item?.usuario?.nome} · {decisaoModal?.item?.dataReferencia}
+        </p>
+        <label style={{ fontSize: 13, color: 'var(--cinza-600)' }}>Observação (opcional, visível ao colaborador)</label>
+        <textarea className="input" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} style={{ width: '100%', marginTop: 8 }} placeholder="Ex.: deferido conforme documento médico" />
+      </Modal>
     </Layout>
   );
 }

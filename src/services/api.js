@@ -95,12 +95,6 @@ api.interceptors.response.use(
       }
     }
     if (error.response?.status === 403 && error.response?.data?.code === 'FEATURE_DISABLED') {
-      const feature = error.response?.data?.feature || 'payroll';
-      if (feature === 'payroll' && !window.__pfFolhaUpgradeShown) {
-        window.__pfFolhaUpgradeShown = true;
-        alert('O módulo de Folha de Pagamento não está habilitado para sua empresa. Entre em contato com o comercial.');
-        setTimeout(() => { window.__pfFolhaUpgradeShown = false; }, 5000);
-      }
       return Promise.reject(error);
     }
     if (error.response?.status === 403 && error.response?.data?.code === 'CONTRACT_EXPIRED') {

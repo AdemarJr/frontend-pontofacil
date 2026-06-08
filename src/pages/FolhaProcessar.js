@@ -61,7 +61,7 @@ export default function FolhaProcessar() {
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Processar Folha</h1>
         <p style={{ color: 'var(--cinza-400)', fontSize: 13, marginBottom: 16 }}>
           Calcula proventos e descontos a partir do espelho de ponto.{' '}
-          <Link to="/folha/config">Configuração</Link>
+          <Link to="/configuracoes#folha-config">Configuração</Link>
         </p>
 
         <div className="card" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end', marginBottom: 20 }}>
