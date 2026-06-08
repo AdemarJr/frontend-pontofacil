@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { logoInternoUrl } from '../utils/branding';
-import { superAdminService } from '../services/api';
+import { superAdminService, API_URL } from '../services/api';
 import { isFolhaHabilitada } from '../utils/features';
 import { format } from 'date-fns';
 
@@ -174,7 +174,7 @@ export default function SuperAdmin() {
     const data = e?.response?.data;
     if (typeof data === 'string') {
       if (data.includes('Cannot PUT') && data.includes('/features')) {
-        return 'Backend desatualizado: faça redeploy do backend no EasyPanel (versão com módulo de folha) e tente novamente.';
+        return `Backend sem rota de folha em ${API_URL}. No Railway, redeploy do backend (branch main). No Vercel, confira REACT_APP_API_URL e faça redeploy do frontend.`;
       }
       if (data.trim()) return data;
     }
@@ -231,7 +231,10 @@ export default function SuperAdmin() {
               response: {
                 data: {
                   error:
-                    'O backend em produção ainda não foi atualizado. No EasyPanel, faça redeploy do serviço backend-pontofacil (branch main) e tente salvar novamente.',
+                    `API em uso: ${API_URL}\n\n` +
+                    '1) Railway → serviço backend → Redeploy (branch main, commit mais recente)\n' +
+                    '2) Vercel → Settings → Environment Variables → REACT_APP_API_URL deve apontar para SEU Railway (ex.: https://backend-pontofacil-hom-production.up.railway.app/api)\n' +
+                    '3) Vercel → Redeploy do frontend após alterar a variável',
                   code: 'BACKEND_OUTDATED',
                 },
               },

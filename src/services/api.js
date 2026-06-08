@@ -13,7 +13,7 @@ function normalizeApiBaseUrl(raw) {
   return base;
 }
 
-const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
+export const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
