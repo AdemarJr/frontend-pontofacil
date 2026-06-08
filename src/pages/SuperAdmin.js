@@ -166,21 +166,34 @@ export default function SuperAdmin() {
     setModalEditar(t);
   }
 
+  function mensagemErroApi(e, fallback) {
+    const data = e?.response?.data;
+    if (typeof data === 'string' && data.trim()) return data;
+    if (data?.error) return data.error;
+    if (data?.code === 'DB_SCHEMA_OUTDATED') {
+      return 'Banco desatualizado: execute folha-pagamento-atualizacao.sql no Supabase (PARTE 1 e PARTE 2).';
+    }
+    if (e?.response?.status === 404) {
+      return 'Endpoint não encontrado — verifique se o backend foi atualizado e reiniciado.';
+    }
+    if (e?.message === 'Network Error') return 'Falha de conexão com o servidor.';
+    return fallback;
+  }
+
   async function salvarEdicao() {
     if (!modalEditar) return;
     setSalvando(true);
     try {
-      const { payrollModuleEnabled, contractStartDate, periodoContrato, ...tenantData } = formEditar;
-      await superAdminService.atualizarTenant(modalEditar.id, tenantData);
-      await superAdminService.atualizarFeatures(modalEditar.id, { payrollModuleEnabled });
-      await superAdminService.atualizarContrato(modalEditar.id, {
+      const { contractStartDate, periodoContrato, ...payload } = formEditar;
+      await superAdminService.atualizarTenant(modalEditar.id, {
+        ...payload,
         contractStartDate: periodoContrato && periodoContrato !== 'SEM_LIMITE' ? contractStartDate : null,
         periodoContrato: periodoContrato === 'SEM_LIMITE' ? null : periodoContrato,
       });
       setModalEditar(null);
       carregar();
     } catch (e) {
-      alert(e.response?.data?.error || 'Erro ao salvar');
+      alert(mensagemErroApi(e, 'Erro ao salvar'));
     } finally { setSalvando(false); }
   }
 

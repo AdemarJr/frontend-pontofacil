@@ -47,8 +47,10 @@ api.interceptors.response.use(
           localStorage.setItem(k, String(now));
           alert(
             'O backend foi atualizado, mas o banco de dados ainda não.\n\n' +
-              'No Railway, rode:\n' +
-              'npx prisma migrate deploy\n\n' +
+              'No Supabase SQL Editor, execute:\n' +
+              'backend-pontofacil/prisma/folha-pagamento-atualizacao.sql\n' +
+              '(PARTE 1 e PARTE 2)\n\n' +
+              'Ou rode: npx prisma migrate deploy\n\n' +
               'Depois reinicie o backend.'
           );
         }
