@@ -21,14 +21,14 @@ const MENU = [
 ];
 
 export default function Layout({ children }) {
-  const { usuario, logout, isAdmin, isSuperAdmin, refreshTenantFeatures } = useAuth();
+  const { usuario, logout, isAdmin, isSuperAdmin, refreshTenantFeatures, folhaHabilitada } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [feriasPendentes, setFeriasPendentes] = useState(0);
   const [navAberto, setNavAberto] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [modalUpgrade, setModalUpgrade] = useState(false);
-  const payrollEnabled = Boolean(usuario?.tenant?.features?.payrollModuleEnabled);
+  const payrollEnabled = folhaHabilitada;
 
   useEffect(() => {
     if (isSuperAdmin || !isAdmin || !usuario?.tenant?.id) return undefined;

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { logoInternoUrl } from '../utils/branding';
 import { superAdminService } from '../services/api';
+import { isFolhaHabilitada } from '../utils/features';
 import { format } from 'date-fns';
 
 const STATUS_BADGE = {
@@ -164,14 +165,19 @@ export default function SuperAdmin() {
       plano: t.plano,
       contractStartDate: toInputDate(t.contractStartDate),
       periodoContrato: t.periodoContrato || 'SEM_LIMITE',
-      payrollModuleEnabled: Boolean(t.features?.payrollModuleEnabled),
+      payrollModuleEnabled: isFolhaHabilitada(t.features),
     });
     setModalEditar(t);
   }
 
   function mensagemErroApi(e, fallback) {
     const data = e?.response?.data;
-    if (typeof data === 'string' && data.trim()) return data;
+    if (typeof data === 'string') {
+      if (data.includes('Cannot PUT') && data.includes('/features')) {
+        return 'Backend desatualizado: faça redeploy do backend no EasyPanel (versão com módulo de folha) e tente novamente.';
+      }
+      if (data.trim()) return data;
+    }
     if (data?.error) return data.error;
     if (data?.code === 'DB_SCHEMA_OUTDATED') {
       return 'Banco desatualizado: execute folha-pagamento-atualizacao.sql no Supabase (PARTE 1 e PARTE 2).';
@@ -195,7 +201,7 @@ export default function SuperAdmin() {
       } = formEditar;
 
       const habilitarFolha = Boolean(payrollModuleEnabled);
-      const folhaAnterior = Boolean(modalEditar.features?.payrollModuleEnabled);
+      const folhaAnterior = isFolhaHabilitada(modalEditar.features);
       const folhaMudou = folhaAnterior !== habilitarFolha;
 
       const contratoPayload = {
@@ -206,13 +212,36 @@ export default function SuperAdmin() {
       const { data: tenantAtualizado } = await superAdminService.atualizarTenant(modalEditar.id, {
         ...tenantData,
         ...contratoPayload,
-      });
-
-      const { data: features } = await superAdminService.atualizarFeatures(modalEditar.id, {
         payrollModuleEnabled: habilitarFolha,
       });
 
-      if (features?.payrollModuleEnabled !== habilitarFolha) {
+      let features = tenantAtualizado?.features;
+
+      if (isFolhaHabilitada(features) !== habilitarFolha) {
+        try {
+          const { data } = await superAdminService.atualizarFeatures(modalEditar.id, {
+            payrollModuleEnabled: habilitarFolha,
+          });
+          features = data;
+        } catch (errFeatures) {
+          const body = errFeatures?.response?.data;
+          const html404 = typeof body === 'string' && body.includes('Cannot PUT');
+          if (html404 || errFeatures?.response?.status === 404) {
+            throw Object.assign(new Error('Backend sem rota de folha'), {
+              response: {
+                data: {
+                  error:
+                    'O backend em produção ainda não foi atualizado. No EasyPanel, faça redeploy do serviço backend-pontofacil (branch main) e tente salvar novamente.',
+                  code: 'BACKEND_OUTDATED',
+                },
+              },
+            });
+          }
+          throw errFeatures;
+        }
+      }
+
+      if (isFolhaHabilitada(features) !== habilitarFolha) {
         throw Object.assign(new Error('Módulo folha não foi gravado no banco'), {
           response: {
             data: {
@@ -440,7 +469,7 @@ export default function SuperAdmin() {
                           if (dias < 0) return <div style={{ fontSize: 11, color: 'var(--vermelho)', marginTop: 4 }}>Contrato expirado</div>;
                           return <div style={{ fontSize: 11, color: dias <= 7 ? 'var(--amarelo)' : 'var(--cinza-400)', marginTop: 4 }}>Expira em {dias}d</div>;
                         })()}
-                        {t.features?.payrollModuleEnabled && (
+                        {isFolhaHabilitada(t.features) && (
                           <div style={{ fontSize: 11, color: 'var(--verde)', marginTop: 4 }}>Folha ativa</div>
                         )}
                       </td>

@@ -327,6 +327,7 @@ export const folhaService = {
 // ---- TENANT ----
 export const tenantService = {
   meu: () => api.get('/tenants/meu'),
+  getFeatures: () => api.get('/tenants/meu/features'),
   atualizar: (dados) => api.put('/tenants/meu', dados),
   info: (tenantId) => api.get(`/tenants/${tenantId}/info`),
 };

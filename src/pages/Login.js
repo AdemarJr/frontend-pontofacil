@@ -19,7 +19,7 @@ export default function Login() {
     setCarregando(true);
     try {
       const { data } = await authService.login(email, senha);
-      login(data.usuario, data.accessToken, data.refreshToken);
+      await login(data.usuario, data.accessToken, data.refreshToken);
       if (data.usuario.role === 'SUPER_ADMIN') navigate('/super-admin');
       else if (data.usuario.role === 'ADMIN') navigate('/dashboard');
       else navigate('/meu-ponto');
