@@ -1,5 +1,5 @@
 // src/hooks/useAuth.js
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -28,12 +28,27 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   }
 
+  const atualizarUsuario = useCallback((partial) => {
+    setUsuario((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        ...partial,
+        tenant: partial.tenant
+          ? { ...(prev.tenant || {}), ...partial.tenant }
+          : prev.tenant,
+      };
+      localStorage.setItem('usuario', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const isSuperAdmin = usuario?.role === 'SUPER_ADMIN';
   const isAdmin = usuario?.role === 'ADMIN' || isSuperAdmin;
   const tenantId = usuario?.tenant?.id;
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, isSuperAdmin, isAdmin, tenantId, carregando }}>
+    <AuthContext.Provider value={{ usuario, login, logout, atualizarUsuario, isSuperAdmin, isAdmin, tenantId, carregando }}>
       {children}
     </AuthContext.Provider>
   );

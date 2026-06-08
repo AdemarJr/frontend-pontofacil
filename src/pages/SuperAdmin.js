@@ -90,6 +90,8 @@ export default function SuperAdmin() {
       ]);
       setTenants(t);
       setStats(s);
+    } catch (e) {
+      alert(mensagemErroApi(e, 'Erro ao carregar empresas'));
     } finally { setCarregando(false); }
   }
 
@@ -161,7 +163,7 @@ export default function SuperAdmin() {
       plano: t.plano,
       contractStartDate: toInputDate(t.contractStartDate),
       periodoContrato: t.periodoContrato || 'SEM_LIMITE',
-      payrollModuleEnabled: t.features?.payrollModuleEnabled === true,
+      payrollModuleEnabled: Boolean(t.features?.payrollModuleEnabled),
     });
     setModalEditar(t);
   }
@@ -184,14 +186,42 @@ export default function SuperAdmin() {
     if (!modalEditar) return;
     setSalvando(true);
     try {
-      const { contractStartDate, periodoContrato, ...payload } = formEditar;
-      await superAdminService.atualizarTenant(modalEditar.id, {
-        ...payload,
+      const {
+        contractStartDate,
+        periodoContrato,
+        payrollModuleEnabled,
+        ...tenantData
+      } = formEditar;
+
+      const contratoPayload = {
         contractStartDate: periodoContrato && periodoContrato !== 'SEM_LIMITE' ? contractStartDate : null,
         periodoContrato: periodoContrato === 'SEM_LIMITE' ? null : periodoContrato,
-      });
+      };
+
+      const [{ data: tenantAtualizado }, { data: features }] = await Promise.all([
+        superAdminService.atualizarTenant(modalEditar.id, {
+          ...tenantData,
+          ...contratoPayload,
+          payrollModuleEnabled,
+        }),
+        superAdminService.atualizarFeatures(modalEditar.id, {
+          payrollModuleEnabled: Boolean(payrollModuleEnabled),
+        }),
+      ]);
+
+      setTenants((prev) => prev.map((t) => {
+        if (t.id !== modalEditar.id) return t;
+        return {
+          ...t,
+          ...tenantAtualizado,
+          features: features || tenantAtualizado?.features || {
+            tenantId: modalEditar.id,
+            payrollModuleEnabled: Boolean(payrollModuleEnabled),
+          },
+        };
+      }));
+
       setModalEditar(null);
-      carregar();
     } catch (e) {
       alert(mensagemErroApi(e, 'Erro ao salvar'));
     } finally { setSalvando(false); }

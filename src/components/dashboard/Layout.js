@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
-import { feriasService } from '../../services/api';
+import { feriasService, tenantService } from '../../services/api';
 import AppIcon from '../AppIcon';
 
 const MENU = [
@@ -21,7 +21,7 @@ const MENU = [
 ];
 
 export default function Layout({ children }) {
-  const { usuario, logout, isAdmin } = useAuth();
+  const { usuario, logout, isAdmin, isSuperAdmin, atualizarUsuario } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [feriasPendentes, setFeriasPendentes] = useState(0);
@@ -29,6 +29,23 @@ export default function Layout({ children }) {
   const [mobile, setMobile] = useState(false);
   const [modalUpgrade, setModalUpgrade] = useState(false);
   const payrollEnabled = usuario?.tenant?.features?.payrollModuleEnabled === true;
+
+  useEffect(() => {
+    if (isSuperAdmin || !isAdmin || !usuario?.tenant?.id) return undefined;
+    let cancelado = false;
+    tenantService.meu()
+      .then(({ data }) => {
+        if (cancelado || !data) return;
+        atualizarUsuario({
+          tenant: {
+            features: data.features ?? null,
+          },
+        });
+      })
+      .catch(() => {});
+    return () => { cancelado = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- atualiza features ao abrir o painel
+  }, [isAdmin, isSuperAdmin, usuario?.tenant?.id]);
 
   const atualizarBadgeFerias = useCallback(async () => {
     if (!isAdmin) {
