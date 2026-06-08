@@ -14,18 +14,35 @@ const MENU = [
   { path: '/feriados', label: 'Feriados', icon: 'feriados' },
   { path: '/ferias', label: 'Férias', icon: 'ferias' },
   { path: '/relatorios', label: 'Relatórios / Espelho de ponto', icon: 'relatorios' },
+  { path: '/folha/processar', label: 'Folha de pagamento', icon: 'relatorios', folha: true },
   { path: '/ajustes-ponto', label: 'Ajustes de ponto', icon: 'ajustes' },
   { path: '/solicitacoes', label: 'Solicitações', icon: 'solicitacoes' },
   { path: '/configuracoes', label: 'Configurações', icon: 'configuracoes' },
 ];
 
 export default function Layout({ children }) {
-  const { usuario, logout, isAdmin } = useAuth();
+  const { usuario, logout, isAdmin, isSuperAdmin, refreshTenantFeatures, folhaHabilitada } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [feriasPendentes, setFeriasPendentes] = useState(0);
   const [navAberto, setNavAberto] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const payrollEnabled = folhaHabilitada;
+
+  useEffect(() => {
+    if (isSuperAdmin || !isAdmin || !usuario?.tenant?.id) return undefined;
+    refreshTenantFeatures();
+    const onFocus = () => refreshTenantFeatures();
+    const onVis = () => {
+      if (document.visibilityState === 'visible') refreshTenantFeatures();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [isAdmin, isSuperAdmin, usuario?.tenant?.id, refreshTenantFeatures]);
 
   const atualizarBadgeFerias = useCallback(async () => {
     if (!isAdmin) {
@@ -130,7 +147,9 @@ export default function Layout({ children }) {
         </div>
 
         <nav style={{ padding: '16px 12px', flex: 1, overflowY: 'auto' }}>
-          {MENU.map((item) => (
+          {MENU.map((item) => {
+            if (item.folha && !payrollEnabled) return null;
+            return (
             <NavLink
               key={item.path}
               to={item.path}
@@ -177,7 +196,8 @@ export default function Layout({ children }) {
                 </span>
               ) : null}
             </NavLink>
-          ))}
+          );
+          })}
         </nav>
 
         <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>

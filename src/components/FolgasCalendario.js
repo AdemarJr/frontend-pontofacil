@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { comprovanteAusenciaService, relatorioService } from '../services/api';
+import Modal from './Modal';
 
 const STATUS_DIA_COR = {
   TRABALHADO: { bg: 'rgba(29,158,117,0.16)', fg: 'var(--verde-escuro)', label: 'Trabalhado' },
@@ -271,90 +272,61 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
         justificadas. Férias, feriados e atestados com documento não são editáveis aqui.
       </p>
 
-      {diaModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 20,
-          }}
-          onClick={fecharModal}
-        >
-          <div
-            className="card"
-            style={{ width: '100%', maxWidth: 420, padding: 24 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 0, marginBottom: 4 }}>
-              {diaModal.diaIso.split('-').reverse().join('/')}
-            </h3>
-            <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 16 }}>
-              {STATUS_DIA_COR[diaModal.status]?.label || diaModal.status}
-              {diaModal.ausencia?.descricao ? ` — ${diaModal.ausencia.descricao}` : ''}
-            </p>
+      <Modal
+        open={!!diaModal}
+        onClose={fecharModal}
+        title={diaModal ? diaModal.diaIso.split('-').reverse().join('/') : ''}
+        subtitle={diaModal ? `${STATUS_DIA_COR[diaModal.status]?.label || diaModal.status}${diaModal.ausencia?.descricao ? ` — ${diaModal.ausencia.descricao}` : ''}` : ''}
+        maxWidth={420}
+        footer={diaModal?.ausencia?.manual ? (
+          <>
+            <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={removerMarcador} style={{ color: 'var(--vermelho)' }}>
+              {salvando ? 'Removendo…' : 'Remover marcação'}
+            </button>
+            <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>Fechar</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              disabled={salvando || !String(motivoJustificativa || '').trim()}
+              onClick={justificarDia}
+            >
+              {salvando ? 'Salvando…' : 'Justificar falta'}
+            </button>
+          </>
+        )}
+      >
+        {erro && <div style={{ color: 'var(--vermelho)', fontSize: 13, marginBottom: 12 }}>{erro}</div>}
 
-            {erro && (
-              <div style={{ color: 'var(--vermelho)', fontSize: 13, marginBottom: 12 }}>{erro}</div>
-            )}
-
-            {diaModal.ausencia?.manual ? (
-              <div style={{ display: 'grid', gap: 10 }}>
-                <p style={{ fontSize: 13, color: 'var(--cinza-600)', margin: 0 }}>
-                  Este dia já está marcado como{' '}
-                  <strong>{diaModal.ausencia.tipo === 'FOLGA' ? 'folga' : 'falta justificada'}</strong>.
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-full"
-                  disabled={salvando}
-                  onClick={removerMarcador}
-                  style={{ color: 'var(--vermelho)' }}
-                >
-                  {salvando ? 'Removendo…' : 'Remover marcação'}
-                </button>
-                <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>
-                  Fechar
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: 12 }}>
-                <button type="button" className="btn btn-primary btn-full" disabled={salvando} onClick={marcarFolga}>
-                  {salvando ? 'Salvando…' : '🌴 Marcar folga'}
-                </button>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
-                    Motivo da justificativa *
-                  </label>
-                  <textarea
-                    className="input"
-                    rows={2}
-                    placeholder="Ex: Consulta médica, problema pessoal…"
-                    value={motivoJustificativa}
-                    onChange={(e) => setMotivoJustificativa(e.target.value)}
-                    style={{ resize: 'vertical' }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-full"
-                  disabled={salvando || !String(motivoJustificativa || '').trim()}
-                  onClick={justificarDia}
-                >
-                  {salvando ? 'Salvando…' : '📝 Justificar falta'}
-                </button>
-                <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>
-                  Cancelar
-                </button>
-              </div>
-            )}
+        {diaModal?.ausencia?.manual ? (
+          <p style={{ fontSize: 13, color: 'var(--cinza-600)', margin: 0 }}>
+            Este dia já está marcado como{' '}
+            <strong>{diaModal.ausencia.tipo === 'FOLGA' ? 'folga' : 'falta justificada'}</strong>.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gap: 12 }}>
+            <button type="button" className="btn btn-primary btn-full" disabled={salvando} onClick={marcarFolga}>
+              {salvando ? 'Salvando…' : '🌴 Marcar folga'}
+            </button>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+                Motivo da justificativa *
+              </label>
+              <textarea
+                className="input"
+                rows={2}
+                placeholder="Ex: Consulta médica, problema pessoal…"
+                value={motivoJustificativa}
+                onChange={(e) => setMotivoJustificativa(e.target.value)}
+                style={{ resize: 'vertical' }}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

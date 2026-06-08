@@ -13,7 +13,7 @@ function normalizeApiBaseUrl(raw) {
   return base;
 }
 
-const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
+export const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -47,8 +47,10 @@ api.interceptors.response.use(
           localStorage.setItem(k, String(now));
           alert(
             'O backend foi atualizado, mas o banco de dados ainda não.\n\n' +
-              'No Railway, rode:\n' +
-              'npx prisma migrate deploy\n\n' +
+              'No Supabase SQL Editor, execute:\n' +
+              'backend-pontofacil/prisma/folha-pagamento-atualizacao.sql\n' +
+              '(PARTE 1 e PARTE 2)\n\n' +
+              'Ou rode: npx prisma migrate deploy\n\n' +
               'Depois reinicie o backend.'
           );
         }
@@ -91,6 +93,15 @@ api.interceptors.response.use(
       } finally {
         refreshando = false;
       }
+    }
+    if (error.response?.status === 403 && error.response?.data?.code === 'FEATURE_DISABLED') {
+      return Promise.reject(error);
+    }
+    if (error.response?.status === 403 && error.response?.data?.code === 'CONTRACT_EXPIRED') {
+      if (!window.location.pathname.startsWith('/contrato-expirado')) {
+        window.location.href = '/contrato-expirado';
+      }
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }
@@ -279,9 +290,38 @@ export const colaboradorService = {
   },
 };
 
+// ---- FOLHA DE PAGAMENTO ----
+export const folhaService = {
+  getConfig: () => api.get('/folha/config'),
+  putConfig: (dados) => api.put('/folha/config', dados),
+  calcular: (dados) => api.post('/folha/calcular', dados, { timeout: 120000 }),
+  listarRuns: (params) => api.get('/folha/runs', { params }),
+  obterRun: (id) => api.get(`/folha/runs/${id}`),
+  fechar: (id) => api.post(`/folha/runs/${id}/fechar`, {}, { timeout: 120000 }),
+  downloadHoleritePdf: async (holeriteId) => {
+    const res = await api.get(`/folha/holerites/${holeriteId}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `holerite-${holeriteId}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+  downloadCnab: async (runId) => {
+    const res = await api.post(`/folha/runs/${runId}/cnab`, {}, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `folha-${runId}.rem`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+};
+
 // ---- TENANT ----
 export const tenantService = {
   meu: () => api.get('/tenants/meu'),
+  getFeatures: () => api.get('/tenants/meu/features'),
   atualizar: (dados) => api.put('/tenants/meu', dados),
   info: (tenantId) => api.get(`/tenants/${tenantId}/info`),
 };
@@ -294,6 +334,8 @@ export const superAdminService = {
   resetSenhaAdminTenant: (tenantId, adminId) =>
     api.post(`/super-admin/tenants/${tenantId}/admin/${adminId}/reset-senha`),
   atualizarTenant: (id, dados) => api.put(`/super-admin/tenants/${id}`, dados),
+  atualizarFeatures: (id, dados) => api.put(`/super-admin/tenants/${id}/features`, dados),
+  atualizarContrato: (id, dados) => api.put(`/super-admin/tenants/${id}/contrato`, dados),
   atualizarStatus: (id, status) => api.put(`/super-admin/tenants/${id}/status`, { status }),
   limparRegistrosTenant: (tenantId, confirmarNomeFantasia) =>
     api.post(`/super-admin/tenants/${tenantId}/limpar-registros`, { confirmarNomeFantasia }),
