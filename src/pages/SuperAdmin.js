@@ -72,6 +72,7 @@ export default function SuperAdmin() {
   });
   const [formEditar, setFormEditar] = useState({
     razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+    contractStartDate:'', periodoContrato:'', payrollModuleEnabled:false,
   });
   const [modalAdmin, setModalAdmin] = useState(null);
   const [formAdmin, setFormAdmin] = useState({ nome:'', email:'', senha:'' });
@@ -122,6 +123,34 @@ export default function SuperAdmin() {
     } finally { setSalvando(false); }
   }
 
+  function toInputDate(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  const PERIODO_LABEL = { MENSAL: 'Mensal', SEMESTRAL: 'Semestral', ANUAL: 'Anual' };
+
+  function calcularFimPreview(inicioStr, periodo) {
+    if (!inicioStr || !periodo || periodo === 'SEM_LIMITE') return '';
+    const meses = periodo === 'MENSAL' ? 1 : periodo === 'SEMESTRAL' ? 6 : 12;
+    const d = new Date(inicioStr + 'T12:00:00');
+    if (Number.isNaN(d.getTime())) return '';
+    d.setMonth(d.getMonth() + meses);
+    d.setDate(d.getDate() - 1);
+    return d.toLocaleDateString('pt-BR');
+  }
+
+  function diasAteExpiracao(contractEndDate) {
+    if (!contractEndDate) return null;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const fim = new Date(contractEndDate);
+    fim.setHours(0, 0, 0, 0);
+    return Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
+  }
+
   function abrirEditar(t) {
     setFormEditar({
       razaoSocial: t.razaoSocial,
@@ -130,6 +159,9 @@ export default function SuperAdmin() {
       email: t.email,
       telefone: t.telefone || '',
       plano: t.plano,
+      contractStartDate: toInputDate(t.contractStartDate),
+      periodoContrato: t.periodoContrato || 'SEM_LIMITE',
+      payrollModuleEnabled: t.features?.payrollModuleEnabled === true,
     });
     setModalEditar(t);
   }
@@ -138,7 +170,13 @@ export default function SuperAdmin() {
     if (!modalEditar) return;
     setSalvando(true);
     try {
-      await superAdminService.atualizarTenant(modalEditar.id, formEditar);
+      const { payrollModuleEnabled, contractStartDate, periodoContrato, ...tenantData } = formEditar;
+      await superAdminService.atualizarTenant(modalEditar.id, tenantData);
+      await superAdminService.atualizarFeatures(modalEditar.id, { payrollModuleEnabled });
+      await superAdminService.atualizarContrato(modalEditar.id, {
+        contractStartDate: periodoContrato && periodoContrato !== 'SEM_LIMITE' ? contractStartDate : null,
+        periodoContrato: periodoContrato === 'SEM_LIMITE' ? null : periodoContrato,
+      });
       setModalEditar(null);
       carregar();
     } catch (e) {
@@ -329,7 +367,23 @@ export default function SuperAdmin() {
                         )}
                       </td>
                       <td><span className="badge badge-cinza">{PLANO_LABEL[t.plano]}</span></td>
-                      <td><span className={`badge ${badge.classe}`}>{badge.label}</span></td>
+                      <td>
+                        <span className={`badge ${badge.classe}`}>{badge.label}</span>
+                        {t.periodoContrato && (
+                          <div style={{ fontSize: 11, color: 'var(--cinza-400)', marginTop: 4 }}>
+                            {PERIODO_LABEL[t.periodoContrato] || t.periodoContrato}
+                          </div>
+                        )}
+                        {t.periodoContrato && t.contractEndDate && (() => {
+                          const dias = diasAteExpiracao(t.contractEndDate);
+                          if (dias == null) return null;
+                          if (dias < 0) return <div style={{ fontSize: 11, color: 'var(--vermelho)', marginTop: 4 }}>Contrato expirado</div>;
+                          return <div style={{ fontSize: 11, color: dias <= 7 ? 'var(--amarelo)' : 'var(--cinza-400)', marginTop: 4 }}>Expira em {dias}d</div>;
+                        })()}
+                        {t.features?.payrollModuleEnabled && (
+                          <div style={{ fontSize: 11, color: 'var(--verde)', marginTop: 4 }}>Folha ativa</div>
+                        )}
+                      </td>
                       <td style={{ textAlign:'center' }}>{t._count.usuarios}</td>
                       <td style={{ textAlign:'center' }}>{t._count.registros}</td>
                       <td style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{format(new Date(t.createdAt), 'dd/MM/yyyy')}</td>
@@ -515,6 +569,47 @@ export default function SuperAdmin() {
                     <option value="ENTERPRISE">Enterprise</option>
                   </select>
                 </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(formEditar.payrollModuleEnabled)}
+                    onChange={(e) => setFormEditar((p) => ({ ...p, payrollModuleEnabled: e.target.checked }))}
+                  />
+                  Módulo Folha de Pagamento habilitado
+                </label>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Vigência do contrato</label>
+                  <select
+                    className="input"
+                    value={formEditar.periodoContrato || 'SEM_LIMITE'}
+                    onChange={(e) => setFormEditar((p) => ({ ...p, periodoContrato: e.target.value }))}
+                  >
+                    <option value="SEM_LIMITE">Sem limite (padrão produção)</option>
+                    <option value="MENSAL">Mensal</option>
+                    <option value="SEMESTRAL">Semestral</option>
+                    <option value="ANUAL">Anual</option>
+                  </select>
+                  <p style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6 }}>
+                    Ao vencer, o sistema suspende o acesso automaticamente (sem integração externa).
+                  </p>
+                </div>
+                {formEditar.periodoContrato && formEditar.periodoContrato !== 'SEM_LIMITE' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Data de início</label>
+                    <input
+                      className="input"
+                      type="date"
+                      required
+                      value={formEditar.contractStartDate}
+                      onChange={(e) => setFormEditar((p) => ({ ...p, contractStartDate: e.target.value }))}
+                    />
+                    {formEditar.contractStartDate && (
+                      <p style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6 }}>
+                        Término previsto: <strong>{calcularFimPreview(formEditar.contractStartDate, formEditar.periodoContrato)}</strong>
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div style={MODAL_FOOTER}>

@@ -24,6 +24,10 @@ export default function Login() {
       else if (data.usuario.role === 'ADMIN') navigate('/dashboard');
       else navigate('/meu-ponto');
     } catch (err) {
+      if (err.response?.data?.code === 'CONTRACT_EXPIRED') {
+        navigate('/contrato-expirado');
+        return;
+      }
       setErro(err.response?.data?.error || 'Erro ao fazer login');
     } finally {
       setCarregando(false);

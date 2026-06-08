@@ -94,7 +94,13 @@ export default function Colaboradores() {
   }
 
   function abrirCriar() {
-    setForm({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR', localRegistroId:'', isentoGeofence: false, dataAdmissao:'', dataDemissao:'' });
+    setForm({
+      nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR',
+      localRegistroId:'', isentoGeofence: false, dataAdmissao:'', dataDemissao:'',
+      cpf:'', pis:'', matricula:'', tipoContrato:'CLT', salarioBase:'',
+      categoriaProfissional:'', dependentesIrrf:0,
+      contaBanco:'', contaAgencia:'', contaNumero:'', contaTipo:'',
+    });
     setErro('');
     setModal('criar');
   }
@@ -121,6 +127,17 @@ export default function Colaboradores() {
       isentoGeofence: Boolean(u.isentoGeofence),
       dataAdmissao: toLocalDate(u.dataAdmissao),
       dataDemissao: toLocalDate(u.dataDemissao),
+      cpf: u.cpf || '',
+      pis: u.pis || '',
+      matricula: u.matricula || '',
+      tipoContrato: u.tipoContrato || 'CLT',
+      salarioBase: u.salarioBase != null ? String(u.salarioBase) : '',
+      categoriaProfissional: u.categoriaProfissional || '',
+      dependentesIrrf: u.dependentesIrrf ?? 0,
+      contaBanco: u.contaBanco || '',
+      contaAgencia: u.contaAgencia || '',
+      contaNumero: u.contaNumero || '',
+      contaTipo: u.contaTipo || '',
     });
     setErro('');
     setModal(u);
@@ -406,6 +423,64 @@ export default function Colaboradores() {
                   />
                 </div>
               </div>
+
+              {form.role === 'COLABORADOR' && (
+                <div style={{ borderTop: '1px solid var(--cinza-200)', paddingTop: 12, display: 'grid', gap: 12 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Dados para folha de pagamento</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>CPF</label>
+                      <input className="input" value={form.cpf || ''} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>PIS</label>
+                      <input className="input" value={form.pis || ''} onChange={(e) => setForm((p) => ({ ...p, pis: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Salário base (R$)</label>
+                      <input className="input" type="number" step="0.01" value={form.salarioBase || ''} onChange={(e) => setForm((p) => ({ ...p, salarioBase: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Tipo contrato</label>
+                      <select className="input" value={form.tipoContrato || 'CLT'} onChange={(e) => setForm((p) => ({ ...p, tipoContrato: e.target.value }))}>
+                        <option value="CLT">CLT</option>
+                        <option value="ESTAGIO">Estágio</option>
+                        <option value="PJ">PJ</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Dependentes IRRF</label>
+                      <input className="input" type="number" min="0" value={form.dependentesIrrf ?? 0} onChange={(e) => setForm((p) => ({ ...p, dependentesIrrf: Number(e.target.value) }))} />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Matrícula</label>
+                      <input className="input" value={form.matricula || ''} onChange={(e) => setForm((p) => ({ ...p, matricula: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Banco</label>
+                      <input className="input" value={form.contaBanco || ''} onChange={(e) => setForm((p) => ({ ...p, contaBanco: e.target.value }))} placeholder="ex: 237" />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Agência</label>
+                      <input className="input" value={form.contaAgencia || ''} onChange={(e) => setForm((p) => ({ ...p, contaAgencia: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Conta</label>
+                      <input className="input" value={form.contaNumero || ''} onChange={(e) => setForm((p) => ({ ...p, contaNumero: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Tipo conta</label>
+                      <select className="input" value={form.contaTipo || ''} onChange={(e) => setForm((p) => ({ ...p, contaTipo: e.target.value }))}>
+                        <option value="">—</option>
+                        <option value="CORRENTE">Corrente</option>
+                        <option value="POUPANCA">Poupança</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>Função</label>

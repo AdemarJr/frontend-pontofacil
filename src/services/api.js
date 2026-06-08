@@ -92,6 +92,21 @@ api.interceptors.response.use(
         refreshando = false;
       }
     }
+    if (error.response?.status === 403 && error.response?.data?.code === 'FEATURE_DISABLED') {
+      const feature = error.response?.data?.feature || 'payroll';
+      if (feature === 'payroll' && !window.__pfFolhaUpgradeShown) {
+        window.__pfFolhaUpgradeShown = true;
+        alert('O módulo de Folha de Pagamento não está habilitado para sua empresa. Entre em contato com o comercial.');
+        setTimeout(() => { window.__pfFolhaUpgradeShown = false; }, 5000);
+      }
+      return Promise.reject(error);
+    }
+    if (error.response?.status === 403 && error.response?.data?.code === 'CONTRACT_EXPIRED') {
+      if (!window.location.pathname.startsWith('/contrato-expirado')) {
+        window.location.href = '/contrato-expirado';
+      }
+      return Promise.reject(error);
+    }
     return Promise.reject(error);
   }
 );
@@ -279,6 +294,34 @@ export const colaboradorService = {
   },
 };
 
+// ---- FOLHA DE PAGAMENTO ----
+export const folhaService = {
+  getConfig: () => api.get('/folha/config'),
+  putConfig: (dados) => api.put('/folha/config', dados),
+  calcular: (dados) => api.post('/folha/calcular', dados, { timeout: 120000 }),
+  listarRuns: (params) => api.get('/folha/runs', { params }),
+  obterRun: (id) => api.get(`/folha/runs/${id}`),
+  fechar: (id) => api.post(`/folha/runs/${id}/fechar`, {}, { timeout: 120000 }),
+  downloadHoleritePdf: async (holeriteId) => {
+    const res = await api.get(`/folha/holerites/${holeriteId}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `holerite-${holeriteId}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+  downloadCnab: async (runId) => {
+    const res = await api.post(`/folha/runs/${runId}/cnab`, {}, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `folha-${runId}.rem`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+};
+
 // ---- TENANT ----
 export const tenantService = {
   meu: () => api.get('/tenants/meu'),
@@ -294,6 +337,8 @@ export const superAdminService = {
   resetSenhaAdminTenant: (tenantId, adminId) =>
     api.post(`/super-admin/tenants/${tenantId}/admin/${adminId}/reset-senha`),
   atualizarTenant: (id, dados) => api.put(`/super-admin/tenants/${id}`, dados),
+  atualizarFeatures: (id, dados) => api.put(`/super-admin/tenants/${id}/features`, dados),
+  atualizarContrato: (id, dados) => api.put(`/super-admin/tenants/${id}/contrato`, dados),
   atualizarStatus: (id, status) => api.put(`/super-admin/tenants/${id}/status`, { status }),
   limparRegistrosTenant: (tenantId, confirmarNomeFantasia) =>
     api.post(`/super-admin/tenants/${tenantId}/limpar-registros`, { confirmarNomeFantasia }),

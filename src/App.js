@@ -28,6 +28,9 @@ import ColaboradorAppLayout from './components/colaborador/ColaboradorAppLayout'
 import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
+import FolhaConfig from './pages/FolhaConfig';
+import FolhaProcessar from './pages/FolhaProcessar';
+import ContratoExpirado from './pages/ContratoExpirado';
 import { useEffect } from 'react';
 
 function RotaProtegida({ children, apenasAdmin = false, apenasColaborador = false }) {
@@ -112,6 +115,7 @@ export default function App() {
           <Route path="/" element={<RedirecionarInicio />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/contrato-expirado" element={<ContratoExpirado />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
 
@@ -177,6 +181,17 @@ export default function App() {
           <Route path="/configuracoes" element={
             <RotaProtegida apenasAdmin>
               <Configuracoes />
+            </RotaProtegida>
+          } />
+          <Route path="/folha" element={<Navigate to="/folha/processar" replace />} />
+          <Route path="/folha/config" element={
+            <RotaProtegida apenasAdmin>
+              <FolhaConfig />
+            </RotaProtegida>
+          } />
+          <Route path="/folha/processar" element={
+            <RotaProtegida apenasAdmin>
+              <FolhaProcessar />
             </RotaProtegida>
           } />
 
