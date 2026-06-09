@@ -338,19 +338,22 @@ export default function Configuracoes() {
               </div>
               <div>
                 <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>
-                  Mínimo de intervalo antes do Retorno
+                  Intervalo intrajornada mínimo (CLT)
                 </label>
                 <input
                   className="input"
                   type="number"
-                  min="0"
-                  max="600"
+                  min="30"
+                  max="60"
                   value={form.intervaloMinimoAlmocoMinutos}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, intervaloMinimoAlmocoMinutos: Number(e.target.value) }))
                   }
                   style={{ maxWidth: '160px' }}
                 />
+                <p style={{ fontSize: 11, color: 'var(--cinza-400)', margin: '6px 0 0', lineHeight: 1.4 }}>
+                  Jornada acima de 6h: mínimo 1h (ou 30 min com convenção coletiva). Entre 4h e 6h: 15 min (fixo).
+                </p>
               </div>
             </div>
           </div>
