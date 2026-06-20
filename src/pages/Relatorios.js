@@ -23,6 +23,15 @@ function fmtMinutos(m) {
 }
 const TIPOS_COR = { ENTRADA:'var(--verde)', SAIDA_ALMOCO:'var(--amarelo)', RETORNO_ALMOCO:'var(--azul)', SAIDA:'var(--vermelho)' };
 
+const DIAS_SEMANA_ABREV = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+function fmtDiaEspelho(isoDate) {
+  const d = new Date(isoDate + 'T12:00:00');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm} (${DIAS_SEMANA_ABREV[d.getDay()]})`;
+}
+
 const STATUS_DIA_COR = {
   TRABALHADO: { bg: 'rgba(29,158,117,0.14)', fg: 'var(--verde-escuro)' },
   PARCIAL: { bg: 'rgba(245,158,11,0.16)', fg: '#92400e' },
@@ -739,7 +748,7 @@ export default function Relatorios() {
             <div key={dia} style={{ marginBottom:'12px', minWidth: 0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize:'12px', fontWeight:'600', color:'var(--cinza-700)', flexShrink: 0 }}>
-                  {format(new Date(dia + 'T12:00:00'), "dd/MM - EEE", { locale:ptBR })}
+                  {fmtDiaEspelho(dia)}
                 </span>
                 <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
                 <StatusDiaBadge status={dados.statusDia} label={dados.statusLabel} />
