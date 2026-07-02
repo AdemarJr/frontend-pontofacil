@@ -135,6 +135,8 @@ export const comprovanteAusenciaService = {
   decidir: (id, dados) => api.put(`/comprovantes-ausencia/${id}/decidir`, dados),
   /** Admin: registra folga/justificativa (sem documento). dados.tipo = 'FOLGA' | 'JUSTIFICATIVA'. */
   registrarFolga: (dados) => api.post('/comprovantes-ausencia/folga', dados),
+  /** Admin: altera folga/justificativa manual (data, tipo ou motivo). */
+  atualizarFolga: (id, dados) => api.put(`/comprovantes-ausencia/${id}/folga`, dados),
   /** Admin: remove um marcador manual (folga/justificativa). */
   removerFolga: (id) => api.delete(`/comprovantes-ausencia/${id}/folga`),
 };
