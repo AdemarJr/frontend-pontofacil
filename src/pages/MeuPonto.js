@@ -11,7 +11,7 @@ import {
 } from '../utils/meuPontoDeviceAccess';
 import { useAuth } from '../hooks/useAuth';
 import { useColaboradorChrome } from '../context/ColaboradorChromeContext';
-import { pontoService, tenantService, escalaService } from '../services/api';
+import { pontoService, tenantService, escalaService, colaboradorService } from '../services/api';
 import {
   enqueueMeuPontoOffline,
   flushMeuPontoOfflineQueue,
@@ -32,7 +32,10 @@ const TIPOS_LABEL = {
   SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
 
-function proximoTipoApos(tipo) {
+function proximoTipoApos(tipo, modoMarcacao = 'QUATRO_BATIDAS') {
+  if (modoMarcacao === 'DUAS_BATIDAS') {
+    return tipo === 'ENTRADA' ? 'SAIDA' : 'ENTRADA';
+  }
   const seq = {
     ENTRADA: 'SAIDA_ALMOCO',
     SAIDA_ALMOCO: 'RETORNO_ALMOCO',
@@ -108,6 +111,9 @@ export default function MeuPonto() {
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
   const [offlinePendentes, setOfflinePendentes] = useState(0);
+  const [modoMarcacao, setModoMarcacao] = useState('QUATRO_BATIDAS');
+  const [consentimentoAberto, setConsentimentoAberto] = useState(false);
+  const [comprovanteRegistro, setComprovanteRegistro] = useState(null);
 
   /** Erro típico de extensão do navegador — não vem do PontoFácil. */
   function humanizarErroRegistro(err) {
@@ -123,6 +129,13 @@ export default function MeuPonto() {
         'npx prisma migrate deploy\n' +
         'e reiniciar o backend.'
       );
+    }
+    if (code === 'CPF_PIS_OBRIGATORIO') {
+      return errorMsg || 'CPF ou PIS obrigatório. Solicite ao RH que complete seu cadastro.';
+    }
+    if (code === 'CONSENTIMENTO_OBRIGATORIO') {
+      setConsentimentoAberto(true);
+      return errorMsg || 'Aceite o termo de uso de dados antes de registrar ponto.';
     }
     if (code === 'FORA_GEOFENCE') {
       return (
@@ -265,6 +278,7 @@ export default function MeuPonto() {
         const anterior = proximoTipoRef.current;
         proximoTipoRef.current = novo;
         setProximoTipo(novo);
+        if (data.modoMarcacao) setModoMarcacao(data.modoMarcacao);
         const pend = data.pendenciaCheckin || null;
         setPendenciaCheckin(pend);
         // Modal só para turno aberto há muitas horas no MESMO dia (não bloqueia virada de dia).
@@ -347,6 +361,16 @@ export default function MeuPonto() {
     setChromeHidden(hide);
     return () => setChromeHidden(false);
   }, [etapa, setChromeHidden]);
+
+  useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
+    colaboradorService
+      .statusConsentimento()
+      .then(({ data }) => {
+        if (!data?.aceito) setConsentimentoAberto(true);
+      })
+      .catch(() => {});
+  }, [usuario?.id, usuario?.role]);
 
   useEffect(() => {
     if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
@@ -624,8 +648,9 @@ export default function MeuPonto() {
         irParaFilaOffline = async () => {
           await enqueueMeuPontoOffline(queueItem);
           lastSelfRegistroAt.current = Date.now();
-          setProximoTipo(proximoTipoApos(tipoParaEnviar));
-          proximoTipoRef.current = proximoTipoApos(tipoParaEnviar);
+          const prox = proximoTipoApos(tipoParaEnviar, modoMarcacao);
+          setProximoTipo(prox);
+          proximoTipoRef.current = prox;
           setMensagem(
             `Ponto guardado neste aparelho (${TIPOS_LABEL[tipoParaEnviar]?.label}).\n\nSerá enviado automaticamente quando houver internet.`
           );
@@ -649,10 +674,18 @@ export default function MeuPonto() {
 
         const res = await pontoService.registrar(payload);
         const aviso = res?.data?.aviso;
+        const reg = res?.data?.registro;
+
+        if (res?.data?.modoMarcacao) setModoMarcacao(res.data.modoMarcacao);
+        if (res?.data?.proximoTipo) {
+          setProximoTipo(res.data.proximoTipo);
+          proximoTipoRef.current = res.data.proximoTipo;
+        }
 
         lastSelfRegistroAt.current = Date.now();
 
-        const baseMsg = `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`;
+        const nsrTxt = reg?.nsr ? `\nNSR: ${reg.nsr}` : '';
+        const baseMsg = `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}${nsrTxt}`;
         if (aviso?.code === 'PENDENCIA_DIA_ANTERIOR') {
           setMensagem(
             baseMsg +
@@ -661,6 +694,7 @@ export default function MeuPonto() {
         } else {
           setMensagem(baseMsg);
         }
+        if (reg?.id) setComprovanteRegistro(reg);
         setEtapa('sucesso');
         setTimeout(() => {
           setEtapa('confirmar');
@@ -709,7 +743,7 @@ export default function MeuPonto() {
         setCarregando(false);
       }
     },
-    [proximoTipo, carregarProximo, tenantCfg?.geofenceAtivo, usuario?.tenant?.geofenceAtivo]
+    [proximoTipo, carregarProximo, tenantCfg?.geofenceAtivo, usuario?.tenant?.geofenceAtivo, modoMarcacao]
   );
 
   const registrarFoto = useCallback(async () => {
@@ -1302,6 +1336,78 @@ export default function MeuPonto() {
           {pendenciaCheckin?.sugerirNovoTurno
             ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
             : 'Registre a próxima batida do dia de hoje na sequência normal.'}
+        </p>
+      </Modal>
+
+      <Modal
+        open={consentimentoAberto}
+        onClose={() => {}}
+        title="Uso de dados no registro de ponto"
+        maxWidth={480}
+        zIndex={10000}
+        footer={(
+          <button
+            type="button"
+            className="btn btn-primary btn-full"
+            onClick={async () => {
+              try {
+                await colaboradorService.registrarConsentimento('2026-07-01');
+                setConsentimentoAberto(false);
+              } catch (e) {
+                alert(e?.response?.data?.error || 'Não foi possível registrar o consentimento.');
+              }
+            }}
+          >
+            Li e aceito
+          </button>
+        )}
+      >
+        <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+          Para registrar ponto pelo celular, o PontoFácil pode coletar <strong>geolocalização</strong> (cerca virtual)
+          e <strong>foto</strong> no momento da batida, conforme configuração da sua empresa. Os dados são usados
+          exclusivamente para controle de jornada e auditoria interna (Portaria MTE 671/2021 — REP-P web).
+        </p>
+      </Modal>
+
+      <Modal
+        open={Boolean(comprovanteRegistro?.id)}
+        onClose={() => setComprovanteRegistro(null)}
+        title="Comprovante de registro"
+        maxWidth={420}
+        footer={(
+          <>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              onClick={async () => {
+                try {
+                  const { data } = await pontoService.comprovantePdf(comprovanteRegistro.id);
+                  const url = window.URL.createObjectURL(data);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `comprovante_nsr${comprovanteRegistro.nsr || ''}.pdf`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                } catch (e) {
+                  alert(e?.response?.data?.error || 'Não foi possível baixar o comprovante.');
+                }
+              }}
+            >
+              Baixar PDF
+            </button>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setComprovanteRegistro(null)}>
+              Fechar
+            </button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0, fontSize: 14 }}>
+          NSR: <strong>{comprovanteRegistro?.nsr ?? '—'}</strong>
+          <br />
+          Horário: {comprovanteRegistro?.dataHora ? new Date(comprovanteRegistro.dataHora).toLocaleString('pt-BR') : '—'}
+        </p>
+        <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--cinza-400)' }}>
+          Comprovante administrativo. Assinatura ICP-Brasil pendente certificação REP-P.
         </p>
       </Modal>
     </div>

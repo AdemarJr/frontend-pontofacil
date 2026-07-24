@@ -9,12 +9,62 @@ import '../styles/landing.css';
 
 const WA_NUMBER = '5592994764780';
 const WA_TEXT = encodeURIComponent(
-  'Olá! Gostaria de falar com um consultor sobre o PontoFácil — controle de ponto digital.'
+  'Olá! Quero uma demonstração do PontoFácil — controle de ponto web/PWA para minha empresa ou órgão público.'
 );
 const WA_HREF = `https://wa.me/${WA_NUMBER}?text=${WA_TEXT}`;
 
 /** Logo no header (fundo claro) — `public/logo-horizontal.png`; rodapé usa filtro claro em CSS */
 const LOGO_LANDING = '/logo-horizontal.png';
+
+/** Dores comuns que a landing aborda (problema → solução). */
+const PAIN_POINTS = [
+  {
+    icon: 'relatorios',
+    title: 'Planilhas e papel no fim do mês',
+    text: 'RH perde horas fechando espelho, caçando ajustes e respondendo dúvidas do contador.',
+  },
+  {
+    icon: 'mapa',
+    title: 'Registro fora do local',
+    text: 'Sem regra clara de local, fica difícil confiar no ponto e evitar contestações.',
+  },
+  {
+    icon: 'jornadas',
+    title: 'Jornadas diferentes por equipe',
+    text: 'Escalas variadas, turnos e exceções viram retrabalho quando o sistema não acompanha.',
+  },
+  {
+    icon: 'shield',
+    title: 'Auditoria e conformidade',
+    text: 'Prefeituras e empresas precisam de rastreabilidade — quem alterou, quando e por quê.',
+  },
+];
+
+/** Segmentos B2B (prova de encaixe / prova social leve). */
+const SEGMENTS = [
+  {
+    title: 'Empresas privadas',
+    text: 'Comércio, serviços e indústria com totem na recepção, app no celular e painel para o gestor.',
+  },
+  {
+    title: 'Prefeituras e órgãos públicos',
+    text: 'Modo entrada e saída (2 batidas), espelho mensal e exportações para controle interno e TC/TCE.',
+  },
+  {
+    title: 'Operações multi-unidade',
+    text: 'Cada cliente isolado no SaaS, com políticas próprias de cerca virtual, foto e tolerâncias.',
+  },
+];
+
+/** Recursos REP-P administrativos (sem prometer certificação MTE). */
+const REP_P_FEATURES = [
+  { title: 'NSR sequencial', text: 'Numeração única por empresa em cada marcação, pronta para auditoria.' },
+  { title: 'Comprovante PDF', text: 'Colaborador recebe comprovante após a batida (CRP administrativo).' },
+  { title: 'Log de auditoria', text: 'Registros, ajustes e configurações ficam rastreados.' },
+  { title: 'Pré-AFD e AEJ', text: 'Exportações para arquivo interno e análise de jornada/extras.' },
+  { title: '2 ou 4 batidas', text: 'Entrada/saída simples ou com intervalo — definido por empresa.' },
+  { title: 'Modo inviolável', text: 'Opcional: bloqueia exclusão de registros quando exigido pela política.' },
+];
 
 /** Ordem e tamanhos otimizados para o grid Bento (desktop). */
 const FEATURES = [
@@ -28,39 +78,40 @@ const FEATURES = [
   {
     icon: 'mapa',
     title: 'Cerca virtual',
-    text: 'Defina as áreas permitidas para registro de ponto e evite fraudes.',
+    text: 'Defina áreas permitidas para registro e reduza risco de marcação fora do local.',
     bento: '2x1',
     highlight: true,
   },
   {
     icon: 'jornadas',
     title: 'Jornadas e escalas',
-    text: 'Configure horários e escalas com flexibilidade, de acordo com a necessidade da sua empresa.',
+    text: 'Horários flexíveis por colaborador ou escala reutilizável — o espelho acompanha a regra.',
     bento: '2x1',
     highlight: true,
   },
   {
     icon: 'monitor',
     title: 'Totem com PIN',
-    text: 'Tablet na entrada com teclado numérico, registro rápido por PIN e foto opcional — ideal para recepção.',
+    text: 'Tablet na entrada com teclado numérico, registro rápido por PIN e foto opcional.',
     bento: '2x1',
   },
   {
     icon: 'relatorios',
-    title: 'Espelho de ponto e relatórios',
-    text: 'Espelho mensal por colaborador, exportação CSV, ajustes manuais com motivo e auditoria.',
+    title: 'Espelho e relatórios',
+    text: 'Espelho mensal, exportação CSV/Excel/PDF, ajustes com motivo e trilha de auditoria.',
     bento: '2x1',
   },
   {
-    icon: 'camera',
-    title: 'Foto no registro',
-    text: 'Evidência visual integrada (armazenamento seguro; modo desenvolvimento sem S3 também disponível).',
+    icon: 'shield',
+    title: 'REP-P web (Portaria 671)',
+    text: 'NSR, comprovante, auditoria e exportações administrativas — sistema 100% web/PWA, sem relógio físico.',
     bento: '2x1',
+    highlight: true,
   },
   {
     icon: 'empresa',
     title: 'Multi-empresa (SaaS)',
-    text: 'Isolamento total por tenant: cada cliente com seus dados, usuários e políticas próprias.',
+    text: 'Isolamento total por tenant: cada cliente com dados, usuários e políticas próprias.',
     bento: '2x1',
   },
 ];
@@ -90,10 +141,11 @@ export default function Landing() {
             />
           </Link>
           <nav className="landing-nav" aria-label="Seções">
+            <a href="#desafios">Desafios</a>
             <a href="#produto">Produto</a>
             <a href="#funcionalidades">Funcionalidades</a>
+            <a href="#conformidade">Conformidade</a>
             <a href="#planos">Planos</a>
-            <a href="#seguranca">Segurança</a>
             <a href="#como-funciona">Como funciona</a>
           </nav>
           <div className="landing-header-actions">
@@ -111,20 +163,21 @@ export default function Landing() {
         <div className="landing-hero-bg" aria-hidden />
         <div className="landing-hero-inner">
           <div className="landing-hero-copy">
-            <p className="landing-hero-kicker">Para empresas que querem ponto simples, seguro e sob controle</p>
+            <p className="landing-hero-kicker">REP-P web · PWA no celular · Totem · Sem relógio físico</p>
             <h1>
-              Controle de ponto <span className="landing-text-brand">digital</span> que sua empresa merece
+              Ponto eletrônico <span className="landing-text-brand">100% digital</span> para empresas e órgãos públicos
             </h1>
             <p className="lead">
-              Com o PontoFácil você organiza jornadas e escalas, reduz risco de registro fora do local com cerca
-              virtual e acompanha tudo em um painel — totem com PIN, relatórios e multi-empresa em uma solução que
-              roda no navegador ou instalada no tablet e no celular (PWA).
+              O PontoFácil centraliza marcações, jornadas e espelho de ponto em um painel na nuvem. Colaboradores
+              registram pelo celular (PWA) ou totem com PIN; o RH acompanha em tempo real, com cerca virtual,
+              auditoria e exportações para controle interno — incluindo modo <strong>entrada e saída</strong> para
+              prefeituras.
             </p>
             <div className="landing-pill-row" aria-hidden>
-              <span className="landing-pill">Jornadas e escalas</span>
+              <span className="landing-pill">PWA + Totem</span>
               <span className="landing-pill">Cerca virtual</span>
-              <span className="landing-pill">Totem com PIN</span>
-              <span className="landing-pill">Multi-empresa</span>
+              <span className="landing-pill">2 ou 4 batidas</span>
+              <span className="landing-pill">NSR e auditoria</span>
             </div>
             <div className="landing-hero-ctas">
               <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="landing-btn-wa">
@@ -161,7 +214,46 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="produto" className="landing-section landing-showcase-section">
+      <section id="desafios" className="landing-section alt">
+        <div className="landing-section-inner">
+          <h2>Reconhece esses desafios no seu RH?</h2>
+          <p className="sub">
+            Muitas equipes ainda fecham o mês no improviso. O PontoFácil foi pensado para substituir planilha e
+            papel por um fluxo digital claro — do registro à exportação para o contador.
+          </p>
+          <div className="landing-pain-grid">
+            {PAIN_POINTS.map((item) => (
+              <article key={item.title} className="landing-card landing-pain-card">
+                <div className="icon" aria-hidden>
+                  <AppIcon name={item.icon} size={22} />
+                </div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="para-quem" className="landing-section">
+        <div className="landing-section-inner">
+          <h2>Para quem é o PontoFácil</h2>
+          <p className="sub">
+            Solução B2B em nuvem: implantação rápida, sem hardware de relógio de ponto e com regras configuráveis
+            por cliente.
+          </p>
+          <div className="landing-segments">
+            {SEGMENTS.map((s) => (
+              <article key={s.title} className="landing-segment-card">
+                <h3>{s.title}</h3>
+                <p>{s.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="produto" className="landing-section landing-showcase-section alt">
         <div className="landing-section-inner">
           <h2>O sistema em ação</h2>
           <p className="sub">
@@ -263,7 +355,31 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="como-funciona" className="landing-section alt">
+      <section id="conformidade" className="landing-section alt">
+        <div className="landing-section-inner">
+          <h2>Conformidade REP-P (controle administrativo web)</h2>
+          <p className="sub">
+            O PontoFácil é um <strong>Registrador Eletrônico de Ponto por Programa (REP-P)</strong>: tudo roda no
+            navegador ou PWA — não substitui relógio físico (REP-C). Recursos alinhados à Portaria MTE 671/2021
+            para gestão e auditoria interna.
+          </p>
+          <div className="landing-rep-grid">
+            {REP_P_FEATURES.map((item) => (
+              <div key={item.title} className="landing-rep-item">
+                <strong>{item.title}</strong>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+          <p className="landing-rep-disclaimer">
+            <strong>Transparência:</strong> comprovantes e exportações atuais são <em>administrativos</em> (sem
+            assinatura ICP-Brasil). Certificação formal REP-P junto ao MTE/INMETRO e AFD oficial com CAdES/PAdES
+            estão previstos em fase futura — consulte nosso time o que já está disponível para o seu caso.
+          </p>
+        </div>
+      </section>
+
+      <section id="como-funciona" className="landing-section">
         <div className="landing-section-inner">
           <h2>Como funciona na prática</h2>
           <p className="sub">
@@ -311,10 +427,10 @@ export default function Landing() {
               <h3>Básico</h3>
               <p className="price-note">Até 10 usuários</p>
               <ul>
-                <li>Totem + PIN</li>
-                <li>Dashboard e colaboradores</li>
-                <li>Jornadas, escalas e espelho de ponto</li>
-                <li>Cerca virtual e foto configuráveis</li>
+                <li>Totem + PIN e app PWA</li>
+                <li>Dashboard, colaboradores e espelho</li>
+                <li>Jornadas, escalas e cerca virtual</li>
+                <li>Modo 2 batidas (entrada/saída) ou 4 batidas</li>
               </ul>
               <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="landing-btn-plan landing-btn-plan--secondary btn-full">
                 Solicitar proposta
@@ -371,8 +487,8 @@ export default function Landing() {
             ))}
           </div>
           <p className="landing-security-footnote">
-            Em evolução: mais integrações com folha, notificações e outras melhorias. Pergunte ao consultor o
-            que já está disponível hoje e o que vem na sequência para o seu caso.
+            Dados isolados por empresa (multi-tenant), consentimento LGPD no app do colaborador e evolução contínua
+            do produto — folha de pagamento, notificações e integrações conforme o plano contratado.
           </p>
         </div>
       </section>
@@ -458,10 +574,10 @@ export default function Landing() {
 
       <section className="landing-cta">
         <div className="landing-cta-inner">
-          <h2>Quer ver o PontoFácil no seu cenário?</h2>
+          <h2>Quer uma demonstração para sua empresa ou órgão?</h2>
           <p>
-            Conte para a gente o tamanho da equipe e como vocês registram ponto hoje. Respondemos com plano,
-            próximos passos e tudo o que precisa para decidir com segurança.
+            Conte o porte da equipe, se usam só entrada/saída ou intervalo, e como registram ponto hoje. Montamos
+            uma proposta com plano, implantação e próximos passos — sem compromisso.
           </p>
           <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="landing-btn-wa landing-btn-wa--lg">
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>

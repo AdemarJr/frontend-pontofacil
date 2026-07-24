@@ -16,6 +16,23 @@ const STATUS_BADGE = {
 };
 const PLANO_LABEL = { BASICO:'Básico', PROFISSIONAL:'Profissional', ENTERPRISE:'Enterprise' };
 
+function SelectModoMarcacao({ value, onChange }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>
+        Modo de marcação de ponto
+      </label>
+      <select className="input" value={value || 'QUATRO_BATIDAS'} onChange={onChange}>
+        <option value="QUATRO_BATIDAS">4 batidas (entrada, intervalo, retorno, saída)</option>
+        <option value="DUAS_BATIDAS">2 batidas (entrada e saída, sem intervalo)</option>
+      </select>
+      <p style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 6, lineHeight: 1.45 }}>
+        Prefeituras e órgãos públicos que registram só entrada e saída devem escolher 2 batidas.
+      </p>
+    </div>
+  );
+}
+
 export default function SuperAdmin() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
@@ -26,10 +43,12 @@ export default function SuperAdmin() {
   const [modalEditar, setModalEditar] = useState(null);
   const [form, setForm] = useState({
     razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+    modoMarcacao:'QUATRO_BATIDAS',
     adminNome:'', adminEmail:'', adminSenha:'',
   });
   const [formEditar, setFormEditar] = useState({
     razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+    modoMarcacao:'QUATRO_BATIDAS',
     contractStartDate:'', periodoContrato:'', payrollModuleEnabled:false,
   });
   const [modalAdmin, setModalAdmin] = useState(null);
@@ -57,6 +76,7 @@ export default function SuperAdmin() {
   function abrirNovo() {
     setForm({
       razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+      modoMarcacao:'QUATRO_BATIDAS',
       adminNome:'', adminEmail:'', adminSenha:'',
     });
     setModal(true);
@@ -120,6 +140,7 @@ export default function SuperAdmin() {
       email: t.email,
       telefone: t.telefone || '',
       plano: t.plano,
+      modoMarcacao: t.modoMarcacao || 'QUATRO_BATIDAS',
       contractStartDate: toInputDate(t.contractStartDate),
       periodoContrato: t.periodoContrato || 'SEM_LIMITE',
       payrollModuleEnabled: isFolhaHabilitada(t.features),
@@ -529,6 +550,10 @@ export default function SuperAdmin() {
                     <option value="ENTERPRISE">Enterprise (ilimitado)</option>
                   </select>
                 </div>
+                <SelectModoMarcacao
+                  value={form.modoMarcacao}
+                  onChange={(e) => setForm((p) => ({ ...p, modoMarcacao: e.target.value }))}
+                />
                 <p
                   style={{
                     fontSize: '12px',
@@ -601,6 +626,10 @@ export default function SuperAdmin() {
                     <option value="ENTERPRISE">Enterprise</option>
                   </select>
                 </div>
+                <SelectModoMarcacao
+                  value={formEditar.modoMarcacao}
+                  onChange={(e) => setFormEditar((p) => ({ ...p, modoMarcacao: e.target.value }))}
+                />
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input
                     type="checkbox"
