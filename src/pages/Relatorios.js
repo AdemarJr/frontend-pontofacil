@@ -23,6 +23,15 @@ function fmtMinutos(m) {
 }
 const TIPOS_COR = { ENTRADA:'var(--verde)', SAIDA_ALMOCO:'var(--amarelo)', RETORNO_ALMOCO:'var(--azul)', SAIDA:'var(--vermelho)' };
 
+const DIAS_SEMANA_ABREV = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+function fmtDiaEspelho(isoDate) {
+  const d = new Date(isoDate + 'T12:00:00');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm} (${DIAS_SEMANA_ABREV[d.getDay()]})`;
+}
+
 const STATUS_DIA_COR = {
   TRABALHADO: { bg: 'rgba(29,158,117,0.14)', fg: 'var(--verde-escuro)' },
   PARCIAL: { bg: 'rgba(245,158,11,0.16)', fg: '#92400e' },
@@ -125,6 +134,11 @@ export default function Relatorios() {
   const [folgaFim, setFolgaFim] = useState('');
   const [folgaDescricao, setFolgaDescricao] = useState('');
   const [salvandoFolga, setSalvandoFolga] = useState(false);
+  const [exportFiscalLoading, setExportFiscalLoading] = useState(false);
+  const [auditInicio, setAuditInicio] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [auditFim, setAuditFim] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [auditoria, setAuditoria] = useState([]);
+  const [carregandoAuditoria, setCarregandoAuditoria] = useState(false);
 
   useEffect(() => {
     usuarioService.listar().then(({ data }) => setUsuarios(data));
@@ -295,6 +309,51 @@ export default function Relatorios() {
 
   function toggleAberto(usuarioId) {
     setAbertos((prev) => ({ ...prev, [usuarioId]: !prev?.[usuarioId] }));
+  }
+
+  async function exportarPreAfd() {
+    const dataInicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+    const ultimo = new Date(ano, mes, 0).getDate();
+    const dataFim = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimo).padStart(2, '0')}`;
+    setExportFiscalLoading(true);
+    try {
+      await relatorioService.downloadPreAfd({ dataInicio, dataFim });
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Falha ao exportar pré-AFD.');
+    } finally {
+      setExportFiscalLoading(false);
+    }
+  }
+
+  async function exportarAej() {
+    setExportFiscalLoading(true);
+    try {
+      await relatorioService.downloadAej({
+        mes,
+        ano,
+        ...(usuarioFiltro ? { usuarioId: usuarioFiltro } : {}),
+      });
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.message || 'Falha ao exportar AEJ.');
+    } finally {
+      setExportFiscalLoading(false);
+    }
+  }
+
+  async function carregarAuditoria() {
+    setCarregandoAuditoria(true);
+    try {
+      const { data } = await relatorioService.listarAuditoria({
+        dataInicio: auditInicio,
+        dataFim: auditFim,
+        limite: 200,
+      });
+      setAuditoria(Array.isArray(data?.eventos) ? data.eventos : []);
+    } catch {
+      setAuditoria([]);
+    } finally {
+      setCarregandoAuditoria(false);
+    }
   }
 
   function verDetalhes() {
@@ -739,7 +798,7 @@ export default function Relatorios() {
             <div key={dia} style={{ marginBottom:'12px', minWidth: 0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize:'12px', fontWeight:'600', color:'var(--cinza-700)', flexShrink: 0 }}>
-                  {format(new Date(dia + 'T12:00:00'), "dd/MM - EEE", { locale:ptBR })}
+                  {fmtDiaEspelho(dia)}
                 </span>
                 <span style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{dados.horasTrabalhadas} trabalhadas</span>
                 <StatusDiaBadge status={dados.statusDia} label={dados.statusLabel} />
@@ -839,6 +898,67 @@ export default function Relatorios() {
           )}
         </>
       )}
+      </div>
+
+      <div className="card" style={{ marginTop: 24 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Exportação fiscal (REP-P)</h2>
+        <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginBottom: 16, lineHeight: 1.5 }}>
+          Arquivos administrativos alinhados à Portaria 671/2021. Não substituem AFD certificado com ICP-Brasil.
+        </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+          <button type="button" className="btn btn-secondary" disabled={exportFiscalLoading} onClick={exportarPreAfd}>
+            {exportFiscalLoading ? '…' : '⬇ Pré-AFD (TXT)'}
+          </button>
+          <button type="button" className="btn btn-secondary" disabled={exportFiscalLoading} onClick={exportarAej}>
+            {exportFiscalLoading ? '…' : '⬇ AEJ (CSV)'}
+          </button>
+        </div>
+
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Auditoria de alterações</h3>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: 'var(--cinza-400)', marginBottom: 4 }}>De</label>
+            <input className="input" type="date" value={auditInicio} onChange={(e) => setAuditInicio(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: 'var(--cinza-400)', marginBottom: 4 }}>Até</label>
+            <input className="input" type="date" value={auditFim} onChange={(e) => setAuditFim(e.target.value)} />
+          </div>
+          <button type="button" className="btn btn-secondary" disabled={carregandoAuditoria} onClick={carregarAuditoria}>
+            {carregandoAuditoria ? '…' : 'Listar'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => relatorioService.downloadAuditoriaCsv({ dataInicio: auditInicio, dataFim: auditFim })}
+          >
+            ⬇ CSV
+          </button>
+        </div>
+        {auditoria.length === 0 ? (
+          <p style={{ fontSize: 13, color: 'var(--cinza-400)', margin: 0 }}>Nenhum evento listado no período.</p>
+        ) : (
+          <div style={{ maxHeight: 280, overflow: 'auto', fontSize: 12 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--cinza-200)' }}>
+                  <th style={{ padding: '6px 8px' }}>Quando</th>
+                  <th style={{ padding: '6px 8px' }}>Ação</th>
+                  <th style={{ padding: '6px 8px' }}>Entidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditoria.map((ev) => (
+                  <tr key={ev.id} style={{ borderBottom: '1px solid var(--cinza-100)' }}>
+                    <td style={{ padding: '6px 8px' }}>{new Date(ev.createdAt).toLocaleString('pt-BR')}</td>
+                    <td style={{ padding: '6px 8px' }}>{ev.acao}</td>
+                    <td style={{ padding: '6px 8px' }}>{ev.entidade} · {ev.entidadeId?.slice(0, 8)}…</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
     </Layout>

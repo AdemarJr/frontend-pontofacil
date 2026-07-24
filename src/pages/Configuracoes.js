@@ -5,8 +5,11 @@ import ListPagination, { slicePaged } from '../components/ListPagination';
 import AppIcon from '../components/AppIcon';
 import { tenantService, localRegistroService } from '../services/api';
 import { runConfiguracoesTour } from '../tours/configuracoesTour';
+import { useAuth } from '../hooks/useAuth';
+import FolhaConfigSection from '../components/folha/FolhaConfigSection';
 
 export default function Configuracoes() {
+  const { folhaHabilitada } = useAuth();
   const [config, setConfig] = useState(null);
   const [form, setForm] = useState({});
   const [salvando, setSalvando] = useState(false);
@@ -31,6 +34,9 @@ export default function Configuracoes() {
         toleranciaMinutos: data.toleranciaMinutos || 5,
         trabalhoMinimoAntesSaidaMinutos: data.trabalhoMinimoAntesSaidaMinutos ?? 30,
         intervaloMinimoAlmocoMinutos: data.intervaloMinimoAlmocoMinutos ?? 30,
+        modoMarcacao: data.modoMarcacao || 'QUATRO_BATIDAS',
+        modoInviolavel: Boolean(data.modoInviolavel),
+        exigirCpfPis: data.exigirCpfPis !== false,
       });
     });
   }, []);
@@ -48,6 +54,14 @@ export default function Configuracoes() {
     const t = setTimeout(() => runConfiguracoesTour({ force: false }), 600);
     return () => clearTimeout(t);
   }, [config]);
+
+  useEffect(() => {
+    if (!config || !folhaHabilitada || window.location.hash !== '#folha-config') return undefined;
+    const t = setTimeout(() => {
+      document.getElementById('folha-config')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [config, folhaHabilitada]);
 
   async function salvar() {
     setSalvando(true);
@@ -154,6 +168,45 @@ export default function Configuracoes() {
               <span style={{ fontSize:'14px', fontWeight:'500' }}>Permitir registro pelo Meu ponto (celular)</span>
             </label>
           </div>
+        </div>
+
+        {/* REP-P / Portaria 671 */}
+        <div className="card">
+          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>REP-P (controle web)</h2>
+          <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'12px', lineHeight:1.5 }}>
+            Configurações de conformidade administrativa com a Portaria MTE 671/2021 (sem certificação ICP nesta etapa).
+          </p>
+          <div style={{ marginBottom:'14px' }}>
+            <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>Modo de marcação</label>
+            <select
+              className="input"
+              value={form.modoMarcacao || 'QUATRO_BATIDAS'}
+              onChange={(e) => setForm((p) => ({ ...p, modoMarcacao: e.target.value }))}
+            >
+              <option value="QUATRO_BATIDAS">4 batidas (entrada, intervalo, retorno, saída)</option>
+              <option value="DUAS_BATIDAS">2 batidas (entrada e saída)</option>
+            </select>
+          </div>
+          <label style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px', cursor:'pointer' }}>
+            <input
+              type="checkbox"
+              checked={form.exigirCpfPis !== false}
+              onChange={(e) => setForm((p) => ({ ...p, exigirCpfPis: e.target.checked }))}
+              style={{ width:'18px', height:'18px', accentColor:'var(--verde)' }}
+            />
+            <span style={{ fontSize:'14px' }}>Exigir CPF ou PIS para registrar ponto</span>
+          </label>
+          <label style={{ display:'flex', alignItems:'flex-start', gap:'10px', cursor:'pointer' }}>
+            <input
+              type="checkbox"
+              checked={Boolean(form.modoInviolavel)}
+              onChange={(e) => setForm((p) => ({ ...p, modoInviolavel: e.target.checked }))}
+              style={{ width:'18px', height:'18px', accentColor:'var(--verde)', marginTop:'2px' }}
+            />
+            <span style={{ fontSize:'14px', lineHeight:1.45 }}>
+              Modo inviolável — impede exclusão de registros pelo painel (ajustes continuam auditados).
+            </span>
+          </label>
         </div>
 
         {/* Geofencing */}
@@ -327,23 +380,28 @@ export default function Configuracoes() {
               </div>
               <div>
                 <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>
-                  Mínimo de intervalo antes do Retorno
+                  Intervalo intrajornada mínimo (CLT)
                 </label>
                 <input
                   className="input"
                   type="number"
-                  min="0"
-                  max="600"
+                  min="30"
+                  max="60"
                   value={form.intervaloMinimoAlmocoMinutos}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, intervaloMinimoAlmocoMinutos: Number(e.target.value) }))
                   }
                   style={{ maxWidth: '160px' }}
                 />
+                <p style={{ fontSize: 11, color: 'var(--cinza-400)', margin: '6px 0 0', lineHeight: 1.4 }}>
+                  Jornada acima de 6h: mínimo 1h (ou 30 min com convenção coletiva). Entre 4h e 6h: 15 min (fixo).
+                </p>
               </div>
             </div>
           </div>
         </div>
+
+        {folhaHabilitada && <FolhaConfigSection />}
 
         {sucesso && (
           <div style={{ background:'var(--verde-claro)', color:'var(--verde-escuro)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>

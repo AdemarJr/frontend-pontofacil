@@ -11,7 +11,7 @@ import {
 } from '../utils/meuPontoDeviceAccess';
 import { useAuth } from '../hooks/useAuth';
 import { useColaboradorChrome } from '../context/ColaboradorChromeContext';
-import { pontoService, tenantService, escalaService } from '../services/api';
+import { pontoService, tenantService, escalaService, colaboradorService } from '../services/api';
 import {
   enqueueMeuPontoOffline,
   flushMeuPontoOfflineQueue,
@@ -23,6 +23,7 @@ import { getMeuPontoDeviceId } from '../utils/meuPontoDeviceId';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
 import { publicUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
+import Modal from '../components/Modal';
 
 const TIPOS_LABEL = {
   ENTRADA: { label: 'Entrada', cor: '#1D9E75', icon: 'dot' },
@@ -31,7 +32,10 @@ const TIPOS_LABEL = {
   SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
 
-function proximoTipoApos(tipo) {
+function proximoTipoApos(tipo, modoMarcacao = 'QUATRO_BATIDAS') {
+  if (modoMarcacao === 'DUAS_BATIDAS') {
+    return tipo === 'ENTRADA' ? 'SAIDA' : 'ENTRADA';
+  }
   const seq = {
     ENTRADA: 'SAIDA_ALMOCO',
     SAIDA_ALMOCO: 'RETORNO_ALMOCO',
@@ -107,6 +111,9 @@ export default function MeuPonto() {
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
   const [offlinePendentes, setOfflinePendentes] = useState(0);
+  const [modoMarcacao, setModoMarcacao] = useState('QUATRO_BATIDAS');
+  const [consentimentoAberto, setConsentimentoAberto] = useState(false);
+  const [comprovanteRegistro, setComprovanteRegistro] = useState(null);
 
   /** Erro típico de extensão do navegador — não vem do PontoFácil. */
   function humanizarErroRegistro(err) {
@@ -122,6 +129,13 @@ export default function MeuPonto() {
         'npx prisma migrate deploy\n' +
         'e reiniciar o backend.'
       );
+    }
+    if (code === 'CPF_PIS_OBRIGATORIO') {
+      return errorMsg || 'CPF ou PIS obrigatório. Solicite ao RH que complete seu cadastro.';
+    }
+    if (code === 'CONSENTIMENTO_OBRIGATORIO') {
+      setConsentimentoAberto(true);
+      return errorMsg || 'Aceite o termo de uso de dados antes de registrar ponto.';
     }
     if (code === 'FORA_GEOFENCE') {
       return (
@@ -264,6 +278,7 @@ export default function MeuPonto() {
         const anterior = proximoTipoRef.current;
         proximoTipoRef.current = novo;
         setProximoTipo(novo);
+        if (data.modoMarcacao) setModoMarcacao(data.modoMarcacao);
         const pend = data.pendenciaCheckin || null;
         setPendenciaCheckin(pend);
         // Modal só para turno aberto há muitas horas no MESMO dia (não bloqueia virada de dia).
@@ -346,6 +361,16 @@ export default function MeuPonto() {
     setChromeHidden(hide);
     return () => setChromeHidden(false);
   }, [etapa, setChromeHidden]);
+
+  useEffect(() => {
+    if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
+    colaboradorService
+      .statusConsentimento()
+      .then(({ data }) => {
+        if (!data?.aceito) setConsentimentoAberto(true);
+      })
+      .catch(() => {});
+  }, [usuario?.id, usuario?.role]);
 
   useEffect(() => {
     if (!usuario?.id || usuario.role !== 'COLABORADOR') return;
@@ -623,8 +648,9 @@ export default function MeuPonto() {
         irParaFilaOffline = async () => {
           await enqueueMeuPontoOffline(queueItem);
           lastSelfRegistroAt.current = Date.now();
-          setProximoTipo(proximoTipoApos(tipoParaEnviar));
-          proximoTipoRef.current = proximoTipoApos(tipoParaEnviar);
+          const prox = proximoTipoApos(tipoParaEnviar, modoMarcacao);
+          setProximoTipo(prox);
+          proximoTipoRef.current = prox;
           setMensagem(
             `Ponto guardado neste aparelho (${TIPOS_LABEL[tipoParaEnviar]?.label}).\n\nSerá enviado automaticamente quando houver internet.`
           );
@@ -648,10 +674,18 @@ export default function MeuPonto() {
 
         const res = await pontoService.registrar(payload);
         const aviso = res?.data?.aviso;
+        const reg = res?.data?.registro;
+
+        if (res?.data?.modoMarcacao) setModoMarcacao(res.data.modoMarcacao);
+        if (res?.data?.proximoTipo) {
+          setProximoTipo(res.data.proximoTipo);
+          proximoTipoRef.current = res.data.proximoTipo;
+        }
 
         lastSelfRegistroAt.current = Date.now();
 
-        const baseMsg = `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`;
+        const nsrTxt = reg?.nsr ? `\nNSR: ${reg.nsr}` : '';
+        const baseMsg = `Ponto registrado!\n${TIPOS_LABEL[tipoParaEnviar]?.label} — ${new Date().toLocaleTimeString('pt-BR')}${nsrTxt}`;
         if (aviso?.code === 'PENDENCIA_DIA_ANTERIOR') {
           setMensagem(
             baseMsg +
@@ -660,6 +694,7 @@ export default function MeuPonto() {
         } else {
           setMensagem(baseMsg);
         }
+        if (reg?.id) setComprovanteRegistro(reg);
         setEtapa('sucesso');
         setTimeout(() => {
           setEtapa('confirmar');
@@ -708,7 +743,7 @@ export default function MeuPonto() {
         setCarregando(false);
       }
     },
-    [proximoTipo, carregarProximo, tenantCfg?.geofenceAtivo, usuario?.tenant?.geofenceAtivo]
+    [proximoTipo, carregarProximo, tenantCfg?.geofenceAtivo, usuario?.tenant?.geofenceAtivo, modoMarcacao]
   );
 
   const registrarFoto = useCallback(async () => {
@@ -1201,169 +1236,180 @@ export default function MeuPonto() {
       </div>
       ) : null}
 
-      {/* Modal de justificativa */}
-      {justificarModal ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(2,6,23,0.72)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            zIndex: 9999,
-          }}
-          onClick={() => setJustificarModal(null)}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 520,
-              background: '#0b1220',
-              border: '1px solid rgba(148,163,184,0.18)',
-              borderRadius: 16,
-              padding: 18,
-              boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 900 }}>
-              Justificar batida faltante
-            </p>
-            <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
-              Dia: <b>{justificarModal.dia}</b> · Tipo: <b>{TIPOS_LABEL[justificarModal.tipo]?.label || justificarModal.tipo}</b>
-            </p>
-
-            <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
-              <div>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
-                  Sugestão de horário (opcional)
-                </label>
-                <input
-                  className="input"
-                  type="datetime-local"
-                  value={justificarForm.dataHoraSugerida}
-                  onChange={(e) => setJustificarForm((p) => ({ ...p, dataHoraSugerida: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
-                  Justificativa *
-                </label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  value={justificarForm.justificativa}
-                  onChange={(e) => setJustificarForm((p) => ({ ...p, justificativa: e.target.value }))}
-                  placeholder="Ex: Esqueci de registrar a saída do intervalo."
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setJustificarModal(null)}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={salvandoJustificativa || !String(justificarForm.justificativa || '').trim()}
-                onClick={salvarJustificativa}
-              >
-                {salvandoJustificativa ? 'Enviando…' : 'Enviar justificativa'}
-              </button>
-            </div>
+      <Modal
+        open={!!justificarModal}
+        onClose={() => setJustificarModal(null)}
+        title="Justificar batida faltante"
+        subtitle={justificarModal ? `Dia: ${justificarModal.dia} · Tipo: ${TIPOS_LABEL[justificarModal.tipo]?.label || justificarModal.tipo}` : ''}
+        variant="dark"
+        maxWidth={520}
+        zIndex={9999}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setJustificarModal(null)}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              disabled={salvandoJustificativa || !String(justificarForm.justificativa || '').trim()}
+              onClick={salvarJustificativa}
+            >
+              {salvandoJustificativa ? 'Enviando…' : 'Enviar justificativa'}
+            </button>
+          </>
+        )}
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div>
+            <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+              Sugestão de horário (opcional)
+            </label>
+            <input
+              className="input"
+              type="datetime-local"
+              value={justificarForm.dataHoraSugerida}
+              onChange={(e) => setJustificarForm((p) => ({ ...p, dataHoraSugerida: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+              Justificativa *
+            </label>
+            <textarea
+              className="input"
+              rows={3}
+              value={justificarForm.justificativa}
+              onChange={(e) => setJustificarForm((p) => ({ ...p, justificativa: e.target.value }))}
+              placeholder="Ex: Esqueci de registrar a saída do intervalo."
+              style={{ resize: 'vertical' }}
+            />
           </div>
         </div>
-      ) : null}
+      </Modal>
 
-      {pendenciaModalAberto && pendenciaCheckin?.aberta ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(2,6,23,0.72)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            zIndex: 9999,
-          }}
-          onClick={() => setPendenciaModalAberto(false)}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 520,
-              background: '#0b1220',
-              border: '1px solid rgba(148,163,184,0.18)',
-              borderRadius: 16,
-              padding: 18,
-              boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 800 }}>
-              Turno de hoje ainda em aberto
-            </p>
-            <p style={{ marginTop: 10, marginBottom: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
-              Seu último registro foi há aproximadamente <b>{pendenciaCheckin.horasAberto}h</b> e pode faltar a saída de hoje.
-            </p>
-            <p style={{ marginTop: 10, marginBottom: 0, color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
-              {pendenciaCheckin.sugerirNovoTurno
-                ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
-                : 'Registre a próxima batida do dia de hoje na sequência normal.'}
-            </p>
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+      <Modal
+        open={pendenciaModalAberto && !!pendenciaCheckin?.aberta}
+        onClose={() => setPendenciaModalAberto(false)}
+        title="Turno de hoje ainda em aberto"
+        variant="dark"
+        maxWidth={520}
+        zIndex={9999}
+        footer={(
+          <>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              disabled={carregando}
+              onClick={() => {
+                setPendenciaModalAberto(false);
+                setRegistroOpts(null);
+                if (fotoObrigatoria) setEtapa('camera');
+                else enviarRegistro(null, {});
+              }}
+            >
+              Continuar ponto de hoje
+            </button>
+            {pendenciaCheckin?.sugerirNovoTurno ? (
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-secondary btn-full"
                 disabled={carregando}
                 onClick={() => {
                   setPendenciaModalAberto(false);
-                  setRegistroOpts(null);
+                  setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
                   if (fotoObrigatoria) setEtapa('camera');
-                  else enviarRegistro(null, {});
+                  else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
                 }}
               >
-                Continuar ponto de hoje
+                Nova entrada (encerrar turno)
               </button>
+            ) : null}
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setPendenciaModalAberto(false)}>
+              Agora não
+            </button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
+          Seu último registro foi há aproximadamente <b>{pendenciaCheckin?.horasAberto}h</b> e pode faltar a saída de hoje.
+        </p>
+        <p style={{ margin: '10px 0 0', color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
+          {pendenciaCheckin?.sugerirNovoTurno
+            ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
+            : 'Registre a próxima batida do dia de hoje na sequência normal.'}
+        </p>
+      </Modal>
 
-              {pendenciaCheckin.sugerirNovoTurno ? (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={carregando}
-                  onClick={() => {
-                    setPendenciaModalAberto(false);
-                    setRegistroOpts({ tipo: 'ENTRADA', forcarNovoTurno: true });
-                    if (fotoObrigatoria) setEtapa('camera');
-                    else enviarRegistro(null, { tipo: 'ENTRADA', forcarNovoTurno: true });
-                  }}
-                >
-                  Nova entrada (encerrar turno)
-                </button>
-              ) : null}
+      <Modal
+        open={consentimentoAberto}
+        onClose={() => {}}
+        title="Uso de dados no registro de ponto"
+        maxWidth={480}
+        zIndex={10000}
+        footer={(
+          <button
+            type="button"
+            className="btn btn-primary btn-full"
+            onClick={async () => {
+              try {
+                await colaboradorService.registrarConsentimento('2026-07-01');
+                setConsentimentoAberto(false);
+              } catch (e) {
+                alert(e?.response?.data?.error || 'Não foi possível registrar o consentimento.');
+              }
+            }}
+          >
+            Li e aceito
+          </button>
+        )}
+      >
+        <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+          Para registrar ponto pelo celular, o PontoFácil pode coletar <strong>geolocalização</strong> (cerca virtual)
+          e <strong>foto</strong> no momento da batida, conforme configuração da sua empresa. Os dados são usados
+          exclusivamente para controle de jornada e auditoria interna (Portaria MTE 671/2021 — REP-P web).
+        </p>
+      </Modal>
 
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setPendenciaModalAberto(false)}
-                style={{ marginLeft: 'auto' }}
-              >
-                Agora não
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Modal
+        open={Boolean(comprovanteRegistro?.id)}
+        onClose={() => setComprovanteRegistro(null)}
+        title="Comprovante de registro"
+        maxWidth={420}
+        footer={(
+          <>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              onClick={async () => {
+                try {
+                  const { data } = await pontoService.comprovantePdf(comprovanteRegistro.id);
+                  const url = window.URL.createObjectURL(data);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `comprovante_nsr${comprovanteRegistro.nsr || ''}.pdf`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                } catch (e) {
+                  alert(e?.response?.data?.error || 'Não foi possível baixar o comprovante.');
+                }
+              }}
+            >
+              Baixar PDF
+            </button>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setComprovanteRegistro(null)}>
+              Fechar
+            </button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0, fontSize: 14 }}>
+          NSR: <strong>{comprovanteRegistro?.nsr ?? '—'}</strong>
+          <br />
+          Horário: {comprovanteRegistro?.dataHora ? new Date(comprovanteRegistro.dataHora).toLocaleString('pt-BR') : '—'}
+        </p>
+        <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--cinza-400)' }}>
+          Comprovante administrativo. Assinatura ICP-Brasil pendente certificação REP-P.
+        </p>
+      </Modal>
     </div>
   );
 }

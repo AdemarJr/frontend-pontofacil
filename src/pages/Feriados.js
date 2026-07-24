@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Layout from '../components/dashboard/Layout';
+import Modal from '../components/Modal';
 import { feriadoService } from '../services/api';
 import {
   addMonths,
@@ -436,43 +437,41 @@ export default function Feriados() {
         </div>
       )}
 
-      {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
-          <div className="card" style={{ width: '100%', maxWidth: 520, padding: 28 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>{modal === 'criar' ? 'Novo feriado' : 'Editar feriado'}</h3>
-
-            <div style={{ display: 'grid', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--cinza-700)', marginBottom: 6 }}>Data</label>
-                <input className="input" type="date" value={form.data} onChange={(e) => setForm((p) => ({ ...p, data: e.target.value }))} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--cinza-700)', marginBottom: 6 }}>Nome</label>
-                <input className="input" value={form.nome} onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))} placeholder="Ex.: Tiradentes" />
-              </div>
-              <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'var(--cinza-700)' }}>
-                <input type="checkbox" checked={form.suspendeExpediente} onChange={(e) => setForm((p) => ({ ...p, suspendeExpediente: e.target.checked }))} />
-                Suspende expediente (não exige batida / esperado = 0 no espelho)
-              </label>
-            </div>
-
-            {erro && modal && (
-              <div style={{ background: 'var(--vermelho-claro)', color: 'var(--vermelho)', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginTop: 14 }}>
-                {erro}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)} disabled={salvando}>
-                Cancelar
-              </button>
-              <button type="button" className="btn btn-primary btn-full" onClick={salvar} disabled={salvando}>
-                {salvando ? 'Salvando…' : 'Salvar'}
-              </button>
-            </div>
+      <Modal
+        open={!!modal}
+        onClose={() => setModal(null)}
+        title={modal === 'criar' ? 'Novo feriado' : 'Editar feriado'}
+        maxWidth={520}
+        zIndex={1100}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)} disabled={salvando}>Cancelar</button>
+            <button type="button" className="btn btn-primary btn-full" onClick={salvar} disabled={salvando}>
+              {salvando ? 'Salvando…' : 'Salvar'}
+            </button>
+          </>
+        )}
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--cinza-700)', marginBottom: 6 }}>Data</label>
+            <input className="input" type="date" value={form.data} onChange={(e) => setForm((p) => ({ ...p, data: e.target.value }))} />
           </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--cinza-700)', marginBottom: 6 }}>Nome</label>
+            <input className="input" value={form.nome} onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))} placeholder="Ex.: Tiradentes" />
+          </div>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'var(--cinza-700)' }}>
+            <input type="checkbox" checked={form.suspendeExpediente} onChange={(e) => setForm((p) => ({ ...p, suspendeExpediente: e.target.checked }))} />
+            Suspende expediente (não exige batida / esperado = 0 no espelho)
+          </label>
         </div>
-      )}
+        {erro && modal && (
+          <div style={{ background: 'var(--vermelho-claro)', color: 'var(--vermelho)', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginTop: 14 }}>
+            {erro}
+          </div>
+        )}
+      </Modal>
     </Layout>
   );
 }

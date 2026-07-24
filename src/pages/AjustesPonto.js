@@ -1,6 +1,7 @@
 // src/pages/AjustesPonto.js
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../components/dashboard/Layout';
+import Modal from '../components/Modal';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -504,84 +505,82 @@ export default function AjustesPonto() {
         )}
       </div>
 
-      {/* Modal de ajuste */}
-      {ajusteModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div className="card" style={{ width: '100%', maxWidth: 420, padding: 28 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: 20 }}>Ajuste Manual de Ponto</h2>
-            <div style={{ background: 'var(--cinza-100)', borderRadius: 8, padding: 12, marginBottom: 20, fontSize: 13, color: 'var(--cinza-700)' }}>
-              <strong>Horário original:</strong> {format(new Date(ajusteModal.dataHora), 'dd/MM/yyyy HH:mm:ss')}
-            </div>
-            <div style={{ display: 'grid', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Novo horário</label>
-                <input className="input" type="datetime-local" value={ajusteForm.dataHoraNova} onChange={(e) => setAjusteForm((p) => ({ ...p, dataHoraNova: e.target.value }))} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Motivo do ajuste *</label>
-                <textarea className="input" rows={3} placeholder="Ex: Colaborador esqueceu de registrar a entrada..." value={ajusteForm.motivo} onChange={(e) => setAjusteForm((p) => ({ ...p, motivo: e.target.value }))} style={{ resize: 'vertical' }} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              <button className="btn btn-secondary btn-full" onClick={() => setAjusteModal(null)}>
-                Cancelar
-              </button>
-              <button
-                className="btn btn-primary btn-full"
-                onClick={salvarAjuste}
-                disabled={salvandoAjuste || !String(ajusteForm.motivo || '').trim()}
-                title={!String(ajusteForm.motivo || '').trim() ? 'Informe o motivo do ajuste' : undefined}
-              >
-                {salvandoAjuste ? 'Salvando...' : 'Confirmar Ajuste'}
-              </button>
-            </div>
+      <Modal
+        open={!!ajusteModal}
+        onClose={() => setAjusteModal(null)}
+        title="Ajuste Manual de Ponto"
+        maxWidth={420}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setAjusteModal(null)}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              onClick={salvarAjuste}
+              disabled={salvandoAjuste || !String(ajusteForm.motivo || '').trim()}
+              title={!String(ajusteForm.motivo || '').trim() ? 'Informe o motivo do ajuste' : undefined}
+            >
+              {salvandoAjuste ? 'Salvando...' : 'Confirmar Ajuste'}
+            </button>
+          </>
+        )}
+      >
+        <div style={{ background: 'var(--cinza-100)', borderRadius: 8, padding: 12, marginBottom: 20, fontSize: 13, color: 'var(--cinza-700)' }}>
+          <strong>Horário original:</strong> {ajusteModal ? format(new Date(ajusteModal.dataHora), 'dd/MM/yyyy HH:mm:ss') : ''}
+        </div>
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Novo horário</label>
+            <input className="input" type="datetime-local" value={ajusteForm.dataHoraNova} onChange={(e) => setAjusteForm((p) => ({ ...p, dataHoraNova: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Motivo do ajuste *</label>
+            <textarea className="input" rows={3} placeholder="Ex: Colaborador esqueceu de registrar a entrada..." value={ajusteForm.motivo} onChange={(e) => setAjusteForm((p) => ({ ...p, motivo: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* Modal de inserção */}
-      {inserirModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div className="card" style={{ width: '100%', maxWidth: 520, padding: 28 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: 10 }}>Inserir batida faltante</h2>
-            <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 16 }}>
-              {inserirModal.nome} — {format(new Date(inserirModal.dia + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
-            </p>
-            <div style={{ display: 'grid', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Tipo</label>
-                <select className="input" value={inserirForm.tipo} onChange={(e) => setInserirForm((p) => ({ ...p, tipo: e.target.value }))}>
-                  <option value="ENTRADA">Entrada</option>
-                  <option value="SAIDA_ALMOCO">Saída intervalo</option>
-                  <option value="RETORNO_ALMOCO">Retorno intervalo</option>
-                  <option value="SAIDA">Saída</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Data/hora</label>
-                <input className="input" type="datetime-local" value={inserirForm.dataHora} onChange={(e) => setInserirForm((p) => ({ ...p, dataHora: e.target.value }))} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Justificativa *</label>
-                <textarea className="input" rows={3} placeholder="Ex: Esqueceu de registrar a saída..." value={inserirForm.motivo} onChange={(e) => setInserirForm((p) => ({ ...p, motivo: e.target.value }))} style={{ resize: 'vertical' }} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              <button className="btn btn-secondary btn-full" onClick={() => setInserirModal(null)}>
-                Cancelar
-              </button>
-              <button
-                className="btn btn-primary btn-full"
-                onClick={salvarInsercao}
-                disabled={salvandoInsercao || !String(inserirForm.motivo || '').trim()}
-                title={!String(inserirForm.motivo || '').trim() ? 'Informe a justificativa' : undefined}
-              >
-                {salvandoInsercao ? 'Salvando...' : 'Confirmar inserção'}
-              </button>
-            </div>
+      <Modal
+        open={!!inserirModal}
+        onClose={() => setInserirModal(null)}
+        title="Inserir batida faltante"
+        subtitle={inserirModal ? `${inserirModal.nome} — ${format(new Date(inserirModal.dia + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}` : ''}
+        maxWidth={520}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setInserirModal(null)}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-primary btn-full"
+              onClick={salvarInsercao}
+              disabled={salvandoInsercao || !String(inserirForm.motivo || '').trim()}
+              title={!String(inserirForm.motivo || '').trim() ? 'Informe a justificativa' : undefined}
+            >
+              {salvandoInsercao ? 'Salvando...' : 'Confirmar inserção'}
+            </button>
+          </>
+        )}
+      >
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Tipo</label>
+            <select className="input" value={inserirForm.tipo} onChange={(e) => setInserirForm((p) => ({ ...p, tipo: e.target.value }))}>
+              <option value="ENTRADA">Entrada</option>
+              <option value="SAIDA_ALMOCO">Saída intervalo</option>
+              <option value="RETORNO_ALMOCO">Retorno intervalo</option>
+              <option value="SAIDA">Saída</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Data/hora</label>
+            <input className="input" type="datetime-local" value={inserirForm.dataHora} onChange={(e) => setInserirForm((p) => ({ ...p, dataHora: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Justificativa *</label>
+            <textarea className="input" rows={3} placeholder="Ex: Esqueceu de registrar a saída..." value={inserirForm.motivo} onChange={(e) => setInserirForm((p) => ({ ...p, motivo: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
         </div>
-      )}
+      </Modal>
     </Layout>
   );
 }

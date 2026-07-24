@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/dashboard/Layout';
+import Modal from '../components/Modal';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { feriasService, usuarioService } from '../services/api';
 import { format, parseISO } from 'date-fns';
@@ -353,12 +354,22 @@ export default function Ferias() {
         )}
       </div>
 
-      {modalLancar && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
-          <div className="card" style={{ width: '100%', maxWidth: 560, padding: 28 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>Lançar férias (já aprovadas)</h3>
-            <p style={{ fontSize: 13, color: 'var(--cinza-500)', marginTop: -8, marginBottom: 16 }}>Use para períodos acordados fora do fluxo de solicitação (ex.: desligamento, acordo coletivo).</p>
-
+      <Modal
+        open={!!modalLancar}
+        onClose={() => setModalLancar(false)}
+        title="Lançar férias (já aprovadas)"
+        subtitle="Use para períodos acordados fora do fluxo de solicitação (ex.: desligamento, acordo coletivo)."
+        maxWidth={560}
+        zIndex={1100}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setModalLancar(false)} disabled={salvando}>Fechar</button>
+            <button type="button" className="btn btn-primary btn-full" onClick={salvarLancamento} disabled={salvando || !form.usuarioId}>
+              {salvando ? 'Salvando…' : 'Salvar'}
+            </button>
+          </>
+        )}
+      >
             <div style={{ display: 'grid', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--cinza-700)', marginBottom: 6 }}>Colaborador</label>
@@ -392,48 +403,35 @@ export default function Ferias() {
                 {erro}
               </div>
             )}
+      </Modal>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setModalLancar(false)} disabled={salvando}>
-                Fechar
-              </button>
-              <button type="button" className="btn btn-primary btn-full" onClick={salvarLancamento} disabled={salvando || !form.usuarioId}>
-                {salvando ? 'Salvando…' : 'Salvar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {decidirModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1150, padding: 20 }}>
-          <div className="card" style={{ width: '100%', maxWidth: 440, padding: 28 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 800, marginBottom: 8 }}>
-              {decidirModal.acao === 'APROVAR' ? 'Aprovar férias' : 'Recusar solicitação'}
-            </h3>
-            <p style={{ fontSize: 14, color: 'var(--cinza-600)', marginBottom: 16 }}>Colaborador: <strong>{decidirModal.titulo}</strong></p>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--cinza-700)', marginBottom: 6 }}>
-              Mensagem para o colaborador (opcional{decidirModal.acao === 'REJEITAR' ? '; recomendado em recusa' : ''})
-            </label>
-            <textarea className="input" rows={3} value={decidirForm.resposta} onChange={(e) => setDecidirForm({ resposta: e.target.value })} placeholder="Ex.: período ajustado com o gestor / motivo da recusa" style={{ width: '100%' }} />
-
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              <button type="button" className="btn btn-secondary btn-full" onClick={() => setDecidirModal(null)} disabled={decidindo}>
-                Voltar
-              </button>
-              <button
-                type="button"
-                className="btn btn-full"
-                style={decidirModal.acao === 'REJEITAR' ? { background: 'var(--vermelho)', color: '#fff', border: 'none' } : {}}
-                onClick={confirmarDecisao}
-                disabled={decidindo}
-              >
-                {decidindo ? '…' : decidirModal.acao === 'APROVAR' ? 'Confirmar aprovação' : 'Confirmar recusa'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!decidirModal}
+        onClose={() => setDecidirModal(null)}
+        title={decidirModal?.acao === 'APROVAR' ? 'Aprovar férias' : 'Recusar solicitação'}
+        maxWidth={440}
+        zIndex={1150}
+        footer={(
+          <>
+            <button type="button" className="btn btn-secondary btn-full" onClick={() => setDecidirModal(null)} disabled={decidindo}>Voltar</button>
+            <button
+              type="button"
+              className="btn btn-full"
+              style={decidirModal?.acao === 'REJEITAR' ? { background: 'var(--vermelho)', color: '#fff', border: 'none' } : {}}
+              onClick={confirmarDecisao}
+              disabled={decidindo}
+            >
+              {decidindo ? '…' : decidirModal?.acao === 'APROVAR' ? 'Confirmar aprovação' : 'Confirmar recusa'}
+            </button>
+          </>
+        )}
+      >
+        <p style={{ fontSize: 14, color: 'var(--cinza-600)', margin: '0 0 16px' }}>Colaborador: <strong>{decidirModal?.titulo}</strong></p>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--cinza-700)', marginBottom: 6 }}>
+          Mensagem para o colaborador (opcional{decidirModal?.acao === 'REJEITAR' ? '; recomendado em recusa' : ''})
+        </label>
+        <textarea className="input" rows={3} value={decidirForm.resposta} onChange={(e) => setDecidirForm({ resposta: e.target.value })} placeholder="Ex.: período ajustado com o gestor / motivo da recusa" style={{ width: '100%' }} />
+      </Modal>
     </Layout>
   );
 }

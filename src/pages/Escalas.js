@@ -5,6 +5,21 @@ import { escalaService, usuarioService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
 
+function validarJornadaCLT(cargaHorariaDiaria, diasSemana, intervaloMinutos) {
+  const carga = Number(cargaHorariaDiaria) || 8;
+  const dias = diasSemana?.length || 0;
+  if (carga > 8) return 'Carga diária não pode exceder 8 horas (CLT).';
+  if (carga * dias > 44) return `Jornada semanal (${(carga * dias).toFixed(1)}h) excede 44 horas (CLT).`;
+  const horas = carga;
+  let minIntervalo = 0;
+  if (horas > 6) minIntervalo = 60;
+  else if (horas >= 4) minIntervalo = 15;
+  if (minIntervalo > 0 && Number(intervaloMinutos) < minIntervalo) {
+    return `Intervalo mínimo para jornada de ${carga}h é ${minIntervalo} minutos (CLT).`;
+  }
+  return null;
+}
+
 const DIAS = [
   { v: 1, l: 'Seg' },
   { v: 2, l: 'Ter' },
@@ -91,6 +106,11 @@ export default function Escalas() {
     e.preventDefault();
     if (!usuarioId || form.diasSemana.length === 0) {
       setErro('Selecione o colaborador e pelo menos um dia da semana.');
+      return;
+    }
+    const errClt = validarJornadaCLT(form.cargaHorariaDiaria, form.diasSemana, form.intervaloMinutos);
+    if (errClt) {
+      setErro(errClt);
       return;
     }
     setErro('');
@@ -314,19 +334,19 @@ export default function Escalas() {
               </div>
               <div id="tour-escalas-carga" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--cinza-400)' }}>Carga horária líquida (h/dia)</label>
+                  <label style={{ fontSize: '12px', color: 'var(--cinza-400)' }}>Carga horária líquida (h/dia, máx. 8 CLT)</label>
                   <input
                     className="input"
                     type="number"
                     step="0.5"
                     min="1"
-                    max="12"
+                    max="8"
                     value={form.cargaHorariaDiaria}
                     onChange={(e) => setForm((p) => ({ ...p, cargaHorariaDiaria: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--cinza-400)' }}>Intervalo mínimo (min)</label>
+                  <label style={{ fontSize: '12px', color: 'var(--cinza-400)' }}>Intervalo mínimo (min, CLT)</label>
                   <input
                     className="input"
                     type="number"
@@ -337,6 +357,9 @@ export default function Escalas() {
                   />
                 </div>
               </div>
+              <p style={{ fontSize: 11, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.45 }}>
+                Limite semanal: 44h (carga × dias selecionados). HE diária acima de 8h e semanal acima de 44h entram no espelho e na folha.
+              </p>
               <div id="tour-escalas-dias">
                 <span style={{ fontSize: '12px', color: 'var(--cinza-400)', display: 'block', marginBottom: '8px' }}>
                   Dias da semana

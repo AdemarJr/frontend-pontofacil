@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { comprovanteAusenciaService, relatorioService } from '../services/api';
+import Modal from './Modal';
 
 const STATUS_DIA_COR = {
   TRABALHADO: { bg: 'rgba(29,158,117,0.16)', fg: 'var(--verde-escuro)', label: 'Trabalhado' },
@@ -17,14 +18,20 @@ const STATUS_DIA_COR = {
 
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const DESCRICOES_PADRAO = new Set(['Folga registrada pelo gestor', 'Falta justificada pelo gestor']);
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
 const PODE_MARCAR = new Set(['FALTA', 'PARCIAL', 'EM_ABERTO', 'FUTURO']);
 
+function motivoExibicao(ausencia) {
+  if (!ausencia?.descricao) return '';
+  return DESCRICOES_PADRAO.has(ausencia.descricao) ? '' : ausencia.descricao;
+}
+
 /**
  * Calendário mensal de folgas/justificativas de um colaborador.
- * Clicar num dia abre opções: marcar folga, justificar falta ou remover marcador manual.
+ * Clicar num dia abre opções: marcar folga, justificar falta, alterar ou remover marcador manual.
  */
 export default function FolgasCalendario({ usuarioId, usuarioNome }) {
   const hoje = new Date();
@@ -35,6 +42,8 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
   const [diaModal, setDiaModal] = useState(null);
+  const [tipoEdicao, setTipoEdicao] = useState('FOLGA');
+  const [dataEdicao, setDataEdicao] = useState('');
   const [motivoJustificativa, setMotivoJustificativa] = useState('');
 
   const carregar = useCallback(async () => {
@@ -77,14 +86,22 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
     if (status === 'FERIAS' || status === 'FERIADO') return;
     if (ausencia && !ausencia.manual) return;
     if (!ausencia?.manual && status && !PODE_MARCAR.has(status)) return;
-    setMotivoJustificativa('');
-    setDiaModal({ diaIso, dados, status, ausencia });
+
+    const editando = !!ausencia?.manual;
+    const tipo = ausencia?.tipo === 'JUSTIFICADA' ? 'JUSTIFICATIVA' : 'FOLGA';
+    setTipoEdicao(editando ? tipo : 'FOLGA');
+    setDataEdicao(diaIso);
+    setMotivoJustificativa(editando && tipo === 'JUSTIFICATIVA' ? motivoExibicao(ausencia) : '');
+    setErro('');
+    setDiaModal({ diaIso, dados, status, ausencia, editando });
   }
 
   function fecharModal() {
     if (salvando) return;
     setDiaModal(null);
     setMotivoJustificativa('');
+    setDataEdicao('');
+    setTipoEdicao('FOLGA');
   }
 
   async function marcarFolga() {
@@ -132,6 +149,47 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
     }
   }
 
+  async function salvarAlteracao() {
+    if (!diaModal?.ausencia?.id) return;
+    if (tipoEdicao === 'JUSTIFICATIVA' && !String(motivoJustificativa || '').trim()) {
+      setErro('Informe o motivo da justificativa.');
+      return;
+    }
+    if (!dataEdicao) {
+      setErro('Informe a data.');
+      return;
+    }
+
+    setSalvando(true);
+    setErro('');
+    try {
+      await comprovanteAusenciaService.atualizarFolga(diaModal.ausencia.id, {
+        dataReferencia: dataEdicao,
+        dataFim: dataEdicao,
+        tipo: tipoEdicao,
+        descricao:
+          tipoEdicao === 'JUSTIFICATIVA'
+            ? String(motivoJustificativa).trim()
+            : 'Folga registrada pelo gestor',
+      });
+
+      if (dataEdicao !== diaModal.diaIso) {
+        const [y, m] = dataEdicao.split('-').map(Number);
+        if (y && m) {
+          setAno(y);
+          setMes(m);
+        }
+      }
+
+      fecharModal();
+      await carregar();
+    } catch (e) {
+      setErro(e?.response?.data?.error || 'Não foi possível alterar a folga.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   async function removerMarcador() {
     if (!diaModal?.ausencia?.id) return;
     setSalvando(true);
@@ -162,6 +220,8 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
     return [...set];
   }, [dias]);
 
+  const editandoManual = !!diaModal?.editando;
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -177,7 +237,7 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
           </button>
         </div>
         <span style={{ fontSize: 12, color: 'var(--cinza-400)' }}>
-          Clique num dia para <strong>folga</strong> ou <strong>justificar</strong>.
+          Clique num dia para <strong>folga</strong>, <strong>justificar</strong> ou <strong>alterar</strong>.
         </span>
       </div>
 
@@ -212,7 +272,7 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
                 bloqueado
                   ? `${cor.label} (não editável por aqui)`
                   : ausencia?.manual
-                    ? `${cor.label} — clique para remover ou alterar`
+                    ? `${cor.label} — clique para alterar ou remover`
                     : 'Clique para folga ou justificativa'
               }
               style={{
@@ -271,90 +331,139 @@ export default function FolgasCalendario({ usuarioId, usuarioNome }) {
         justificadas. Férias, feriados e atestados com documento não são editáveis aqui.
       </p>
 
-      {diaModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 20,
-          }}
-          onClick={fecharModal}
-        >
-          <div
-            className="card"
-            style={{ width: '100%', maxWidth: 420, padding: 24 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 0, marginBottom: 4 }}>
-              {diaModal.diaIso.split('-').reverse().join('/')}
-            </h3>
-            <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginTop: 0, marginBottom: 16 }}>
-              {STATUS_DIA_COR[diaModal.status]?.label || diaModal.status}
-              {diaModal.ausencia?.descricao ? ` — ${diaModal.ausencia.descricao}` : ''}
-            </p>
+      <Modal
+        open={!!diaModal}
+        onClose={fecharModal}
+        title={
+          editandoManual
+            ? 'Alterar folga / justificativa'
+            : diaModal
+              ? diaModal.diaIso.split('-').reverse().join('/')
+              : ''
+        }
+        subtitle={
+          editandoManual
+            ? usuarioNome
+            : diaModal
+              ? `${STATUS_DIA_COR[diaModal.status]?.label || diaModal.status}${diaModal.ausencia?.descricao ? ` — ${diaModal.ausencia.descricao}` : ''}`
+              : ''
+        }
+        maxWidth={420}
+        footer={
+          editandoManual ? (
+            <>
+              <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={removerMarcador} style={{ color: 'var(--vermelho)' }}>
+                {salvando ? 'Removendo…' : 'Remover'}
+              </button>
+              <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-full"
+                disabled={salvando || (tipoEdicao === 'JUSTIFICATIVA' && !String(motivoJustificativa || '').trim())}
+                onClick={salvarAlteracao}
+              >
+                {salvando ? 'Salvando…' : 'Salvar alterações'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-full"
+                disabled={salvando || !String(motivoJustificativa || '').trim()}
+                onClick={justificarDia}
+              >
+                {salvando ? 'Salvando…' : 'Justificar falta'}
+              </button>
+            </>
+          )
+        }
+      >
+        {erro && <div style={{ color: 'var(--vermelho)', fontSize: 13, marginBottom: 12 }}>{erro}</div>}
 
-            {erro && (
-              <div style={{ color: 'var(--vermelho)', fontSize: 13, marginBottom: 12 }}>{erro}</div>
-            )}
-
-            {diaModal.ausencia?.manual ? (
-              <div style={{ display: 'grid', gap: 10 }}>
-                <p style={{ fontSize: 13, color: 'var(--cinza-600)', margin: 0 }}>
-                  Este dia já está marcado como{' '}
-                  <strong>{diaModal.ausencia.tipo === 'FOLGA' ? 'folga' : 'falta justificada'}</strong>.
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-full"
-                  disabled={salvando}
-                  onClick={removerMarcador}
-                  style={{ color: 'var(--vermelho)' }}
-                >
-                  {salvando ? 'Removendo…' : 'Remover marcação'}
-                </button>
-                <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>
-                  Fechar
-                </button>
+        {editandoManual ? (
+          <div style={{ display: 'grid', gap: 14 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Tipo</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { v: 'FOLGA', l: 'Folga' },
+                  { v: 'JUSTIFICATIVA', l: 'Justificativa' },
+                ].map((opt) => (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setTipoEdicao(opt.v)}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: tipoEdicao === opt.v ? '2px solid var(--verde)' : '1px solid var(--cinza-200)',
+                      background: tipoEdicao === opt.v ? 'var(--verde-claro)' : 'white',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <div style={{ display: 'grid', gap: 12 }}>
-                <button type="button" className="btn btn-primary btn-full" disabled={salvando} onClick={marcarFolga}>
-                  {salvando ? 'Salvando…' : '🌴 Marcar folga'}
-                </button>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
-                    Motivo da justificativa *
-                  </label>
-                  <textarea
-                    className="input"
-                    rows={2}
-                    placeholder="Ex: Consulta médica, problema pessoal…"
-                    value={motivoJustificativa}
-                    onChange={(e) => setMotivoJustificativa(e.target.value)}
-                    style={{ resize: 'vertical' }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-full"
-                  disabled={salvando || !String(motivoJustificativa || '').trim()}
-                  onClick={justificarDia}
-                >
-                  {salvando ? 'Salvando…' : '📝 Justificar falta'}
-                </button>
-                <button type="button" className="btn btn-secondary btn-full" disabled={salvando} onClick={fecharModal}>
-                  Cancelar
-                </button>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Data</label>
+              <input
+                className="input"
+                type="date"
+                value={dataEdicao}
+                onChange={(e) => setDataEdicao(e.target.value)}
+              />
+              <p style={{ fontSize: 11, color: 'var(--cinza-400)', margin: '6px 0 0' }}>
+                Altere a data para mover a folga para outro dia.
+              </p>
+            </div>
+            {tipoEdicao === 'JUSTIFICATIVA' && (
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+                  Motivo da justificativa *
+                </label>
+                <textarea
+                  className="input"
+                  rows={2}
+                  placeholder="Ex: Consulta médica, problema pessoal…"
+                  value={motivoJustificativa}
+                  onChange={(e) => setMotivoJustificativa(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
               </div>
             )}
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{ display: 'grid', gap: 12 }}>
+            <button type="button" className="btn btn-primary btn-full" disabled={salvando} onClick={marcarFolga}>
+              {salvando ? 'Salvando…' : '🌴 Marcar folga'}
+            </button>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+                Motivo da justificativa *
+              </label>
+              <textarea
+                className="input"
+                rows={2}
+                placeholder="Ex: Consulta médica, problema pessoal…"
+                value={motivoJustificativa}
+                onChange={(e) => setMotivoJustificativa(e.target.value)}
+                style={{ resize: 'vertical' }}
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

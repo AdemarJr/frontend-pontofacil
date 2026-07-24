@@ -1,9 +1,16 @@
-# Credenciais e ambiente (CRA embute REACT_APP_* no build)
+# Credenciais e ambiente — nunca commitar (exceto .env.example)
+# CRA embute REACT_APP_* no build; variáveis reais ficam no Vercel/Railway.
 .env
 .env.*
+.env-*
+hom.env
+hom.env.*
+*.env.local
 !.env.example
 *.pem
 *.key
+secrets/
+credentials.json
 
 # Dependências
 node_modules/
