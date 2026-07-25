@@ -8,6 +8,7 @@ import { superAdminService, API_URL } from '../services/api';
 import { isFolhaHabilitada } from '../utils/features';
 import { format } from 'date-fns';
 import Modal from '../components/Modal';
+import SuperAdminPlanos from '../components/SuperAdminPlanos';
 
 const STATUS_BADGE = {
   ATIVO: { label:'Ativo', classe:'badge-verde' },
@@ -15,6 +16,37 @@ const STATUS_BADGE = {
   CANCELADO: { label:'Cancelado', classe:'badge-vermelho' },
 };
 const PLANO_LABEL = { BASICO:'Básico', PROFISSIONAL:'Profissional', ENTERPRISE:'Enterprise' };
+
+function formatarReais(centavos) {
+  return (Number(centavos || 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function labelPlanoTenant(t) {
+  if (t.planoComercial) {
+    const max = t.planoComercial.maxColaboradores;
+    const lim = max == null ? 'ilimitado' : `até ${max} colab.`;
+    return `${t.planoComercial.nome} (${formatarReais(t.planoComercial.valorCentavos)}/mês · ${lim})`;
+  }
+  return PLANO_LABEL[t.plano] || t.plano;
+}
+
+function SelectPlanoComercial({ planos, value, onChange }) {
+  const ativos = planos.filter((p) => p.ativo);
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Plano comercial</label>
+      <select className="input" value={value || ''} onChange={onChange}>
+        <option value="">Selecione um plano…</option>
+        {ativos.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.nome} — {formatarReais(p.valorCentavos)}/mês
+            {p.maxColaboradores != null ? ` · até ${p.maxColaboradores} colab.` : ' · ilimitado'}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function SelectModoMarcacao({ value, onChange }) {
   return (
@@ -37,17 +69,19 @@ export default function SuperAdmin() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
   const [tenants, setTenants] = useState([]);
+  const [planos, setPlanos] = useState([]);
+  const [aba, setAba] = useState('empresas');
   const [stats, setStats] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [modal, setModal] = useState(false);
   const [modalEditar, setModalEditar] = useState(null);
   const [form, setForm] = useState({
-    razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+    razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', planoComercialId:'',
     modoMarcacao:'QUATRO_BATIDAS',
     adminNome:'', adminEmail:'', adminSenha:'',
   });
   const [formEditar, setFormEditar] = useState({
-    razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+    razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', planoComercialId:'',
     modoMarcacao:'QUATRO_BATIDAS',
     contractStartDate:'', periodoContrato:'', payrollModuleEnabled:false,
   });
@@ -62,24 +96,49 @@ export default function SuperAdmin() {
 
   async function carregar() {
     try {
-      const [{ data: t }, { data: s }] = await Promise.all([
+      const [{ data: t }, { data: s }, planosRes] = await Promise.all([
         superAdminService.listarTenants(),
         superAdminService.stats(),
+        superAdminService.listarPlanos({ ativos: '1' }).catch(() => ({ data: [] })),
       ]);
       setTenants(t);
       setStats(s);
+      setPlanos(planosRes.data || []);
     } catch (e) {
       alert(mensagemErroApi(e, 'Erro ao carregar empresas'));
     } finally { setCarregando(false); }
   }
 
   function abrirNovo() {
+    const primeiroPlano = planos.find((p) => p.ativo)?.id || '';
     setForm({
-      razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', plano:'BASICO',
+      razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', planoComercialId: primeiroPlano,
       modoMarcacao:'QUATRO_BATIDAS',
       adminNome:'', adminEmail:'', adminSenha:'',
     });
     setModal(true);
+  }
+
+  async function gerarCobrancaPlano(t) {
+    const planoId = t.planoComercialId || t.planoComercial?.id;
+    let escolhido = planoId;
+    if (!escolhido && planos.length) {
+      const idx = window.prompt(`Informe o número do plano para cobrar ${t.nomeFantasia}:\n${planos.filter((p) => p.ativo).map((p, i) => `${i + 1}. ${p.nome}`).join('\n')}`);
+      if (!idx) return;
+      const p = planos.filter((x) => x.ativo)[parseInt(idx, 10) - 1];
+      if (!p) return alert('Plano inválido');
+      escolhido = p.id;
+    }
+    if (!escolhido) return alert('Vincule um plano comercial à empresa antes de cobrar.');
+    try {
+      const { data } = await superAdminService.criarCobrancaPlano(t.id, { planoComercialId: escolhido });
+      if (data.checkoutUrl) {
+        window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+        alert(data.mensagem || 'Link de pagamento aberto em nova aba.');
+      }
+    } catch (e) {
+      alert(e.response?.data?.error || 'Erro ao gerar cobrança InfinitePay');
+    }
   }
 
   async function criarTenant() {
@@ -139,7 +198,7 @@ export default function SuperAdmin() {
       cnpj: t.cnpj,
       email: t.email,
       telefone: t.telefone || '',
-      plano: t.plano,
+      planoComercialId: t.planoComercialId || t.planoComercial?.id || '',
       modoMarcacao: t.modoMarcacao || 'QUATRO_BATIDAS',
       contractStartDate: toInputDate(t.contractStartDate),
       periodoContrato: t.periodoContrato || 'SEM_LIMITE',
@@ -369,6 +428,33 @@ export default function SuperAdmin() {
       </div>
 
       <div style={{ padding:'32px', maxWidth:'1100px', margin:'0 auto' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+          {[
+            { id: 'empresas', label: 'Empresas' },
+            { id: 'planos', label: 'Planos comerciais' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setAba(tab.id)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: aba === tab.id ? '2px solid var(--verde)' : '1px solid var(--cinza-200)',
+                background: aba === tab.id ? 'var(--verde-claro)' : 'white',
+                fontWeight: aba === tab.id ? 600 : 500,
+                cursor: 'pointer',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {aba === 'planos' ? (
+          <SuperAdminPlanos />
+        ) : (
+        <>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'24px', flexWrap:'wrap', gap:'12px' }}>
           <div>
             <h1 style={{ fontSize:'22px', fontWeight:'700' }}>Empresas Assinantes</h1>
@@ -436,7 +522,9 @@ export default function SuperAdmin() {
                           <span style={{ color:'var(--cinza-400)' }}>—</span>
                         )}
                       </td>
-                      <td><span className="badge badge-cinza">{PLANO_LABEL[t.plano]}</span></td>
+                      <td style={{ fontSize: '12px', maxWidth: 160 }}>
+                        <span className="badge badge-cinza">{labelPlanoTenant(t)}</span>
+                      </td>
                       <td>
                         <span className={`badge ${badge.classe}`}>{badge.label}</span>
                         {t.periodoContrato && (
@@ -460,6 +548,7 @@ export default function SuperAdmin() {
                       <td>
                         <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
                           <button type="button" onClick={() => abrirEditar(t)} style={{ background:'none', border:'1px solid var(--azul)', color:'var(--azul)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}>Editar</button>
+                          <button type="button" onClick={() => gerarCobrancaPlano(t)} style={{ background:'none', border:'1px solid #7c3aed', color:'#7c3aed', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }} title="Gerar link InfinitePay">Cobrar plano</button>
                           {t.status === 'ATIVO' && (
                             <button type="button" onClick={() => abrirCadastroAdmin(t)} style={{ background:'none', border:'1px solid var(--verde)', color:'var(--verde)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }} title="Criar usuário administrador (acesso ao painel)">Cadastrar admin</button>
                           )}
@@ -505,6 +594,8 @@ export default function SuperAdmin() {
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
 
       <Modal
@@ -542,14 +633,11 @@ export default function SuperAdmin() {
                     />
                   </div>
                 ))}
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Plano</label>
-                  <select className="input" value={form.plano} onChange={(e) => setForm((p) => ({ ...p, plano: e.target.value }))}>
-                    <option value="BASICO">Básico (até 10 usuários)</option>
-                    <option value="PROFISSIONAL">Profissional (até 50 usuários)</option>
-                    <option value="ENTERPRISE">Enterprise (ilimitado)</option>
-                  </select>
-                </div>
+                <SelectPlanoComercial
+                  planos={planos}
+                  value={form.planoComercialId}
+                  onChange={(e) => setForm((p) => ({ ...p, planoComercialId: e.target.value }))}
+                />
                 <SelectModoMarcacao
                   value={form.modoMarcacao}
                   onChange={(e) => setForm((p) => ({ ...p, modoMarcacao: e.target.value }))}
@@ -618,14 +706,11 @@ export default function SuperAdmin() {
                     />
                   </div>
                 ))}
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>Plano</label>
-                  <select className="input" value={formEditar.plano} onChange={(e) => setFormEditar((p) => ({ ...p, plano: e.target.value }))}>
-                    <option value="BASICO">Básico</option>
-                    <option value="PROFISSIONAL">Profissional</option>
-                    <option value="ENTERPRISE">Enterprise</option>
-                  </select>
-                </div>
+                <SelectPlanoComercial
+                  planos={planos}
+                  value={formEditar.planoComercialId}
+                  onChange={(e) => setFormEditar((p) => ({ ...p, planoComercialId: e.target.value }))}
+                />
                 <SelectModoMarcacao
                   value={formEditar.modoMarcacao}
                   onChange={(e) => setFormEditar((p) => ({ ...p, modoMarcacao: e.target.value }))}
