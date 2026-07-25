@@ -17,7 +17,7 @@ export const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  // 30s cobre a 1ª requisição "fria" ao banco remoto (Supabase) sem derrubar a tela.
+  // 30s cobre a 1ª requisição "fria" ao banco remoto sem derrubar a tela.
   timeout: 30000,
 });
 
@@ -47,10 +47,8 @@ api.interceptors.response.use(
           localStorage.setItem(k, String(now));
           alert(
             'O backend foi atualizado, mas o banco de dados ainda não.\n\n' +
-              'No Supabase SQL Editor, execute:\n' +
-              'backend-pontofacil/prisma/folha-pagamento-atualizacao.sql\n' +
-              '(PARTE 1 e PARTE 2)\n\n' +
-              'Ou rode: npx prisma migrate deploy\n\n' +
+              'No servidor (Railway/EasyPanel), rode:\n' +
+              'npx prisma migrate deploy\n\n' +
               'Depois reinicie o backend.'
           );
         }

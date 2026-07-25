@@ -1,5 +1,5 @@
 // src/App.js
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { publicUrl } from './utils/branding';
@@ -30,7 +30,6 @@ import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
 import FolhaProcessar from './pages/FolhaProcessar';
 import ContratoExpirado from './pages/ContratoExpirado';
-import { useEffect } from 'react';
 
 function RotaFolha({ children }) {
   const { folhaHabilitada, carregando } = useAuth();
@@ -75,36 +74,6 @@ function RedirecionarInicio() {
   return <Navigate to="/meu-ponto" replace />;
 }
 
-function SupabaseRecoveryRedirect() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Supabase redirects to `redirect_to` with the token in the URL hash:
-    // `#access_token=...&type=recovery`
-    // If redirect_to is set to the site root, we still want to route the user
-    // to the password reset screen.
-    const rawHash = window.location.hash || '';
-    const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
-    if (!hash) return;
-
-    const params = new URLSearchParams(hash);
-    const type = (params.get('type') || '').toLowerCase();
-    const accessToken = params.get('access_token') || '';
-    const refreshToken = params.get('refresh_token') || '';
-
-    if (type === 'recovery' && accessToken) {
-      const nextHash = new URLSearchParams({
-        access_token: accessToken,
-        ...(refreshToken ? { refresh_token: refreshToken } : {}),
-        type: 'recovery',
-      }).toString();
-      navigate(`/redefinir-senha#${nextHash}`, { replace: true });
-    }
-  }, [navigate]);
-
-  return null;
-}
-
 /** Manifest correto por rota: Totem instalável abre em /totem; demais fluxos usam o manifest padrão. */
 function ManifestPorRota() {
   const { pathname } = useLocation();
@@ -122,7 +91,6 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <ManifestPorRota />
-        <SupabaseRecoveryRedirect />
         <Routes>
           <Route path="/" element={<RedirecionarInicio />} />
           <Route path="/landing" element={<Landing />} />
