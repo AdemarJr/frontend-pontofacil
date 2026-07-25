@@ -9,6 +9,7 @@ import { isFolhaHabilitada } from '../utils/features';
 import { format } from 'date-fns';
 import Modal from '../components/Modal';
 import SuperAdminPlanos from '../components/SuperAdminPlanos';
+import SuperAdminIntegracoes from '../components/SuperAdminIntegracoes';
 
 const STATUS_BADGE = {
   ATIVO: { label:'Ativo', classe:'badge-verde' },
@@ -432,6 +433,7 @@ export default function SuperAdmin() {
           {[
             { id: 'empresas', label: 'Empresas' },
             { id: 'planos', label: 'Planos comerciais' },
+            { id: 'integracoes', label: 'Integrações' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -453,6 +455,8 @@ export default function SuperAdmin() {
 
         {aba === 'planos' ? (
           <SuperAdminPlanos />
+        ) : aba === 'integracoes' ? (
+          <SuperAdminIntegracoes />
         ) : (
         <>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'24px', flexWrap:'wrap', gap:'12px' }}>

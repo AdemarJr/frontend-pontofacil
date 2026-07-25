@@ -386,6 +386,9 @@ export const superAdminService = {
   removerPlano: (id) => api.delete(`/super-admin/plans/${id}`),
   criarCobrancaPlano: (tenantId, dados) => api.post(`/super-admin/tenants/${tenantId}/cobranca-plano`, dados),
   listarPagamentosTenant: (tenantId) => api.get(`/super-admin/tenants/${tenantId}/pagamentos`),
+  obterIntegracaoInfinitipay: () => api.get('/super-admin/integracoes/infinitipay'),
+  salvarIntegracaoInfinitipay: (dados) => api.put('/super-admin/integracoes/infinitipay', dados),
+  testarIntegracaoInfinitipay: () => api.post('/super-admin/integracoes/infinitipay/testar'),
 };
 
 export const pagamentoService = {
