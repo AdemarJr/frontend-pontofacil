@@ -30,6 +30,7 @@ import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
 import FolhaProcessar from './pages/FolhaProcessar';
 import ContratoExpirado from './pages/ContratoExpirado';
+import PagamentoRetorno from './pages/PagamentoRetorno';
 
 function RotaFolha({ children }) {
   const { folhaHabilitada, carregando } = useAuth();
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/contrato-expirado" element={<ContratoExpirado />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+          <Route path="/pagamento/retorno" element={<PagamentoRetorno />} />
 
           {/* Colaborador: shell tipo app (tab bar + header) */}
           <Route element={
