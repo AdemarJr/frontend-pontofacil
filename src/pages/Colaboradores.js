@@ -432,18 +432,26 @@ export default function Colaboradores() {
                 </div>
               </div>
 
+              {form.role === 'COLABORADOR' && (
+                <div style={{ borderTop: '1px solid var(--cinza-200)', paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <p style={{ gridColumn: '1 / -1', fontSize: 13, fontWeight: 600, margin: 0 }}>
+                    CPF / PIS (obrigatório para bater ponto — REP-P)
+                  </p>
+                  <div>
+                    <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>CPF</label>
+                    <input className="input" placeholder="11 dígitos" value={form.cpf || ''} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>PIS</label>
+                    <input className="input" placeholder="11 dígitos" value={form.pis || ''} onChange={(e) => setForm((p) => ({ ...p, pis: e.target.value }))} />
+                  </div>
+                </div>
+              )}
+
               {form.role === 'COLABORADOR' && folhaHabilitada && (
                 <div style={{ borderTop: '1px solid var(--cinza-200)', paddingTop: 12, display: 'grid', gap: 12 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Dados para folha de pagamento</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>CPF</label>
-                      <input className="input" value={form.cpf || ''} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>PIS</label>
-                      <input className="input" value={form.pis || ''} onChange={(e) => setForm((p) => ({ ...p, pis: e.target.value }))} />
-                    </div>
                     <div>
                       <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Salário base (R$)</label>
                       <input className="input" type="number" step="0.01" value={form.salarioBase || ''} onChange={(e) => setForm((p) => ({ ...p, salarioBase: e.target.value }))} />

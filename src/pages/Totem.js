@@ -106,7 +106,7 @@ export default function Totem() {
       const tokenOriginal = localStorage.getItem('accessToken');
       localStorage.setItem('accessToken', totemToken);
 
-      await pontoService.registrar({
+      const { data: resData } = await pontoService.registrar({
         tipo: proximoTipo,
         latitude,
         longitude,
@@ -116,7 +116,9 @@ export default function Totem() {
 
       localStorage.setItem('accessToken', tokenOriginal);
 
-      setMensagem(`Ponto registrado com sucesso!\n${TIPOS_LABEL[proximoTipo]?.label} — ${new Date().toLocaleTimeString('pt-BR')}`);
+      const nsrTxt = resData?.registro?.nsr ? `\nNSR: ${resData.registro.nsr}` : '';
+      setMensagem(`Ponto registrado com sucesso!\n${TIPOS_LABEL[proximoTipo]?.label} — ${new Date().toLocaleTimeString('pt-BR')}${nsrTxt}`);
+      if (resData?.proximoTipo) setProximoTipo(resData.proximoTipo);
       setEtapa('sucesso');
       setTimeout(resetar, 4000);
     } catch (err) {

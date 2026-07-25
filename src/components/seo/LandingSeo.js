@@ -4,20 +4,22 @@ import { getSiteUrl } from '../../utils/siteUrl';
 const SITE_NAME = 'PontoFácil';
 
 const TITLE =
-  'Ponto digital para empresas — controle de ponto eletrônico (totem e celular) | PontoFácil';
+  'PontoFácil — Ponto eletrônico web/PWA para empresas e órgãos públicos | REP-P';
 
 const DESCRIPTION =
-  'PontoFácil: sistema web e PWA com totem (PIN), Meu ponto, cerca virtual, jornadas, espelho de ponto e exportação CSV. Ideal para empresas no Brasil.';
+  'Sistema REP-P 100% web: PWA no celular, totem com PIN, cerca virtual, jornadas, espelho de ponto, NSR, auditoria e exportações. Modo entrada/saída para prefeituras.';
 
 const KEYWORDS = [
-  'ponto digital para empresas',
-  'controle de ponto eletrônico',
-  'melhor sistema de ponto',
   'ponto eletrônico web',
+  'REP-P',
+  'controle de ponto digital',
+  'ponto para prefeitura',
+  'ponto entrada e saída',
   'totem de ponto',
   'espelho de ponto',
   'cerca virtual ponto',
   'PWA ponto',
+  'Portaria 671',
 ].join(', ');
 
 function buildJsonLd(base) {
@@ -45,7 +47,7 @@ function buildJsonLd(base) {
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         description:
-          'Sistema web e PWA para controle de ponto: totem com PIN, registro pelo celular (Meu ponto), cerca virtual, jornadas, espelho de ponto e exportações.',
+          'Sistema REP-P web e PWA: totem com PIN, Meu ponto no celular, cerca virtual, jornadas, espelho de ponto, NSR, auditoria e exportações administrativas.',
         url: base,
         publisher: { '@id': `${base}/#organization` },
       },

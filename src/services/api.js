@@ -17,7 +17,7 @@ export const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  // 30s cobre a 1ª requisição "fria" ao banco remoto (Supabase) sem derrubar a tela.
+  // 30s cobre a 1ª requisição "fria" ao banco remoto sem derrubar a tela.
   timeout: 30000,
 });
 
@@ -47,10 +47,8 @@ api.interceptors.response.use(
           localStorage.setItem(k, String(now));
           alert(
             'O backend foi atualizado, mas o banco de dados ainda não.\n\n' +
-              'No Supabase SQL Editor, execute:\n' +
-              'backend-pontofacil/prisma/folha-pagamento-atualizacao.sql\n' +
-              '(PARTE 1 e PARTE 2)\n\n' +
-              'Ou rode: npx prisma migrate deploy\n\n' +
+              'No servidor (Railway/EasyPanel), rode:\n' +
+              'npx prisma migrate deploy\n\n' +
               'Depois reinicie o backend.'
           );
         }
@@ -124,6 +122,8 @@ export const pontoService = {
   pendencias: (params) => api.get('/ponto/pendencias', { params }),
   solicitarAjuste: (dados) => api.post('/ponto/solicitacoes-ajuste', dados),
   excluir: (registroId, motivo) => api.delete(`/ponto/${registroId}`, { data: { motivo } }),
+  comprovantePdf: (registroId) =>
+    api.get(`/ponto/registros/${registroId}/comprovante.pdf`, { responseType: 'blob' }),
 };
 
 // ---- COMPROVANTES DE AUSÊNCIA (atestado / falta) ----
@@ -135,6 +135,8 @@ export const comprovanteAusenciaService = {
   decidir: (id, dados) => api.put(`/comprovantes-ausencia/${id}/decidir`, dados),
   /** Admin: registra folga/justificativa (sem documento). dados.tipo = 'FOLGA' | 'JUSTIFICATIVA'. */
   registrarFolga: (dados) => api.post('/comprovantes-ausencia/folga', dados),
+  /** Admin: altera folga/justificativa manual (data, tipo ou motivo). */
+  atualizarFolga: (id, dados) => api.put(`/comprovantes-ausencia/${id}/folga`, dados),
   /** Admin: remove um marcador manual (folga/justificativa). */
   removerFolga: (id) => api.delete(`/comprovantes-ausencia/${id}/folga`),
 };
@@ -202,6 +204,42 @@ export const relatorioService = {
   inserirPontoManual: (dados) => api.post('/relatorios/inserir', dados),
   solicitacoesAjuste: (params) => api.get('/relatorios/solicitacoes-ajuste', { params }),
   decidirSolicitacaoAjuste: (id, dados) => api.post(`/relatorios/solicitacoes-ajuste/${id}/decidir`, dados),
+  /** Export pré-AFD administrativo (REP-P) */
+  downloadPreAfd: async ({ dataInicio, dataFim }) => {
+    const res = await api.get('/relatorios/afd/export', {
+      params: { dataInicio, dataFim },
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pre_afd_${dataInicio}_${dataFim}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+  /** Export AEJ básico (jornada/extras) */
+  downloadAej: async ({ mes, ano, usuarioId }) => {
+    const res = await api.get('/relatorios/aej/export', {
+      params: { mes, ano, ...(usuarioId ? { usuarioId } : {}) },
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aej_${mes}_${ano}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+  listarAuditoria: (params) => api.get('/relatorios/auditoria', { params }),
+  downloadAuditoriaCsv: async (params) => {
+    const res = await api.get('/relatorios/auditoria/export', { params, responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'auditoria.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
   /** Gestor: colaborador deve revisar e assinar o espelho do mês (status AGUARDANDO_ASSINATURA no app). */
   solicitarAssinaturaEspelho: (dados) => api.post('/relatorios/espelho/solicitar-assinatura', dados),
   /**
@@ -249,11 +287,13 @@ export const relatorioService = {
   },
 };
 
-// ---- COLABORADOR: ESPELHO + FECHAMENTO ----
+// ---- COLABORADOR: ESPELHO + FECHAMENTO + CONSENTIMENTO ----
 export const colaboradorService = {
   espelhoMeu: (params) => api.get('/colaborador/espelho', { params, timeout: 60000 }),
   fechamentoStatus: (params) => api.get('/colaborador/espelho/fechamento', { params }),
   fecharMes: (dados) => api.post('/colaborador/espelho/fechamento', dados),
+  statusConsentimento: () => api.get('/colaborador/consentimento'),
+  registrarConsentimento: (versao) => api.post('/colaborador/consentimento', { versao }),
   downloadEspelhoMeuExport: async ({ mes, ano, format }) => {
     try {
       const res = await api.get('/colaborador/espelho/export', {

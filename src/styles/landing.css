@@ -1086,6 +1086,100 @@ html {
   border-radius: 18px;
 }
 
+/* ——— Desafios / segmentos / REP-P ——— */
+.landing-pain-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.landing-pain-card h3 {
+  margin: 12px 0 8px;
+  font-size: 1.05rem;
+  color: var(--lp-navy);
+}
+
+.landing-pain-card p {
+  margin: 0;
+  color: var(--lp-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.landing-pain-card .icon {
+  color: var(--lp-brand-dark);
+}
+
+.landing-segments {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.landing-segment-card {
+  padding: 24px;
+  border-radius: var(--lp-radius-lg);
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  box-shadow: var(--lp-shadow);
+}
+
+.landing-segment-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: var(--lp-navy);
+}
+
+.landing-segment-card p {
+  margin: 0;
+  color: var(--lp-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.landing-rep-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 8px;
+}
+
+.landing-rep-item {
+  padding: 18px 20px;
+  border-radius: var(--lp-radius);
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.landing-rep-item strong {
+  font-size: 0.95rem;
+  color: var(--lp-navy);
+}
+
+.landing-rep-item span {
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  line-height: 1.55;
+}
+
+.landing-rep-disclaimer {
+  margin-top: 24px;
+  padding: 16px 18px;
+  border-radius: var(--lp-radius);
+  background: var(--lp-bg-muted);
+  border: 1px solid var(--lp-border);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--lp-muted);
+}
+
+.landing-rep-disclaimer strong {
+  color: var(--lp-navy);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-bento-card:hover,
   .landing-showcase-frame--browser,
