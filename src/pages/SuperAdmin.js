@@ -158,7 +158,7 @@ export default function SuperAdmin() {
     }
     if (data?.error) return data.error;
     if (data?.code === 'DB_SCHEMA_OUTDATED') {
-      return 'Banco desatualizado: execute folha-pagamento-atualizacao.sql no Supabase (PARTE 1 e PARTE 2).';
+      return 'Banco desatualizado: rode `npx prisma migrate deploy` no servidor do backend e reinicie o serviço.';
     }
     if (e?.response?.status === 404) {
       return 'Endpoint não encontrado — verifique se o backend foi atualizado e reiniciado.';
