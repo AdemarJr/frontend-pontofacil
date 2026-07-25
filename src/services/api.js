@@ -380,6 +380,16 @@ export const superAdminService = {
   limparRegistrosTenant: (tenantId, confirmarNomeFantasia) =>
     api.post(`/super-admin/tenants/${tenantId}/limpar-registros`, { confirmarNomeFantasia }),
   stats: () => api.get('/super-admin/stats'),
+  listarPlanos: (params) => api.get('/super-admin/plans', { params }),
+  criarPlano: (dados) => api.post('/super-admin/plans', dados),
+  atualizarPlano: (id, dados) => api.put(`/super-admin/plans/${id}`, dados),
+  removerPlano: (id) => api.delete(`/super-admin/plans/${id}`),
+  criarCobrancaPlano: (tenantId, dados) => api.post(`/super-admin/tenants/${tenantId}/cobranca-plano`, dados),
+  listarPagamentosTenant: (tenantId) => api.get(`/super-admin/tenants/${tenantId}/pagamentos`),
+};
+
+export const pagamentoService = {
+  confirmar: (params) => api.get('/pagamentos/confirmar', { params }),
 };
 
 export default api;
