@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
 import { ColaboradorChromeContext } from '../../context/ColaboradorChromeContext';
@@ -57,6 +57,14 @@ export default function ColaboradorAppLayout() {
               </button>
               {menuAberto ? (
                 <div className="colaborador-app__menu-pop" role="menu">
+                  <Link
+                    to="/minha-conta"
+                    className="colaborador-app__menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuAberto(false)}
+                  >
+                    Alterar senha
+                  </Link>
                   <button type="button" className="colaborador-app__menu-item" onClick={sair}>
                     Sair da conta
                   </button>

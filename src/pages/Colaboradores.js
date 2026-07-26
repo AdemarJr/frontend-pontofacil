@@ -217,6 +217,26 @@ export default function Colaboradores() {
     carregar();
   }
 
+  async function reenviarConvite(u) {
+    if (!window.confirm(`Reenviar convite por e-mail para ${u.email}?`)) return;
+    try {
+      const { data } = await usuarioService.reenviarConvite(u.id);
+      alert(data.mensagem || 'Convite enviado.');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao reenviar convite');
+    }
+  }
+
+  async function resetSenhaColaborador(u) {
+    if (!window.confirm(`Enviar link de redefinição de senha para ${u.email}?`)) return;
+    try {
+      const { data } = await usuarioService.resetSenhaEmail(u.id);
+      alert(data.mensagem || 'E-mail enviado.');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao enviar e-mail de reset');
+    }
+  }
+
   const filtrados = useMemo(
     () =>
       usuarios.filter(
@@ -306,13 +326,40 @@ export default function Colaboradores() {
                     </div>
                   </td>
                   <td>
-                    <span className={`badge ${u.ativo ? 'badge-verde' : 'badge-vermelho'}`}>
-                      {u.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                      <span className={`badge ${u.ativo ? 'badge-verde' : 'badge-vermelho'}`}>
+                        {u.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                      {u.ativo && u.senhaWebDefinida === false ? (
+                        <span className="badge badge-amarelo" style={{ fontSize: 11 }}>
+                          Aguardando 1º acesso
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td>
-                    <div style={{ display:'flex', gap:'8px' }}>
+                    <div style={{ display:'flex', gap:'8px', flexWrap: 'wrap' }}>
                       <button onClick={() => abrirEditar(u)} style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px' }}>Editar</button>
+                      {u.ativo && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => reenviarConvite(u)}
+                            title="Envia e-mail com link para definir senha web (Meu Ponto)"
+                            style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px' }}
+                          >
+                            Reenviar convite
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => resetSenhaColaborador(u)}
+                            title="Envia e-mail com link para redefinir senha web"
+                            style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px' }}
+                          >
+                            Reset senha
+                          </button>
+                        </>
+                      )}
                       <button onClick={() => toggleAtivo(u)} style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px', color: u.ativo ? 'var(--vermelho)' : 'var(--verde)' }}>
                         {u.ativo ? 'Desativar' : 'Ativar'}
                       </button>
