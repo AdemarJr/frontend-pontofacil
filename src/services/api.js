@@ -392,6 +392,8 @@ export const superAdminService = {
   obterIntegracaoInfinitipay: () => api.get('/super-admin/integracoes/infinitipay'),
   salvarIntegracaoInfinitipay: (dados) => api.put('/super-admin/integracoes/infinitipay', dados),
   testarIntegracaoInfinitipay: () => api.post('/super-admin/integracoes/infinitipay/testar'),
+  obterSmtpStatus: () => api.get('/super-admin/integracoes/smtp'),
+  testarSmtp: (email) => api.post('/super-admin/integracoes/smtp/testar', email ? { email } : {}),
 };
 
 export const pagamentoService = {

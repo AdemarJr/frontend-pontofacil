@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
-import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
+import { validarSenhaAoDefinir, PASSWORD_HINT } from '../utils/passwordPolicy';
 
 export default function MinhaConta() {
   const { usuario, logout } = useAuth();
@@ -19,7 +19,7 @@ export default function MinhaConta() {
     setErro('');
     setSucesso('');
 
-    const val = validarSenhaForte(novaSenha);
+    const val = validarSenhaAoDefinir(novaSenha, { senhaAtual });
     if (!val.ok) {
       setErro(val.error);
       return;

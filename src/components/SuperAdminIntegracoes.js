@@ -194,6 +194,101 @@ export default function SuperAdminIntegracoes() {
           </p>
         )}
       </div>
+
+      <SmtpIntegracaoCard />
+    </div>
+  );
+}
+
+function SmtpIntegracaoCard() {
+  const [smtp, setSmtp] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [testando, setTestando] = useState(false);
+  const [emailTeste, setEmailTeste] = useState('');
+
+  useEffect(() => {
+    superAdminService
+      .obterSmtpStatus()
+      .then(({ data }) => setSmtp(data))
+      .catch(() => setSmtp(null))
+      .finally(() => setCarregando(false));
+  }, []);
+
+  async function testar() {
+    setTestando(true);
+    try {
+      const { data } = await superAdminService.testarSmtp(emailTeste.trim() || undefined);
+      alert(data.mensagem || 'SMTP OK');
+      const st = await superAdminService.obterSmtpStatus();
+      setSmtp(st.data);
+    } catch (e) {
+      const d = e.response?.data;
+      alert([d?.error, d?.dica].filter(Boolean).join('\n\n') || 'Falha no teste SMTP');
+    } finally {
+      setTestando(false);
+    }
+  }
+
+  if (carregando) {
+    return (
+      <div className="card" style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  const ok = smtp?.configured && smtp?.passConfigured;
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div>
+        <h2 style={{ margin: 0, fontSize: 20 }}>E-mail (SMTP)</h2>
+        <p style={{ margin: '8px 0 0', color: 'var(--cinza-400)', fontSize: 14, lineHeight: 1.5 }}>
+          Convites, recuperação de senha e reset de colaboradores. Variáveis no Railway: SMTP_HOST, SMTP_PORT,
+          SMTP_SECURE, SMTP_USER, SMTP_PASS, MAIL_FROM.
+        </p>
+      </div>
+
+      <div className="card" style={{ borderLeft: `4px solid ${ok ? 'var(--verde)' : 'var(--amarelo)'}` }}>
+        <p style={{ margin: 0, fontWeight: 600 }}>
+          Status: {ok ? 'Variáveis presentes no servidor' : 'SMTP incompleto ou ausente'}
+        </p>
+        {smtp && (
+          <ul style={{ margin: '10px 0 0', paddingLeft: 18, fontSize: 13, color: 'var(--cinza-500)', lineHeight: 1.6 }}>
+            <li>Host: {smtp.host || '—'}</li>
+            <li>Porta: {smtp.port} · secure: {String(smtp.secure)}</li>
+            <li>Usuário: {smtp.user || '—'}</li>
+            <li>Senha configurada: {smtp.passConfigured ? `sim (${smtp.passLength} caracteres)` : 'não'}</li>
+          </ul>
+        )}
+        {!smtp?.passConfigured && (
+          <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--vermelho)' }}>
+            SMTP_PASS vazio no Railway — senhas com $ ou + devem ser coladas sem alteração.
+          </p>
+        )}
+      </div>
+
+      <div className="card" style={{ display: 'grid', gap: 12 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 5 }}>
+            E-mail para teste (opcional)
+          </label>
+          <input
+            className="input"
+            type="email"
+            value={emailTeste}
+            onChange={(e) => setEmailTeste(e.target.value)}
+            placeholder={smtp?.user || 'destino@empresa.com'}
+          />
+        </div>
+        <button type="button" className="btn btn-primary" disabled={testando} onClick={testar}>
+          {testando ? 'Testando…' : 'Testar conexão SMTP'}
+        </button>
+        <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.5 }}>
+          Se falhar na porta 465, tente no Railway: SMTP_PORT=587 e SMTP_SECURE=false. Ative SMTP_VERIFY_ON_START=1
+          para ver erro nos logs ao subir o backend.
+        </p>
+      </div>
     </div>
   );
 }

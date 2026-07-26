@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { publicUrl } from '../utils/branding';
-import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
+import { validarSenhaAoDefinir, PASSWORD_HINT } from '../utils/passwordPolicy';
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -33,7 +33,7 @@ export default function RedefinirSenha() {
   async function handleSubmit(e) {
     e.preventDefault();
     setErro('');
-    const val = validarSenhaForte(senha);
+    const val = validarSenhaAoDefinir(senha);
     if (!val.ok) {
       setErro(val.error);
       return;
