@@ -22,6 +22,7 @@ import SuperAdmin from './pages/SuperAdmin';
 import Landing from './pages/Landing';
 import MeuPonto from './pages/MeuPonto';
 import MinhasFerias from './pages/MinhasFerias';
+import MinhaConta from './pages/MinhaConta';
 import ComprovantesColaborador from './pages/ComprovantesColaborador';
 import FechamentoMes from './pages/FechamentoMes';
 import ColaboradorAppLayout from './components/colaborador/ColaboradorAppLayout';
@@ -128,6 +129,7 @@ export default function App() {
             <Route path="meu-ponto" element={<MeuPonto />} />
             <Route path="comprovantes" element={<ComprovantesColaborador />} />
             <Route path="minhas-ferias" element={<MinhasFerias />} />
+            <Route path="minha-conta" element={<MinhaConta />} />
             <Route path="fechamento" element={<FechamentoMes />} />
           </Route>
           <Route path="/totem" element={<Totem />} />

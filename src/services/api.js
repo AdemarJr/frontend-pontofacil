@@ -112,6 +112,7 @@ export const authService = {
   logout: () => api.post('/auth/logout', {}),
   forgotPassword: (body) => api.post('/auth/forgot-password', body),
   resetPassword: (body) => api.post('/auth/reset-password', body),
+  changePassword: (body) => api.post('/auth/change-password', body),
 };
 
 // ---- PONTO ----
@@ -150,6 +151,8 @@ export const usuarioService = {
   atualizar: (id, dados) => api.put(`/usuarios/${id}`, dados),
   remover: (id) => api.delete(`/usuarios/${id}`),
   excluirDefinitivo: (id) => api.delete(`/usuarios/${id}/definitivo`),
+  reenviarConvite: (id) => api.post(`/usuarios/${id}/reenviar-convite`),
+  resetSenhaEmail: (id) => api.post(`/usuarios/${id}/reset-senha`),
 };
 
 // ---- ESCALAS (jornada) ----
