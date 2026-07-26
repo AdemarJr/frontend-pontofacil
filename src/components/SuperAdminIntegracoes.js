@@ -244,8 +244,8 @@ function SmtpIntegracaoCard() {
       <div>
         <h2 style={{ margin: 0, fontSize: 20 }}>E-mail (SMTP)</h2>
         <p style={{ margin: '8px 0 0', color: 'var(--cinza-400)', fontSize: 14, lineHeight: 1.5 }}>
-          Convites, recuperação de senha e reset de colaboradores. Variáveis no Railway: SMTP_HOST, SMTP_PORT,
-          SMTP_SECURE, SMTP_USER, SMTP_PASS, MAIL_FROM.
+          Convites, recuperação de senha e reset de colaboradores. Brevo: SMTP_HOST, SMTP_PORT=587,
+          SMTP_SECURE=false, SMTP_USER, SMTP_PASS (chave SMTP), MAIL_FROM verificado no Brevo.
         </p>
       </div>
 
@@ -285,8 +285,8 @@ function SmtpIntegracaoCard() {
           {testando ? 'Testando…' : 'Testar conexão SMTP'}
         </button>
         <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.5 }}>
-          Se falhar na porta 465, tente no Railway: SMTP_PORT=587 e SMTP_SECURE=false. Ative SMTP_VERIFY_ON_START=1
-          para ver erro nos logs ao subir o backend.
+          Brevo: host <code>smtp-relay.brevo.com</code>, porta <code>587</code>, <code>SMTP_SECURE=false</code>.
+          O remetente (<code>MAIL_FROM</code>) precisa estar verificado em Brevo → Senders.
         </p>
       </div>
     </div>
