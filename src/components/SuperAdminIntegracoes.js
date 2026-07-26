@@ -194,6 +194,106 @@ export default function SuperAdminIntegracoes() {
           </p>
         )}
       </div>
+
+      <SmtpIntegracaoCard />
+    </div>
+  );
+}
+
+function SmtpIntegracaoCard() {
+  const [smtp, setSmtp] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [testando, setTestando] = useState(false);
+  const [emailTeste, setEmailTeste] = useState('');
+
+  useEffect(() => {
+    superAdminService
+      .obterSmtpStatus()
+      .then(({ data }) => setSmtp(data))
+      .catch(() => setSmtp(null))
+      .finally(() => setCarregando(false));
+  }, []);
+
+  async function testar() {
+    setTestando(true);
+    try {
+      const { data } = await superAdminService.testarSmtp(emailTeste.trim() || undefined);
+      alert(data.mensagem || 'SMTP OK');
+      const st = await superAdminService.obterSmtpStatus();
+      setSmtp(st.data);
+    } catch (e) {
+      const d = e.response?.data;
+      alert([d?.error, d?.dica].filter(Boolean).join('\n\n') || 'Falha no teste SMTP');
+    } finally {
+      setTestando(false);
+    }
+  }
+
+  if (carregando) {
+    return (
+      <div className="card" style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  const ok = smtp?.configured;
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div>
+        <h2 style={{ margin: 0, fontSize: 20 }}>E-mail</h2>
+        <p style={{ margin: '8px 0 0', color: 'var(--cinza-400)', fontSize: 14, lineHeight: 1.5 }}>
+          Convites e recuperação de senha. No Railway use <strong>Brevo API</strong> (HTTPS):{' '}
+          MAIL_PROVIDER=brevo-api, BREVO_API_KEY (xkeysib-…), MAIL_FROM verificado no Brevo.
+        </p>
+      </div>
+
+      <div className="card" style={{ borderLeft: `4px solid ${ok ? 'var(--verde)' : 'var(--amarelo)'}` }}>
+        <p style={{ margin: 0, fontWeight: 600 }}>
+          Status: {ok ? 'E-mail configurado no servidor' : 'Configuração incompleta'}
+        </p>
+        {smtp && (
+          <ul style={{ margin: '10px 0 0', paddingLeft: 18, fontSize: 13, color: 'var(--cinza-500)', lineHeight: 1.6 }}>
+            <li>Provedor: {smtp.provider || 'smtp'}</li>
+            <li>Remetente: {smtp.from || '—'}</li>
+            {smtp.provider === 'brevo-api' ? (
+              <li>API Key Brevo: {smtp.brevoApiKeyConfigured ? 'configurada' : 'ausente'}</li>
+            ) : (
+              <>
+                <li>Host: {smtp.host || '—'}</li>
+                <li>Porta: {smtp.port} · secure: {String(smtp.secure)}</li>
+              </>
+            )}
+          </ul>
+        )}
+        {smtp?.provider === 'brevo-api' && !smtp?.brevoApiKeyConfigured && (
+          <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--vermelho)' }}>
+            Defina BREVO_API_KEY no Railway (chave xkeysib-, não a chave SMTP xsmtpsib-).
+          </p>
+        )}
+      </div>
+
+      <div className="card" style={{ display: 'grid', gap: 12 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 5 }}>
+            E-mail para teste (opcional)
+          </label>
+          <input
+            className="input"
+            type="email"
+            value={emailTeste}
+            onChange={(e) => setEmailTeste(e.target.value)}
+            placeholder={smtp?.user || 'destino@empresa.com'}
+          />
+        </div>
+        <button type="button" className="btn btn-primary" disabled={testando} onClick={testar}>
+          {testando ? 'Testando…' : 'Testar conexão SMTP'}
+        </button>
+        <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.5 }}>
+          Railway costuma bloquear SMTP (timeout na 587). Use API Brevo. SMTP direto só funciona fora do Railway.
+        </p>
+      </div>
     </div>
   );
 }

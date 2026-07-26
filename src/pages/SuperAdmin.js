@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import Modal from '../components/Modal';
 import SuperAdminPlanos from '../components/SuperAdminPlanos';
 import SuperAdminIntegracoes from '../components/SuperAdminIntegracoes';
+import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
 
 const STATUS_BADGE = {
   ATIVO: { label:'Ativo', classe:'badge-verde' },
@@ -143,6 +144,11 @@ export default function SuperAdmin() {
   }
 
   async function criarTenant() {
+    const senhaAdmin = String(form.adminSenha || '').trim();
+    if (senhaAdmin) {
+      const val = validarSenhaForte(senhaAdmin);
+      if (!val.ok) return alert(val.error);
+    }
     setSalvando(true);
     try {
       const payload = { ...form };
@@ -326,6 +332,11 @@ export default function SuperAdmin() {
 
   async function salvarAdmin() {
     if (!modalAdmin) return;
+    const senhaAdmin = String(formAdmin.senha || '').trim();
+    if (senhaAdmin) {
+      const val = validarSenhaForte(senhaAdmin);
+      if (!val.ok) return alert(val.error);
+    }
     setSalvando(true);
     try {
       const payload = { ...formAdmin };
@@ -664,6 +675,9 @@ export default function SuperAdmin() {
                 ].map((f) => (
                   <div key={f.key}>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>{f.label}</label>
+                    {f.key === 'adminSenha' && (
+                      <p style={{ fontSize: '12px', color: 'var(--cinza-400)', margin: '0 0 6px', lineHeight: 1.45 }}>{PASSWORD_HINT}</p>
+                    )}
                     <input
                       className="input"
                       type={f.type}
@@ -783,10 +797,13 @@ export default function SuperAdmin() {
                 {[
                   { key: 'nome', label: 'Nome completo', type: 'text' },
                   { key: 'email', label: 'E-mail de login', type: 'email' },
-                  { key: 'senha', label: 'Senha (opcional — em branco = convite por e-mail; se preencher, mín. 6 caracteres)', type: 'password' },
+                  { key: 'senha', label: 'Senha (opcional — em branco = convite por e-mail)', type: 'password' },
                 ].map((f) => (
                   <div key={f.key}>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>{f.label}</label>
+                    {f.key === 'senha' && (
+                      <p style={{ fontSize: '12px', color: 'var(--cinza-400)', margin: '0 0 6px', lineHeight: 1.45 }}>{PASSWORD_HINT}</p>
+                    )}
                     <input
                       className="input"
                       type={f.type}
