@@ -17,8 +17,8 @@ export const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  // 30s cobre a 1ª requisição "fria" ao banco remoto sem derrubar a tela.
   timeout: 30000,
+  withCredentials: true,
 });
 
 // Injeta token em todas as requisições
@@ -75,10 +75,9 @@ api.interceptors.response.use(
 
       refreshando = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
         localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.removeItem('refreshToken');
         filaEspera.forEach((p) => p.resolve(data.accessToken));
         filaEspera = [];
         original.headers.Authorization = `Bearer ${data.accessToken}`;
@@ -109,7 +108,8 @@ api.interceptors.response.use(
 export const authService = {
   login: (email, senha) => api.post('/auth/login', { email, senha }),
   loginPin: (pin, tenantId, deviceId) => api.post('/auth/login-pin', { pin, tenantId, deviceId }),
-  refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  refresh: () => api.post('/auth/refresh', {}),
+  logout: () => api.post('/auth/logout', {}),
   forgotPassword: (body) => api.post('/auth/forgot-password', body),
   resetPassword: (body) => api.post('/auth/reset-password', body),
 };

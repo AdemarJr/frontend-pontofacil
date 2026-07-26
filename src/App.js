@@ -60,6 +60,24 @@ function RotaProtegida({ children, apenasAdmin = false, apenasColaborador = fals
   return children;
 }
 
+function RotaSuperAdmin({ children }) {
+  const { usuario, carregando } = useAuth();
+  if (carregando) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+  if (!usuario) return <Navigate to="/login" replace />;
+  if (usuario.role !== 'SUPER_ADMIN') {
+    if (usuario.role === 'ADMIN') return <Navigate to="/dashboard" replace />;
+    if (usuario.role === 'COLABORADOR') return <Navigate to="/meu-ponto" replace />;
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
 function RedirecionarInicio() {
   const { usuario, carregando } = useAuth();
   if (carregando) {
@@ -183,9 +201,9 @@ export default function App() {
 
           {/* Super Admin */}
           <Route path="/super-admin" element={
-            <RotaProtegida>
+            <RotaSuperAdmin>
               <SuperAdmin />
-            </RotaProtegida>
+            </RotaSuperAdmin>
           } />
 
           <Route path="*" element={<Navigate to="/" replace />} />

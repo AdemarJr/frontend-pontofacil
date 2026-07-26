@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { publicUrl } from '../utils/branding';
+import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -32,8 +33,9 @@ export default function RedefinirSenha() {
   async function handleSubmit(e) {
     e.preventDefault();
     setErro('');
-    if (senha.length < 6) {
-      setErro('A senha deve ter no mínimo 6 caracteres.');
+    const val = validarSenhaForte(senha);
+    if (!val.ok) {
+      setErro(val.error);
       return;
     }
     if (senha !== senha2) {
@@ -98,8 +100,9 @@ export default function RedefinirSenha() {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'var(--cinza-700)', marginBottom: '6px' }}>
-                Nova senha (mín. 6 caracteres)
+                Nova senha
               </label>
+              <p style={{ fontSize: '12px', color: 'var(--cinza-400)', margin: '0 0 8px', lineHeight: 1.45 }}>{PASSWORD_HINT}</p>
               <input
                 className="input"
                 type="password"

@@ -1,6 +1,6 @@
 // src/hooks/useAuth.js
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { tenantService } from '../services/api';
+import { tenantService, authService } from '../services/api';
 import { featuresPadrao, isFolhaHabilitada } from '../utils/features';
 
 const AuthContext = createContext(null);
@@ -60,11 +60,11 @@ export function AuthProvider({ children }) {
     return features;
   }, [atualizarUsuario]);
 
-  const login = useCallback(async (dadosUsuario, accessToken, refreshToken) => {
+  const login = useCallback(async (dadosUsuario, accessToken) => {
     let features = dadosUsuario.tenant?.features ?? featuresPadrao(dadosUsuario.tenant?.id);
 
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.removeItem('refreshToken');
 
     const usuarioInicial = {
       ...dadosUsuario,
@@ -86,10 +86,15 @@ export function AuthProvider({ children }) {
     return { ...usuarioInicial, tenant: { ...usuarioInicial.tenant, features } };
   }, [atualizarUsuario]);
 
-  function logout() {
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // ignore — limpa sessão local mesmo se offline
+    }
     localStorage.clear();
     setUsuario(null);
-  }
+  }, []);
 
   useEffect(() => {
     const dados = localStorage.getItem('usuario');
@@ -98,6 +103,7 @@ export function AuthProvider({ children }) {
       setCarregando(false);
       return undefined;
     }
+    localStorage.removeItem('refreshToken');
     setUsuario(JSON.parse(dados));
     let ativo = true;
     refreshTenantFeatures().finally(() => {
