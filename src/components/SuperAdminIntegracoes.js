@@ -237,33 +237,39 @@ function SmtpIntegracaoCard() {
     );
   }
 
-  const ok = smtp?.configured && smtp?.passConfigured;
+  const ok = smtp?.configured;
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div>
-        <h2 style={{ margin: 0, fontSize: 20 }}>E-mail (SMTP)</h2>
+        <h2 style={{ margin: 0, fontSize: 20 }}>E-mail</h2>
         <p style={{ margin: '8px 0 0', color: 'var(--cinza-400)', fontSize: 14, lineHeight: 1.5 }}>
-          Convites, recuperação de senha e reset de colaboradores. Brevo: SMTP_HOST, SMTP_PORT=587,
-          SMTP_SECURE=false, SMTP_USER, SMTP_PASS (chave SMTP), MAIL_FROM verificado no Brevo.
+          Convites e recuperação de senha. No Railway use <strong>Brevo API</strong> (HTTPS):{' '}
+          MAIL_PROVIDER=brevo-api, BREVO_API_KEY (xkeysib-…), MAIL_FROM verificado no Brevo.
         </p>
       </div>
 
       <div className="card" style={{ borderLeft: `4px solid ${ok ? 'var(--verde)' : 'var(--amarelo)'}` }}>
         <p style={{ margin: 0, fontWeight: 600 }}>
-          Status: {ok ? 'Variáveis presentes no servidor' : 'SMTP incompleto ou ausente'}
+          Status: {ok ? 'E-mail configurado no servidor' : 'Configuração incompleta'}
         </p>
         {smtp && (
           <ul style={{ margin: '10px 0 0', paddingLeft: 18, fontSize: 13, color: 'var(--cinza-500)', lineHeight: 1.6 }}>
-            <li>Host: {smtp.host || '—'}</li>
-            <li>Porta: {smtp.port} · secure: {String(smtp.secure)}</li>
-            <li>Usuário: {smtp.user || '—'}</li>
-            <li>Senha configurada: {smtp.passConfigured ? `sim (${smtp.passLength} caracteres)` : 'não'}</li>
+            <li>Provedor: {smtp.provider || 'smtp'}</li>
+            <li>Remetente: {smtp.from || '—'}</li>
+            {smtp.provider === 'brevo-api' ? (
+              <li>API Key Brevo: {smtp.brevoApiKeyConfigured ? 'configurada' : 'ausente'}</li>
+            ) : (
+              <>
+                <li>Host: {smtp.host || '—'}</li>
+                <li>Porta: {smtp.port} · secure: {String(smtp.secure)}</li>
+              </>
+            )}
           </ul>
         )}
-        {!smtp?.passConfigured && (
+        {smtp?.provider === 'brevo-api' && !smtp?.brevoApiKeyConfigured && (
           <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--vermelho)' }}>
-            SMTP_PASS vazio no Railway — senhas com $ ou + devem ser coladas sem alteração.
+            Defina BREVO_API_KEY no Railway (chave xkeysib-, não a chave SMTP xsmtpsib-).
           </p>
         )}
       </div>
@@ -285,8 +291,7 @@ function SmtpIntegracaoCard() {
           {testando ? 'Testando…' : 'Testar conexão SMTP'}
         </button>
         <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.5 }}>
-          Brevo: host <code>smtp-relay.brevo.com</code>, porta <code>587</code>, <code>SMTP_SECURE=false</code>.
-          O remetente (<code>MAIL_FROM</code>) precisa estar verificado em Brevo → Senders.
+          Railway costuma bloquear SMTP (timeout na 587). Use API Brevo. SMTP direto só funciona fora do Railway.
         </p>
       </div>
     </div>
