@@ -7,6 +7,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { comprovanteAusenciaService, pontoService, relatorioService, usuarioService } from '../services/api';
 import { useSearchParams } from 'react-router-dom';
+import { mensagemDuplicataDia } from '../utils/duplicataPonto';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
@@ -42,6 +43,18 @@ function datetimeLocalParaIsoUtc(valor) {
   const d = new Date(valor);
   if (Number.isNaN(d.getTime())) return valor;
   return d.toISOString();
+}
+
+function encontrarPontoNoRelatorio(relatorioLista, registroId) {
+  if (!registroId) return null;
+  for (const item of relatorioLista || []) {
+    const dias = item.diasTrabalhados || {};
+    for (const dia of Object.keys(dias)) {
+      const p = (dias[dia].pontos || []).find((x) => x.id === registroId);
+      if (p) return p;
+    }
+  }
+  return null;
 }
 
 export default function AjustesPonto() {
@@ -159,7 +172,17 @@ export default function AjustesPonto() {
     } catch (e) {
       const code = e?.response?.data?.code;
       if (code === 'DUPLICADO_DIA') {
-        alert('Já existe uma batida desse tipo nesse dia. Em vez de inserir, ajuste o horário da batida existente.');
+        const payload = e?.response?.data || {};
+        alert(mensagemDuplicataDia(payload));
+        const existente = encontrarPontoNoRelatorio(relatorio, payload.registroId);
+        if (existente && window.confirm('Abrir o ajuste da batida existente agora?')) {
+          setInserirModal(null);
+          setAjusteModal(existente);
+          setAjusteForm({
+            dataHoraNova: format(new Date(existente.dataHora), "yyyy-MM-dd'T'HH:mm"),
+            motivo: '',
+          });
+        }
       } else {
         alert(e?.response?.data?.error || e?.message || 'Não foi possível inserir a batida.');
       }
