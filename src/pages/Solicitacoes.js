@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Layout from '../components/dashboard/Layout';
 import { relatorioService } from '../services/api';
 import { format } from 'date-fns';
+import { mensagemDuplicataDia } from '../utils/duplicataPonto';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 
@@ -49,7 +50,12 @@ export default function Solicitacoes() {
       await relatorioService.decidirSolicitacaoAjuste(sol.id, { acao: 'APROVAR', dataHoraEfetiva: dh });
       await carregar();
     } catch (e) {
-      alert(e?.response?.data?.error || e?.message || 'Não foi possível aprovar.');
+      const payload = e?.response?.data || {};
+      if (payload.code === 'DUPLICADO_DIA') {
+        alert(mensagemDuplicataDia(payload));
+      } else {
+        alert(payload.error || e?.message || 'Não foi possível aprovar.');
+      }
     }
   }
 
