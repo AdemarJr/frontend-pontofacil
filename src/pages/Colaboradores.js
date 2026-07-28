@@ -101,6 +101,7 @@ export default function Colaboradores() {
       cpf:'', pis:'', matricula:'', tipoContrato:'CLT', salarioBase:'',
       categoriaProfissional:'', dependentesIrrf:0,
       contaBanco:'', contaAgencia:'', contaNumero:'', contaTipo:'',
+      usaVt: false, valorVtMensal:'', descontoVaMensal:'', descontoPlanoSaudeMensal:'',
     });
     setErro('');
     setModal('criar');
@@ -139,6 +140,10 @@ export default function Colaboradores() {
       contaAgencia: u.contaAgencia || '',
       contaNumero: u.contaNumero || '',
       contaTipo: u.contaTipo || '',
+      usaVt: Boolean(u.usaVt),
+      valorVtMensal: u.valorVtMensal != null ? String(u.valorVtMensal) : '',
+      descontoVaMensal: u.descontoVaMensal != null ? String(u.descontoVaMensal) : '',
+      descontoPlanoSaudeMensal: u.descontoPlanoSaudeMensal != null ? String(u.descontoPlanoSaudeMensal) : '',
     });
     setErro('');
     setModal(u);
@@ -540,6 +545,48 @@ export default function Colaboradores() {
                         <option value="CORRENTE">Corrente</option>
                         <option value="POUPANCA">Poupança</option>
                       </select>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, gridColumn: '1 / -1' }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(form.usaVt)}
+                        onChange={(e) => setForm((p) => ({ ...p, usaVt: e.target.checked }))}
+                      />
+                      Utiliza vale transporte (desconto em folha)
+                    </label>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Custo VT mensal (R$)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        step="0.01"
+                        disabled={!form.usaVt}
+                        value={form.valorVtMensal || ''}
+                        onChange={(e) => setForm((p) => ({ ...p, valorVtMensal: e.target.value }))}
+                        placeholder="Valor do passe"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Desconto VA/VR mensal (R$)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        step="0.01"
+                        value={form.descontoVaMensal || ''}
+                        onChange={(e) => setForm((p) => ({ ...p, descontoVaMensal: e.target.value }))}
+                      />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display:'block', fontSize:'13px', fontWeight:'500', marginBottom:'6px' }}>Desconto plano de saúde mensal (R$)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        step="0.01"
+                        value={form.descontoPlanoSaudeMensal || ''}
+                        onChange={(e) => setForm((p) => ({ ...p, descontoPlanoSaudeMensal: e.target.value }))}
+                      />
                     </div>
                   </div>
                 </div>

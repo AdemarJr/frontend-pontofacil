@@ -1,12 +1,27 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/dashboard/Layout';
 import { folhaService } from '../services/api';
 
 const MESES = Array.from({ length: 12 }, (_, i) => i + 1);
 
+const PENDENCIA_TEXTO = {
+  ESPELHO_NAO_ASSINADO: 'Espelho não assinado',
+  SALARIO_NAO_CONFIGURADO: 'Salário não configurado',
+  ERRO_CALCULO: 'Erro no cálculo',
+  DIAS_ATRASO: 'Dias com atraso',
+  INTERVALO_INSUFICIENTE: 'Intervalo insuficiente',
+  PARCIAL_SEM_FECHAMENTO: 'Marcações parciais',
+};
+
 function fmtBRL(v) {
   return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function textoPendencia(p) {
+  const base = p.label || PENDENCIA_TEXTO[p.tipo] || p.tipo;
+  const extra = p.detalhe || p.mensagem;
+  return extra ? `${base} — ${extra}` : base;
 }
 
 export default function FolhaProcessar() {
@@ -17,6 +32,7 @@ export default function FolhaProcessar() {
   const [pendencias, setPendencias] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [fechando, setFechando] = useState(false);
+  const [holeriteAberto, setHoleriteAberto] = useState(null);
 
   async function calcular() {
     setCarregando(true);
@@ -24,6 +40,7 @@ export default function FolhaProcessar() {
       const { data } = await folhaService.calcular({ mes, ano });
       setRun(data.run);
       setPendencias(data.pendencias || []);
+      setHoleriteAberto(null);
     } catch (e) {
       alert(e.response?.data?.error || e.message);
     } finally {
@@ -60,8 +77,14 @@ export default function FolhaProcessar() {
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Processar Folha</h1>
         <p style={{ color: 'var(--cinza-400)', fontSize: 13, marginBottom: 16 }}>
-          Calcula proventos e descontos a partir do espelho de ponto.{' '}
+          Usa o espelho de ponto (horas, faltas, atrasos, HE) + benefícios cadastrados no colaborador (VT, VA, saúde).{' '}
           <Link to="/configuracoes#folha-config">Configuração</Link>
+          {' · '}
+          <Link to="/folha/ferias">Férias</Link>
+          {' · '}
+          <Link to="/folha/decimo">13º</Link>
+          {' · '}
+          <Link to="/folha/rescisao">Rescisão</Link>
         </p>
 
         <div className="card" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end', marginBottom: 20 }}>
@@ -93,9 +116,14 @@ export default function FolhaProcessar() {
             <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Pendências ({pendencias.length})</h3>
             <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
               {pendencias.map((p, i) => (
-                <li key={i}>{p.nome}: {p.tipo}{p.mensagem ? ` — ${p.mensagem}` : ''}</li>
+                <li key={i}>
+                  <strong>{p.nome}</strong>: {textoPendencia(p)}
+                </li>
               ))}
             </ul>
+            <p style={{ fontSize: 12, color: 'var(--cinza-400)', marginTop: 10, marginBottom: 0 }}>
+              Ajuste o ponto em <Link to="/ajustes-ponto">Ajustes</Link> ou cadastre salário/benefícios em Colaboradores.
+            </p>
           </div>
         )}
 
@@ -106,23 +134,58 @@ export default function FolhaProcessar() {
                 <tr>
                   <th>Colaborador</th>
                   <th>Líquido</th>
-                  <th>Status folha</th>
-                  <th>PDF</th>
+                  <th>Descontos</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {run.holerites.map((h) => (
-                  <tr key={h.id}>
-                    <td>{h.usuario?.nome}</td>
-                    <td>{fmtBRL(h.liquido)}</td>
-                    <td><span className="badge badge-cinza">{run.status}</span></td>
-                    <td>
-                      <button type="button" className="btn btn-secondary" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => folhaService.downloadHoleritePdf(h.id)}>
-                        PDF
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {run.holerites.map((h) => {
+                  const descontos = Array.isArray(h.descontos) ? h.descontos : [];
+                  const aberto = holeriteAberto === h.id;
+                  return (
+                    <Fragment key={h.id}>
+                      <tr>
+                        <td>{h.usuario?.nome}</td>
+                        <td>{fmtBRL(h.liquido)}</td>
+                        <td style={{ fontSize: 12 }}>{descontos.length} rubrica(s)</td>
+                        <td><span className="badge badge-cinza">{run.status}</span></td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <button type="button" className="btn btn-secondary" style={{ fontSize: 12, padding: '4px 10px', marginRight: 6 }} onClick={() => setHoleriteAberto(aberto ? null : h.id)}>
+                            {aberto ? 'Ocultar' : 'Detalhes'}
+                          </button>
+                          <button type="button" className="btn btn-secondary" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => folhaService.downloadHoleritePdf(h.id)}>
+                            PDF
+                          </button>
+                        </td>
+                      </tr>
+                      {aberto && (
+                        <tr key={`${h.id}-det`}>
+                          <td colSpan={5} style={{ background: 'var(--cinza-50)', fontSize: 12 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '8px 4px' }}>
+                              <div>
+                                <strong>Proventos</strong>
+                                <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                                  {(h.proventos || []).map((p, idx) => (
+                                    <li key={idx}>{p.descricao} ({p.referencia}): {fmtBRL(p.valor)}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div>
+                                <strong>Descontos</strong>
+                                <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                                  {descontos.map((d, idx) => (
+                                    <li key={idx}>{d.descricao} ({d.referencia}): {fmtBRL(d.valor)}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

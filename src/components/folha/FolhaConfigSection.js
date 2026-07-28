@@ -73,6 +73,45 @@ export default function FolhaConfigSection() {
           <input type="checkbox" checked={config.permitirFolhaSemAssinatura} onChange={(e) => setConfig((c) => ({ ...c, permitirFolhaSemAssinatura: e.target.checked }))} />
           Permitir folha sem espelho assinado
         </label>
+        <label>
+          Tolerância atraso folha (min) — informativo nas pendências
+          <input
+            className="input"
+            type="number"
+            min="0"
+            placeholder="Usa tolerância da empresa se vazio"
+            value={config.toleranciaAtrasoMin ?? ''}
+            onChange={(e) => setConfig((c) => ({ ...c, toleranciaAtrasoMin: e.target.value === '' ? null : Number(e.target.value) }))}
+          />
+        </label>
+        <hr style={{ border: 'none', borderTop: '1px solid var(--cinza-200)', margin: '4px 0' }} />
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Vale transporte</h3>
+        <label>
+          Teto desconto VT (% salário, máx. 6 CLT)
+          <input className="input" type="number" min="0" max="6" value={config.vtPercentMax ?? 6} onChange={(e) => setConfig((c) => ({ ...c, vtPercentMax: Number(e.target.value) }))} />
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={config.vtProporcionalFaltas !== false} onChange={(e) => setConfig((c) => ({ ...c, vtProporcionalFaltas: e.target.checked }))} />
+          Reduzir VT proporcionalmente às faltas do mês
+        </label>
+        <hr style={{ border: 'none', borderTop: '1px solid var(--cinza-200)', margin: '4px 0' }} />
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Descontos do espelho de ponto</h3>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={Boolean(config.descontarAtrasos)} onChange={(e) => setConfig((c) => ({ ...c, descontarAtrasos: e.target.checked }))} />
+          Descontar dias com atraso na entrada
+        </label>
+        <label>
+          % do valor de 1 dia de salário por atraso
+          <input className="input" type="number" min="0" max="100" value={config.descontoAtrasoDiarioPercent ?? 25} onChange={(e) => setConfig((c) => ({ ...c, descontoAtrasoDiarioPercent: Number(e.target.value) }))} />
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={Boolean(config.descontarIntervaloInsuficiente)} onChange={(e) => setConfig((c) => ({ ...c, descontarIntervaloInsuficiente: e.target.checked }))} />
+          Descontar dias com intervalo de almoço insuficiente
+        </label>
+        <label>
+          % do valor de 1 dia de salário por intervalo insuficiente
+          <input className="input" type="number" min="0" max="100" value={config.descontoIntervaloDiarioPercent ?? 25} onChange={(e) => setConfig((c) => ({ ...c, descontoIntervaloDiarioPercent: Number(e.target.value) }))} />
+        </label>
         <hr style={{ border: 'none', borderTop: '1px solid var(--cinza-200)', margin: '4px 0' }} />
         <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Dados bancários (CNAB)</h3>
         <label>Banco (código)<input className="input" value={config.bancoCodigo || ''} onChange={(e) => setConfig((c) => ({ ...c, bancoCodigo: e.target.value }))} /></label>
