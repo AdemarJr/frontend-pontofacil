@@ -359,6 +359,41 @@ export const folhaService = {
     a.click();
     window.URL.revokeObjectURL(url);
   },
+  saldoFerias: (usuarioId) => api.get(`/folha/colaboradores/${usuarioId}/saldo-ferias`),
+  calcularFerias: (dados) => api.post('/folha/ferias/calcular', dados),
+  listarFeriasPagamentos: (params) => api.get('/folha/ferias/pagamentos', { params }),
+  downloadFeriasPdf: async (id) => {
+    const res = await api.get(`/folha/ferias/pagamentos/${id}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ferias-${id}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+  calcularDecimo: (dados) => api.post('/folha/decimo/calcular', dados, { timeout: 120000 }),
+  listarDecimoRuns: (params) => api.get('/folha/decimo/runs', { params }),
+  obterDecimoRun: (id) => api.get(`/folha/decimo/runs/${id}`),
+  downloadDecimoPdf: async (id) => {
+    const res = await api.get(`/folha/decimo/holerites/${id}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `decimo-${id}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+  calcularRescisao: (dados) => api.post('/folha/rescisao/calcular', dados),
+  listarRescisoes: (params) => api.get('/folha/rescisao', { params }),
+  downloadRescisaoPdf: async (id) => {
+    const res = await api.get(`/folha/rescisao/${id}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rescisao-${id}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 // ---- TENANT ----

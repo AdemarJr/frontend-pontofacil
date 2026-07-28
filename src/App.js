@@ -30,6 +30,9 @@ import AusenciasEmpresa from './pages/AusenciasEmpresa';
 import Feriados from './pages/Feriados';
 import Ferias from './pages/Ferias';
 import FolhaProcessar from './pages/FolhaProcessar';
+import FolhaFerias from './pages/FolhaFerias';
+import FolhaDecimo from './pages/FolhaDecimo';
+import FolhaRescisao from './pages/FolhaRescisao';
 import ContratoExpirado from './pages/ContratoExpirado';
 import PagamentoRetorno from './pages/PagamentoRetorno';
 
@@ -197,6 +200,27 @@ export default function App() {
             <RotaProtegida apenasAdmin>
               <RotaFolha>
                 <FolhaProcessar />
+              </RotaFolha>
+            </RotaProtegida>
+          } />
+          <Route path="/folha/ferias" element={
+            <RotaProtegida apenasAdmin>
+              <RotaFolha>
+                <FolhaFerias />
+              </RotaFolha>
+            </RotaProtegida>
+          } />
+          <Route path="/folha/decimo" element={
+            <RotaProtegida apenasAdmin>
+              <RotaFolha>
+                <FolhaDecimo />
+              </RotaFolha>
+            </RotaProtegida>
+          } />
+          <Route path="/folha/rescisao" element={
+            <RotaProtegida apenasAdmin>
+              <RotaFolha>
+                <FolhaRescisao />
               </RotaFolha>
             </RotaProtegida>
           } />
