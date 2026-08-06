@@ -32,6 +32,7 @@ import Ferias from './pages/Ferias';
 import FolhaProcessar from './pages/FolhaProcessar';
 import FolhaFerias from './pages/FolhaFerias';
 import FolhaDecimo from './pages/FolhaDecimo';
+import FolhaAdiantamento from './pages/FolhaAdiantamento';
 import FolhaRescisao from './pages/FolhaRescisao';
 import ContratoExpirado from './pages/ContratoExpirado';
 import PagamentoRetorno from './pages/PagamentoRetorno';
@@ -200,6 +201,13 @@ export default function App() {
             <RotaProtegida apenasAdmin>
               <RotaFolha>
                 <FolhaProcessar />
+              </RotaFolha>
+            </RotaProtegida>
+          } />
+          <Route path="/folha/adiantamento" element={
+            <RotaProtegida apenasAdmin>
+              <RotaFolha>
+                <FolhaAdiantamento />
               </RotaFolha>
             </RotaProtegida>
           } />
