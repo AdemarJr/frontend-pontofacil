@@ -29,12 +29,6 @@ export default function Colaboradores() {
   useEffect(() => { carregar(); }, []);
 
   useEffect(() => {
-    if (carregando) return;
-    const t = setTimeout(() => runColaboradoresTour({ force: false }), 600);
-    return () => clearTimeout(t);
-  }, [carregando]);
-
-  useEffect(() => {
     setPage(1);
   }, [busca]);
   useEffect(() => {

@@ -349,7 +349,7 @@ export default function MeuPonto() {
     }
   }, [pendenciaCheckin?.diaAnteriorEmAberto, carregarPendencias]);
 
-  /** Tour guiado na tela principal do Meu ponto (primeira visita) */
+  /** Tour automático só no 1º acesso ao Meu ponto; depois só via "Como usar" */
   useEffect(() => {
     if (etapa !== 'confirmar') return;
     const t = setTimeout(() => runMeuPontoTour({ force: false }), 900);
