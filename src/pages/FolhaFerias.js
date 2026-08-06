@@ -78,6 +78,7 @@ export default function FolhaFerias() {
             <label>
               Colaborador CLT
               <select
+                className="input"
                 value={form.usuarioId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -95,6 +96,7 @@ export default function FolhaFerias() {
             <label>
               Férias aprovadas (opcional)
               <select
+                className="input"
                 value={form.feriasId}
                 onChange={(e) => setForm((f) => ({ ...f, feriasId: e.target.value }))}
               >
@@ -110,6 +112,7 @@ export default function FolhaFerias() {
               <label>
                 Dias de férias
                 <input
+                  className="input"
                   type="number"
                   min={1}
                   max={30}
@@ -122,6 +125,7 @@ export default function FolhaFerias() {
             <label>
               Dias de abono (máx. 10)
               <input
+                className="input"
                 type="number"
                 min={0}
                 max={10}
