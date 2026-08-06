@@ -42,35 +42,25 @@ export default function RecuperarSenha() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1D9E75 0%, #085041 100%)',
-        padding: '20px',
-      }}
-    >
-      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+    <div className="auth-shell">
+      <div className="card auth-card" style={{ maxWidth: 420 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <img
             src={publicUrl('/logo-stacked.png')}
             alt="Ponto Fácil"
-            style={{ maxHeight: '72px', width: 'auto', maxWidth: '100%', objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
+            style={{ maxHeight: 72, width: 'auto', maxWidth: '100%', objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
           />
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--cinza-900)' }}>Recuperar senha</h1>
-          <p style={{ color: 'var(--cinza-400)', fontSize: '14px', marginTop: '8px', lineHeight: 1.5 }}>
+          <h1 className="page-title" style={{ fontSize: '1.25rem' }}>Recuperar senha</h1>
+          <p className="page-subtitle" style={{ marginTop: 8 }}>
             Enviaremos um link para o e-mail cadastrado na empresa.
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'var(--cinza-700)', marginBottom: '6px' }}>
-              E-mail
-            </label>
+          <div className="form-field" style={{ marginBottom: 20 }}>
+            <label htmlFor="recuperar-email">E-mail</label>
             <input
+              id="recuperar-email"
               className="input"
               type="email"
               value={email}
@@ -82,43 +72,24 @@ export default function RecuperarSenha() {
           </div>
 
           {erro && (
-            <div
-              style={{
-                background: 'var(--vermelho-claro)',
-                color: 'var(--vermelho)',
-                padding: '12px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '14px',
-                marginBottom: '16px',
-              }}
-            >
+            <div className="alert alert-error" style={{ marginBottom: 16 }} role="alert">
               {erro}
             </div>
           )}
 
           {ok && (
-            <div
-              style={{
-                background: 'rgba(29, 158, 117, 0.12)',
-                color: 'var(--verde-escuro, #085041)',
-                padding: '12px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '14px',
-                marginBottom: '16px',
-                lineHeight: 1.5,
-              }}
-            >
+            <div className="alert alert-success" style={{ marginBottom: 16 }} role="status">
               {ok}
             </div>
           )}
 
           <button className="btn btn-primary btn-full btn-lg" type="submit" disabled={carregando}>
-            {carregando ? <span className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }} /> : 'Enviar link'}
+            {carregando ? <span className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} /> : 'Enviar link'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
-          <Link to="/login" style={{ color: 'var(--verde)', fontWeight: '500', textDecoration: 'none' }}>
+        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14 }}>
+          <Link to="/login" style={{ color: 'var(--verde)', fontWeight: 600, textDecoration: 'none' }}>
             Voltar ao login
           </Link>
         </p>
