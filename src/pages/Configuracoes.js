@@ -50,12 +50,6 @@ export default function Configuracoes() {
   }, [config]);
 
   useEffect(() => {
-    if (!config) return;
-    const t = setTimeout(() => runConfiguracoesTour({ force: false }), 600);
-    return () => clearTimeout(t);
-  }, [config]);
-
-  useEffect(() => {
     if (!config || !folhaHabilitada || window.location.hash !== '#folha-config') return undefined;
     const t = setTimeout(() => {
       document.getElementById('folha-config')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

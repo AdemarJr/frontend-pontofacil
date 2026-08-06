@@ -68,11 +68,6 @@ export default function Escalas() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => runEscalasTour({ force: false }), 700);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
     setEscalasPage(1);
   }, [usuarioId]);
 

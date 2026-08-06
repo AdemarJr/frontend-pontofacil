@@ -65,12 +65,6 @@ export default function AusenciasEmpresa() {
     carregar();
   }, [filtro]);
 
-  useEffect(() => {
-    if (carregando) return;
-    const t = setTimeout(() => runAusenciasTour({ force: false }), 600);
-    return () => clearTimeout(t);
-  }, [carregando]);
-
   async function abrirPreviewComprovante(id) {
     setZoomImg(1);
     setPreviewArquivo({ loading: true });
