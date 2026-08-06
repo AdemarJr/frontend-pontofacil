@@ -35,50 +35,50 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg, #1D9E75 0%, #085041 100%)', padding:'max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))', boxSizing:'border-box', width:'100%', maxWidth:'100%', overflowX:'clip' }}>
-      <div className="card" style={{ width:'100%', maxWidth:'400px', padding:'clamp(24px, 5vw, 40px)', boxSizing:'border-box' }}>
+    <div className="auth-shell">
+      <div className="card auth-card">
         {/* Logo */}
-        <div style={{ textAlign:'center', marginBottom:'32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
             src={publicUrl('/logo-horizontal.png')}
             alt="Ponto Fácil"
-            style={{ maxWidth: '100%', width: 'auto', height: 'auto', maxHeight: '52px', objectFit: 'contain', margin: '0 auto 14px', display: 'block' }}
+            style={{ maxWidth: '100%', width: 'auto', height: 'auto', maxHeight: 52, objectFit: 'contain', margin: '0 auto 14px', display: 'block' }}
           />
-          <p style={{ color:'var(--cinza-400)', fontSize:'14px', marginTop:'4px', marginBottom: 0 }}>Sistema de Controle de Ponto Digital</p>
+          <p className="page-subtitle" style={{ margin: 0 }}>Sistema de Controle de Ponto Digital</p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom:'16px' }}>
-            <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>E-mail</label>
-            <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" required autoFocus autoComplete="email" />
+          <div className="form-field">
+            <label htmlFor="login-email">E-mail</label>
+            <input id="login-email" className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" required autoFocus autoComplete="email" />
           </div>
-          <div style={{ marginBottom:'24px' }}>
-            <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>Senha</label>
-            <input className="input" type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="••••••••" required autoComplete="current-password" />
+          <div className="form-field" style={{ marginBottom: 24 }}>
+            <label htmlFor="login-senha">Senha</label>
+            <input id="login-senha" className="input" type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="••••••••" required autoComplete="current-password" />
           </div>
 
           {erro && (
-            <div style={{ background:'var(--vermelho-claro)', color:'var(--vermelho)', padding:'12px', borderRadius:'var(--radius-sm)', fontSize:'14px', marginBottom:'16px' }}>
+            <div className="alert alert-error" style={{ marginBottom: 16 }} role="alert">
               {erro}
             </div>
           )}
 
           <button className="btn btn-primary btn-full btn-lg" type="submit" disabled={carregando}>
-            {carregando ? <span className="spinner" style={{ width:'20px', height:'20px', borderWidth:'2px' }} /> : 'Entrar'}
+            {carregando ? <span className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} /> : 'Entrar'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px' }}>
-          <Link to="/recuperar-senha" style={{ color: 'var(--verde)', fontWeight: '500', textDecoration: 'none' }}>
+        <p style={{ textAlign: 'center', marginTop: 16, fontSize: 14 }}>
+          <Link to="/recuperar-senha" style={{ color: 'var(--verde)', fontWeight: 600, textDecoration: 'none' }}>
             Esqueci minha senha
           </Link>
         </p>
 
-        <p style={{ textAlign:'center', marginTop:'24px', fontSize:'13px', color:'var(--cinza-400)', lineHeight: 1.6 }}>
+        <p className="page-subtitle" style={{ textAlign: 'center', marginTop: 24, lineHeight: 1.6 }}>
           Colaborador: após entrar, use <strong>Meu ponto</strong> no celular (mesmas regras da empresa).
           <br />
           Totem compartilhado (PIN)?{' '}
-          <a href="/totem" style={{ color:'var(--verde)', textDecoration:'none', fontWeight:'500' }}>Abrir totem</a>
+          <a href="/totem" style={{ color: 'var(--verde)', textDecoration: 'none', fontWeight: 600 }}>Abrir totem</a>
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
