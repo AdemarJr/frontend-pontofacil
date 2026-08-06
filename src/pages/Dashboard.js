@@ -10,12 +10,12 @@ import { ptBR } from 'date-fns/locale';
 
 function CardMetrica({ label, valor, cor, icon }) {
   return (
-    <div className="card" style={{ textAlign:'center', borderTop:`3px solid ${cor}`, minWidth: 0 }}>
-      <div style={{ marginBottom:'8px', display:'flex', justifyContent:'center' }}>
-        <AppIcon name={icon} size={32} color={cor} />
+    <div className="card card-kpi" style={{ '--kpi-accent': cor }}>
+      <div className="card-kpi__icon">
+        <AppIcon name={icon} size={28} color={cor} />
       </div>
-      <p style={{ fontSize:'36px', fontWeight:'700', color: cor }}>{valor}</p>
-      <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginTop:'4px' }}>{label}</p>
+      <p className="card-kpi__value">{valor}</p>
+      <p className="card-kpi__label">{label}</p>
     </div>
   );
 }
@@ -123,33 +123,24 @@ export default function Dashboard() {
   return (
     <Layout>
       {/* Header */}
-      <div id="tour-dashboard-header" style={{ marginBottom:'28px', display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:'16px', width:'100%', minWidth: 0 }}>
+      <div id="tour-dashboard-header" className="page-header fade-in">
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize:'24px', fontWeight:'700' }}>Painel de Controle</h1>
-          <p style={{ color:'var(--cinza-400)', marginTop:'4px' }}>
+          <h1 className="page-title">Painel de Controle</h1>
+          <p className="page-subtitle">
             {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
         <button
           type="button"
+          className="btn btn-sm btn-ghost"
           onClick={() => runAdminDashboardTour({ force: true })}
-          style={{
-            padding:'8px 14px',
-            fontSize:'13px',
-            fontWeight:600,
-            color:'var(--verde-escuro)',
-            background:'var(--verde-claro)',
-            border:'1px solid rgba(29,158,117,0.35)',
-            borderRadius:'8px',
-            cursor:'pointer',
-          }}
         >
           Como usar o painel
         </button>
       </div>
 
       {/* Métricas */}
-      <div id="tour-dashboard-metrics" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap:'16px', marginBottom:'28px', width:'100%', minWidth: 0 }}>
+      <div id="tour-dashboard-metrics" className="kpi-grid fade-in">
         <CardMetrica label="Total de Colaboradores" valor={resumo?.totalColaboradores ?? '-'} cor="var(--azul)" icon="colaboradores" />
         <CardMetrica label="Presentes Agora" valor={resumo?.presentes ?? '-'} cor="var(--verde)" icon="ok" />
         <CardMetrica label="Ausentes" valor={resumo?.ausentes ?? '-'} cor="var(--vermelho)" icon="erro" />
@@ -157,21 +148,19 @@ export default function Dashboard() {
       </div>
 
       {resumo?.contextoDia?.feriado ? (
-        <div className="card" style={{ marginBottom: 20, padding: 16, background: 'rgba(24, 95, 165, 0.08)', border: '1px solid rgba(24, 95, 165, 0.25)' }}>
-          <p style={{ margin: 0, fontSize: 14, color: 'var(--cinza-700)' }}>
-            <strong>Feriado:</strong> {resumo.contextoDia.feriado.nome} — presença e ausência não são contabilizadas neste dia. Ainda assim você pode consultar férias e comprovantes aprovados abaixo.
-          </p>
+        <div className="alert alert-info" style={{ marginBottom: 20 }}>
+          <strong>Feriado:</strong> {resumo.contextoDia.feriado.nome} — presença e ausência não são contabilizadas neste dia. Ainda assim você pode consultar férias e comprovantes aprovados abaixo.
         </div>
       ) : null}
 
       {/* Filtro por situação no dia */}
-      <div className="card" style={{ marginBottom: 20, padding: '18px 20px', maxWidth: '100%', minWidth: 0 }}>
-        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 12px' }}>Situação no dia</h2>
-        <p style={{ fontSize: '13px', color: 'var(--cinza-400)', margin: '0 0 14px', lineHeight: 1.45 }}>
+      <div className="card fade-in" style={{ marginBottom: 20 }}>
+        <h2 className="section-title" style={{ marginBottom: 8 }}>Situação no dia</h2>
+        <p className="page-subtitle" style={{ marginBottom: 14 }}>
           Liste colaboradores por ausência, atraso na entrada, falta após o horário previsto (+ tolerância), férias aprovadas ou ausência com comprovante aprovado (dispensado).
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--cinza-600)' }} htmlFor="dashboard-filtro-situacao">
+          <label style={{ marginBottom: 0 }} htmlFor="dashboard-filtro-situacao">
             Filtrar por
           </label>
           <select
@@ -191,9 +180,9 @@ export default function Dashboard() {
           </select>
         </div>
         {!filtroSituacao ? (
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--cinza-400)' }}>Escolha um tipo de situação para exibir a lista.</p>
+          <p className="page-subtitle" style={{ margin: 0 }}>Escolha um tipo de situação para exibir a lista.</p>
         ) : linhasSituacao.length === 0 ? (
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--cinza-400)' }}>Nenhum colaborador nesta categoria no momento.</p>
+          <p className="page-subtitle" style={{ margin: 0 }}>Nenhum colaborador nesta categoria no momento.</p>
         ) : (
           <div className="table-scroll">
             <table className="tabela" style={{ minWidth: 520 }}>
@@ -207,7 +196,7 @@ export default function Dashboard() {
               <tbody>
                 {linhasSituacao.map((row) => (
                   <tr key={`${filtroSituacao}-${row.id}`}>
-                    <td style={{ fontWeight: 500 }}>{row.nome}</td>
+                    <td style={{ fontWeight: 600 }}>{row.nome}</td>
                     <td style={{ fontSize: 13, color: 'var(--cinza-500)' }}>
                       {[row.cargo, row.departamento].filter(Boolean).join(' · ') || '—'}
                     </td>
@@ -221,11 +210,11 @@ export default function Dashboard() {
       </div>
 
       {/* Últimos registros */}
-      <div id="tour-dashboard-registros" className="card" style={{ padding: 0, maxWidth: '100%', minWidth: 0 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 20px 0', flexWrap:'wrap', gap:'12px' }}>
-          <h2 style={{ fontSize:'16px', fontWeight:'600', minWidth:0 }}>Registros de Hoje</h2>
-          <button type="button" onClick={carregarDados} style={{ background:'none', border:'none', color:'var(--verde)', cursor:'pointer', fontSize:'13px', fontWeight:'500', whiteSpace:'nowrap' }}>
-            <span style={{ display:'inline-flex', alignItems:'center', gap: 8 }}>
+      <div id="tour-dashboard-registros" className="card fade-in" style={{ padding: 0, maxWidth: '100%', minWidth: 0 }}>
+        <div className="table-card-header">
+          <h2 className="section-title" style={{ minWidth: 0 }}>Registros de Hoje</h2>
+          <button type="button" className="btn btn-sm btn-ghost" onClick={carregarDados}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <AppIcon name="refresh" size={16} />
               Atualizar
             </span>
@@ -233,14 +222,14 @@ export default function Dashboard() {
         </div>
 
         {registros.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'40px 20px', color:'var(--cinza-400)' }}>
-            <div style={{ display:'flex', justifyContent:'center', marginBottom:'8px' }}>
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--cinza-400)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
               <AppIcon name="inbox" size={34} color="var(--cinza-400)" />
             </div>
             <p>Nenhum registro hoje ainda</p>
           </div>
         ) : (
-          <div className="table-scroll" style={{ marginTop: 16 }}>
+          <div className="table-scroll" style={{ marginTop: 12 }}>
             <table className="tabela" style={{ minWidth: 720 }}>
               <thead>
                 <tr>
@@ -256,8 +245,8 @@ export default function Dashboard() {
                 {registros.map(r => (
                   <tr key={r.id}>
                     <td>
-                      <div style={{ fontWeight:'500' }}>{r.usuario?.nome}</div>
-                      <div style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{r.usuario?.cargo}</div>
+                      <div style={{ fontWeight: 600 }}>{r.usuario?.nome}</div>
+                      <div style={{ fontSize: 12, color: 'var(--cinza-400)' }}>{r.usuario?.cargo}</div>
                     </td>
                     <td>
                       <span className="badge" style={{ background: TIPOS_COR[r.tipo] + '20', color: TIPOS_COR[r.tipo] }}>
@@ -266,31 +255,23 @@ export default function Dashboard() {
                     </td>
                     <td>
                       {r.origem ? (
-                        <span
-                          className="badge"
-                          style={{
-                            background: 'rgba(255,255,255,0.08)',
-                            border: '1px solid rgba(148,163,184,0.25)',
-                            color: 'var(--cinza-700)',
-                          }}
-                          title={r.origem}
-                        >
+                        <span className="badge badge-cinza" title={r.origem}>
                           {ORIGEM_LABEL[r.origem] || r.origem}
                         </span>
                       ) : (
-                        <span style={{ color:'var(--cinza-400)', fontSize:'12px' }}>—</span>
+                        <span style={{ color: 'var(--cinza-400)', fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    <td style={{ fontFamily:'monospace', fontSize:'15px', fontWeight:'500' }}>
+                    <td className="font-mono" style={{ fontSize: 14, fontWeight: 600 }}>
                       {format(new Date(r.dataHora), 'HH:mm:ss')}
-                      {r.ajustado && <span className="badge badge-amarelo" style={{ marginLeft:'6px', fontSize:'10px' }}>Ajustado</span>}
+                      {r.ajustado && <span className="badge badge-amarelo" style={{ marginLeft: 6, fontSize: 10 }}>Ajustado</span>}
                     </td>
                     <td>
                       {r.fotoUrl ? (
-                        <img src={r.fotoUrl} alt="foto" style={{ width:'40px', height:'40px', borderRadius:'8px', objectFit:'cover', cursor:'pointer' }}
+                        <img src={r.fotoUrl} alt="foto" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', cursor: 'pointer', boxShadow: 'var(--shadow-xs)' }}
                           onClick={() => window.open(r.fotoUrl, '_blank')} />
                       ) : (
-                        <span style={{ color:'var(--cinza-400)', fontSize:'12px' }}>—</span>
+                        <span style={{ color: 'var(--cinza-400)', fontSize: 12 }}>—</span>
                       )}
                     </td>
                     <td>
@@ -299,7 +280,7 @@ export default function Dashboard() {
                           {r.dentroGeofence ? '✓ Dentro' : '✗ Fora'}
                         </span>
                       ) : (
-                        <span style={{ color:'var(--cinza-400)', fontSize:'12px' }}>—</span>
+                        <span style={{ color: 'var(--cinza-400)', fontSize: 12 }}>—</span>
                       )}
                     </td>
                   </tr>

@@ -17,17 +17,6 @@ export function slicePaged(items, page, pageSize) {
   };
 }
 
-const btnStyle = (disabled) => ({
-  background: 'none',
-  border: '1px solid var(--cinza-200)',
-  borderRadius: '8px',
-  padding: '6px 12px',
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  fontSize: '13px',
-  color: disabled ? 'var(--cinza-300)' : 'var(--cinza-700)',
-  opacity: disabled ? 0.6 : 1,
-});
-
 /**
  * @param {{
  *   page: number;
@@ -54,35 +43,21 @@ export default function ListPagination({
   const to = Math.min(safePage * pageSize, total);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px',
-        marginTop: '16px',
-        fontSize: '13px',
-        color: 'var(--cinza-400)',
-        minWidth: 0,
-        maxWidth: '100%',
-        ...style,
-      }}
-    >
+    <div className="pagination" style={style}>
       <span>
         Mostrando <strong style={{ color: 'var(--cinza-700)' }}>{from}</strong>–
         <strong style={{ color: 'var(--cinza-700)' }}>{to}</strong> de{' '}
         <strong style={{ color: 'var(--cinza-700)' }}>{total}</strong>
       </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         {typeof onPageSizeChange === 'function' && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 0, fontSize: 13 }}>
             Por página
             <select
               className="input"
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              style={{ width: 'auto', padding: '6px 10px', fontSize: '12px', minWidth: '72px' }}
+              style={{ width: 'auto', padding: '6px 10px', fontSize: 12, minWidth: 72, minHeight: 34 }}
             >
               {pageSizeOptions.map((n) => (
                 <option key={n} value={n}>
@@ -94,18 +69,18 @@ export default function ListPagination({
         )}
         <button
           type="button"
-          style={btnStyle(safePage <= 1)}
+          className="pagination__btn"
           disabled={safePage <= 1}
           onClick={() => onPageChange(safePage - 1)}
         >
           Anterior
         </button>
-        <span style={{ color: 'var(--cinza-700)', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap' }}>
+        <span style={{ color: 'var(--cinza-700)', fontWeight: 550, textAlign: 'center', whiteSpace: 'nowrap' }}>
           Página {safePage} / {totalPages}
         </span>
         <button
           type="button"
-          style={btnStyle(safePage >= totalPages)}
+          className="pagination__btn"
           disabled={safePage >= totalPages}
           onClick={() => onPageChange(safePage + 1)}
         >
