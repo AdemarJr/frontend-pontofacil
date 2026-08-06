@@ -147,12 +147,6 @@ export default function Relatorios() {
   useEffect(() => { buscar(); }, [mes, ano, usuarioFiltro]);
 
   useEffect(() => {
-    if (carregando) return;
-    const t = setTimeout(() => runRelatoriosTour({ force: false }), 600);
-    return () => clearTimeout(t);
-  }, [carregando]);
-
-  useEffect(() => {
     setBancoPage(1);
     setEspelhoPage(1);
   }, [mes, ano, usuarioFiltro]);

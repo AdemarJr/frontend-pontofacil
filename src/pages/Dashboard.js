@@ -71,7 +71,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [carregarDados]);
 
-  /** Tour guiado (primeira visita ao painel) */
+  /** Tour automático só no 1º acesso ao painel; depois só via "Como usar" */
   useEffect(() => {
     if (carregando) return;
     const timer = setTimeout(() => runAdminDashboardTour({ force: false }), 700);

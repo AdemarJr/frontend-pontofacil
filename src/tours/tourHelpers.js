@@ -34,8 +34,8 @@ export function tourTargetsReady(steps) {
 }
 
 /**
- * Primeiro acesso: localStorage vazio → tour automático (uma vez).
- * Depois: só via "Como usar" (force: true ignora localStorage).
+ * Tour sob demanda: use force:true no botão "Como usar".
+ * Auto (force:false) só deve ser chamado no 1º login (Início / Meu ponto).
  *
  * @param {{ storageKey: string, steps: import('driver.js').DriveStep[], force?: boolean }} opts
  */
