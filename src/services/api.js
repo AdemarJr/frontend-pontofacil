@@ -383,6 +383,18 @@ export const folhaService = {
     a.click();
     window.URL.revokeObjectURL(url);
   },
+  calcularAdiantamento: (dados) => api.post('/folha/adiantamento/calcular', dados, { timeout: 120000 }),
+  listarAdiantamentoRuns: (params) => api.get('/folha/adiantamento/runs', { params }),
+  obterAdiantamentoRun: (id) => api.get(`/folha/adiantamento/runs/${id}`),
+  downloadAdiantamentoPdf: async (id) => {
+    const res = await api.get(`/folha/adiantamento/holerites/${id}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `adiantamento-${id}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
   calcularRescisao: (dados) => api.post('/folha/rescisao/calcular', dados),
   listarRescisoes: (params) => api.get('/folha/rescisao', { params }),
   downloadRescisaoPdf: async (id) => {

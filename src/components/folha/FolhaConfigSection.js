@@ -113,6 +113,27 @@ export default function FolhaConfigSection() {
           <input className="input" type="number" min="0" max="100" value={config.descontoIntervaloDiarioPercent ?? 25} onChange={(e) => setConfig((c) => ({ ...c, descontoIntervaloDiarioPercent: Number(e.target.value) }))} />
         </label>
         <hr style={{ border: 'none', borderTop: '1px solid var(--cinza-200)', margin: '4px 0' }} />
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Adiantamento salarial</h3>
+        <label>
+          Percentual padrão (% do salário base)
+          <input
+            className="input"
+            type="number"
+            min="0"
+            max="100"
+            value={config.adiantamentoPercent ?? 40}
+            onChange={(e) => setConfig((c) => ({ ...c, adiantamentoPercent: Number(e.target.value) }))}
+          />
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={config.descontarAdiantamentoNaFolha !== false}
+            onChange={(e) => setConfig((c) => ({ ...c, descontarAdiantamentoNaFolha: e.target.checked }))}
+          />
+          Descontar automaticamente na folha mensal do mesmo mês
+        </label>
+        <hr style={{ border: 'none', borderTop: '1px solid var(--cinza-200)', margin: '4px 0' }} />
         <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Dados bancários (CNAB)</h3>
         <label>Banco (código)<input className="input" value={config.bancoCodigo || ''} onChange={(e) => setConfig((c) => ({ ...c, bancoCodigo: e.target.value }))} /></label>
         <label>Agência<input className="input" value={config.bancoAgencia || ''} onChange={(e) => setConfig((c) => ({ ...c, bancoAgencia: e.target.value }))} /></label>

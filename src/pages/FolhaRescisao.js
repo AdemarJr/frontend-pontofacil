@@ -66,6 +66,7 @@ export default function FolhaRescisao() {
             <label>
               Colaborador CLT
               <select
+                className="input"
                 value={form.usuarioId}
                 onChange={(e) => setForm((f) => ({ ...f, usuarioId: e.target.value }))}
                 required
@@ -78,7 +79,7 @@ export default function FolhaRescisao() {
             </label>
             <label>
               Tipo
-              <select value={form.tipo} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}>
+              <select className="input" value={form.tipo} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}>
                 {TIPOS.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
@@ -87,6 +88,7 @@ export default function FolhaRescisao() {
             <label>
               Data desligamento
               <input
+                className="input"
                 type="date"
                 value={form.dataDesligamento}
                 onChange={(e) => setForm((f) => ({ ...f, dataDesligamento: e.target.value }))}
@@ -96,6 +98,7 @@ export default function FolhaRescisao() {
             <label>
               Dias aviso prévio
               <input
+                className="input"
                 type="number"
                 min={0}
                 value={form.diasAvisoPrevio}
@@ -113,6 +116,7 @@ export default function FolhaRescisao() {
             <label style={{ gridColumn: '1 / -1' }}>
               Observações
               <textarea
+                className="input"
                 rows={2}
                 value={form.observacoes}
                 onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}

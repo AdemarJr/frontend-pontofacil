@@ -15,6 +15,7 @@ const MENU = [
   { path: '/ferias', label: 'Férias', icon: 'ferias', section: 'principal' },
   { path: '/relatorios', label: 'Relatórios / Espelho', icon: 'relatorios', section: 'principal' },
   { path: '/folha/processar', label: 'Folha mensal', icon: 'relatorios', folha: true, section: 'folha' },
+  { path: '/folha/adiantamento', label: 'Adiantamento', icon: 'relatorios', folha: true, section: 'folha' },
   { path: '/folha/ferias', label: 'Férias (R$)', icon: 'ferias', folha: true, section: 'folha' },
   { path: '/folha/decimo', label: '13º salário', icon: 'relatorios', folha: true, section: 'folha' },
   { path: '/folha/rescisao', label: 'Rescisão', icon: 'colaboradores', folha: true, section: 'folha' },
