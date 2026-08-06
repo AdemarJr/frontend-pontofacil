@@ -1,5 +1,5 @@
 // public/sw.js - Service Worker para PWA (SPA: sempre devolve uma Response válida)
-const CACHE = 'pontofacil-v6';
+const CACHE = 'pontofacil-v7';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
