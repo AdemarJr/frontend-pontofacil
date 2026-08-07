@@ -1,13 +1,11 @@
 /**
  * Tour guiado do painel (gestor) — sequência de balões próximos aos elementos.
- * Biblioteca: driver.js
  */
-import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css';
+import { startModuleTour } from './tourHelpers';
 
 export const STORAGE_TOUR_ADMIN_DASHBOARD = 'pontofacil_tour_admin_dashboard_v1';
 
-function buildSteps() {
+function steps() {
   return [
     {
       element: '#tour-sidebar',
@@ -51,50 +49,14 @@ function buildSteps() {
   ];
 }
 
-function allTargetsPresent() {
-  return ['#tour-sidebar', '#tour-dashboard-header', '#tour-dashboard-metrics', '#tour-dashboard-registros'].every(
-    (sel) => document.querySelector(sel)
-  );
-}
-
 /**
- * @param {{ force?: boolean }} opts — force=true ignora "já vi o tour" (ex.: botão Ajuda)
+ * @param {{ force?: boolean }} opts — force=true ignora "já vi o tour" (ex.: botão Como usar)
+ * @returns {(() => void) | undefined}
  */
 export function runAdminDashboardTour(opts = {}) {
-  const { force = false } = opts;
-  if (typeof window === 'undefined') return;
-
-  if (!force) {
-    try {
-      if (localStorage.getItem(STORAGE_TOUR_ADMIN_DASHBOARD) === '1') return;
-    } catch {
-      /* ignore */
-    }
-  }
-
-  if (!allTargetsPresent()) return;
-
-  const driverObj = driver({
-    showProgress: true,
-    progressText: '{{current}} de {{total}}',
-    nextBtnText: 'Próximo',
-    prevBtnText: 'Anterior',
-    doneBtnText: 'Concluir',
-    overlayColor: '#0f172a',
-    overlayOpacity: 0.72,
-    smoothScroll: true,
-    animate: true,
-    stagePadding: 8,
-    stageRadius: 10,
-    steps: buildSteps(),
-    onDestroyed: () => {
-      try {
-        localStorage.setItem(STORAGE_TOUR_ADMIN_DASHBOARD, '1');
-      } catch {
-        /* ignore */
-      }
-    },
+  return startModuleTour({
+    storageKey: STORAGE_TOUR_ADMIN_DASHBOARD,
+    steps: steps(),
+    force: opts.force === true,
   });
-
-  driverObj.drive();
 }

@@ -5,6 +5,7 @@ import ListPagination from '../components/ListPagination';
 import AppIcon from '../components/AppIcon';
 import { relatorioService, pontoService } from '../services/api';
 import { runAdminDashboardTour } from '../tours/adminDashboardTour';
+import { destroyActiveTour } from '../tours/tourHelpers';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -73,9 +74,16 @@ export default function Dashboard() {
 
   /** Tour automático só no 1º acesso ao painel; depois só via "Como usar" */
   useEffect(() => {
-    if (carregando) return;
-    const timer = setTimeout(() => runAdminDashboardTour({ force: false }), 700);
-    return () => clearTimeout(timer);
+    if (carregando) return undefined;
+    let tourCleanup;
+    const timer = setTimeout(() => {
+      tourCleanup = runAdminDashboardTour({ force: false });
+    }, 700);
+    return () => {
+      clearTimeout(timer);
+      if (typeof tourCleanup === 'function') tourCleanup();
+      else destroyActiveTour();
+    };
   }, [carregando]);
 
   const TIPOS_COR = {

@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
 import { feriasService } from '../../services/api';
 import AppIcon from '../AppIcon';
+import { destroyActiveTour } from '../../tours/tourHelpers';
 
 const MENU = [
   { path: '/dashboard', label: 'Início', icon: 'dashboard', section: 'principal' },
@@ -38,6 +39,11 @@ export default function Layout({ children }) {
   const [navAberto, setNavAberto] = useState(false);
   const [mobile, setMobile] = useState(false);
   const payrollEnabled = folhaHabilitada;
+
+  useEffect(() => {
+    destroyActiveTour();
+    setNavAberto(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (isSuperAdmin || !isAdmin || !usuario?.tenant?.id) return undefined;
