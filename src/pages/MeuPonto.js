@@ -21,6 +21,7 @@ import {
 } from '../services/meuPontoOfflineQueue';
 import { getMeuPontoDeviceId } from '../utils/meuPontoDeviceId';
 import { runMeuPontoTour } from '../tours/meuPontoTour';
+import { destroyActiveTour } from '../tours/tourHelpers';
 import { publicUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
 import Modal from '../components/Modal';
@@ -351,9 +352,16 @@ export default function MeuPonto() {
 
   /** Tour automático só no 1º acesso ao Meu ponto; depois só via "Como usar" */
   useEffect(() => {
-    if (etapa !== 'confirmar') return;
-    const t = setTimeout(() => runMeuPontoTour({ force: false }), 900);
-    return () => clearTimeout(t);
+    if (etapa !== 'confirmar') return undefined;
+    let tourCleanup;
+    const t = setTimeout(() => {
+      tourCleanup = runMeuPontoTour({ force: false });
+    }, 900);
+    return () => {
+      clearTimeout(t);
+      if (typeof tourCleanup === 'function') tourCleanup();
+      else destroyActiveTour();
+    };
   }, [etapa]);
 
   useEffect(() => {

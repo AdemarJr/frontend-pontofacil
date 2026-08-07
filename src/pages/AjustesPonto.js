@@ -482,21 +482,25 @@ export default function AjustesPonto() {
                                 ) : null}
                                 {p.ajustado && <span className="badge badge-amarelo" style={{ fontSize: 10, padding: '1px 6px' }}>Ajustado</span>}
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setAjusteModal(p);
                                     setAjusteForm({ dataHoraNova: format(new Date(p.dataHora), "yyyy-MM-dd'T'HH:mm"), motivo: '' });
                                   }}
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--cinza-400)', fontSize: 12, padding: '0 2px' }}
+                                  className="btn btn-secondary"
+                                  style={{ padding: '4px 10px', fontSize: 12, minHeight: 32 }}
                                   title="Ajustar horário"
                                 >
-                                  ✏️
+                                  Editar
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => excluirBatida(p)}
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vermelho)', fontSize: 12, padding: '0 2px' }}
+                                  className="btn btn-secondary"
+                                  style={{ padding: '4px 10px', fontSize: 12, minHeight: 32, color: 'var(--vermelho)', borderColor: 'rgba(220,38,38,0.35)' }}
                                   title="Excluir batida (com motivo)"
                                 >
-                                  🗑️
+                                  Excluir
                                 </button>
                               </div>
                             ))}

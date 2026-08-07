@@ -254,131 +254,112 @@ export default function AusenciasEmpresa() {
         )}
       </div>
 
-      {/* Modal visualização (imagem com zoom / PDF em iframe) */}
-      {previewArquivo && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Visualizar comprovante"
-          className="modal-overlay"
-          style={{ background: 'rgba(0,0,0,0.88)', zIndex: 1100 }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) fecharPreview();
-          }}
-        >
-          <div
-            className="card modal-card"
-            style={{ maxWidth: 960 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingBottom: 14 }}>
-              <span className="modal-title" style={{ fontSize: 15 }}>Visualizar comprovante</span>
-              <button type="button" className="btn btn-secondary" onClick={fecharPreview} style={{ padding: '8px 14px' }}>
-                Fechar
+      <Modal
+        open={!!previewArquivo}
+        onClose={fecharPreview}
+        title="Visualizar comprovante"
+        maxWidth={960}
+        variant="dark"
+        footer={(
+          <button type="button" className="btn btn-secondary btn-full" onClick={fecharPreview}>
+            Fechar
+          </button>
+        )}
+      >
+        {!previewArquivo ? null : previewArquivo.loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
+            <div className="spinner" />
+          </div>
+        ) : previewArquivo.error ? (
+          <p style={{ color: 'var(--vermelho)', textAlign: 'center', padding: 24 }}>{previewArquivo.error}</p>
+        ) : previewArquivo.isPdf ? (
+          <iframe
+            title="Comprovante PDF"
+            src={previewArquivo.url}
+            style={{
+              width: '100%',
+              minHeight: 'min(60dvh, 480px)',
+              border: '1px solid rgba(148,163,184,0.25)',
+              borderRadius: 8,
+              background: '#fff',
+            }}
+          />
+        ) : (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                flexWrap: 'wrap',
+                marginBottom: 12,
+              }}
+            >
+              <span style={{ fontSize: 13, color: '#cbd5e1' }}>Zoom</span>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '6px 12px', minWidth: 40 }}
+                onClick={() => setZoomImg((z) => Math.max(0.25, Math.round((z - 0.25) * 100) / 100))}
+              >
+                −
               </button>
+              <span style={{ fontSize: 13, fontWeight: 600, minWidth: 48, textAlign: 'center', color: '#e2e8f0' }}>{Math.round(zoomImg * 100)}%</span>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '6px 12px', minWidth: 40 }}
+                onClick={() => setZoomImg((z) => Math.min(4, Math.round((z + 0.25) * 100) / 100))}
+              >
+                +
+              </button>
+              <button type="button" className="btn btn-secondary" style={{ padding: '6px 12px' }} onClick={() => setZoomImg(1)}>
+                Ajustar (100%)
+              </button>
+              <a
+                href={previewArquivo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 13, marginLeft: 'auto', color: '#93c5fd' }}
+              >
+                Abrir em nova aba
+              </a>
             </div>
-
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column' }}>
-              {previewArquivo.loading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
-                  <div className="spinner" />
-                </div>
-              ) : previewArquivo.error ? (
-                <p style={{ color: 'var(--vermelho)', textAlign: 'center', padding: 24 }}>{previewArquivo.error}</p>
-              ) : previewArquivo.isPdf ? (
-                <iframe
-                  title="Comprovante PDF"
+            <div
+              style={{
+                overflow: 'auto',
+                minHeight: 240,
+                maxHeight: 'min(55dvh, 520px)',
+                background: '#0f172a',
+                borderRadius: 8,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'flex-start',
+              }}
+            >
+              <div
+                style={{
+                  transform: `scale(${zoomImg})`,
+                  transformOrigin: 'top center',
+                  padding: zoomImg > 1 ? 24 : 0,
+                  transition: 'transform 0.12s ease-out',
+                }}
+              >
+                <img
                   src={previewArquivo.url}
+                  alt="Comprovante enviado pelo colaborador"
                   style={{
-                    width: '100%',
-                    flex: 1,
-                    minHeight: 480,
-                    border: '1px solid var(--cinza-200)',
-                    borderRadius: 8,
-                    background: '#fff',
+                    maxWidth: 'min(100%, 880px)',
+                    width: 'auto',
+                    height: 'auto',
+                    display: 'block',
                   }}
                 />
-              ) : (
-                <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      flexWrap: 'wrap',
-                      marginBottom: 12,
-                    }}
-                  >
-                    <span style={{ fontSize: 13, color: 'var(--cinza-600)' }}>Zoom</span>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      style={{ padding: '6px 12px', minWidth: 40 }}
-                      onClick={() => setZoomImg((z) => Math.max(0.25, Math.round((z - 0.25) * 100) / 100))}
-                    >
-                      −
-                    </button>
-                    <span style={{ fontSize: 13, fontWeight: 600, minWidth: 48, textAlign: 'center' }}>{Math.round(zoomImg * 100)}%</span>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      style={{ padding: '6px 12px', minWidth: 40 }}
-                      onClick={() => setZoomImg((z) => Math.min(4, Math.round((z + 0.25) * 100) / 100))}
-                    >
-                      +
-                    </button>
-                    <button type="button" className="btn btn-secondary" style={{ padding: '6px 12px' }} onClick={() => setZoomImg(1)}>
-                      Ajustar (100%)
-                    </button>
-                    <a
-                      href={previewArquivo.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 13, marginLeft: 'auto', color: 'var(--azul)' }}
-                    >
-                      Abrir em nova aba
-                    </a>
-                  </div>
-                  <div
-                    style={{
-                      overflow: 'auto',
-                      flex: 1,
-                      minHeight: 320,
-                      maxHeight: 'calc(95vh - 200px)',
-                      background: '#0f172a',
-                      borderRadius: 8,
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <div
-                      style={{
-                        transform: `scale(${zoomImg})`,
-                        transformOrigin: 'top center',
-                        padding: zoomImg > 1 ? 24 : 0,
-                        transition: 'transform 0.12s ease-out',
-                      }}
-                    >
-                      <img
-                        src={previewArquivo.url}
-                        alt="Comprovante enviado pelo colaborador"
-                        style={{
-                          maxWidth: 'min(100%, 880px)',
-                          width: 'auto',
-                          height: 'auto',
-                          display: 'block',
-                          verticalAlign: 'top',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       <Modal
         open={!!decisaoModal}

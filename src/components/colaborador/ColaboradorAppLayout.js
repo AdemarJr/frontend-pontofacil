@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoInternoUrl } from '../../utils/branding';
 import { ColaboradorChromeContext } from '../../context/ColaboradorChromeContext';
 import AppIcon from '../AppIcon';
+import { destroyActiveTour } from '../../tours/tourHelpers';
 
 function primeiroNome(nome) {
   if (!nome) return '';
@@ -28,6 +29,11 @@ export default function ColaboradorAppLayout() {
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const ctxValue = useMemo(() => ({ setChromeHidden }), []);
   const nome = primeiroNome(usuario?.nome);
+
+  useEffect(() => {
+    destroyActiveTour();
+    setMenuAberto(false);
+  }, [location.pathname, location.search]);
 
   function sair() {
     setMenuAberto(false);
