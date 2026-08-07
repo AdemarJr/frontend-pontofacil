@@ -360,7 +360,6 @@ export default function Ferias() {
         title="Lançar férias (já aprovadas)"
         subtitle="Use para períodos acordados fora do fluxo de solicitação (ex.: desligamento, acordo coletivo)."
         maxWidth={560}
-        zIndex={1100}
         footer={(
           <>
             <button type="button" className="btn btn-secondary btn-full" onClick={() => setModalLancar(false)} disabled={salvando}>Fechar</button>
@@ -410,7 +409,6 @@ export default function Ferias() {
         onClose={() => setDecidirModal(null)}
         title={decidirModal?.acao === 'APROVAR' ? 'Aprovar férias' : 'Recusar solicitação'}
         maxWidth={440}
-        zIndex={1150}
         footer={(
           <>
             <button type="button" className="btn btn-secondary btn-full" onClick={() => setDecidirModal(null)} disabled={decidindo}>Voltar</button>

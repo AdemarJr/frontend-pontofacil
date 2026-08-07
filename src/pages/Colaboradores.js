@@ -89,8 +89,9 @@ export default function Colaboradores() {
   }
 
   function abrirCriar() {
+    const pinInicial = gerarPinAleatorio();
     setForm({
-      nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR',
+      nome:'', email:'', pin: pinInicial, cargo:'', departamento:'', role:'COLABORADOR',
       localRegistroId:'', isentoGeofence: false, dataAdmissao:'', dataDemissao:'',
       cpf:'', pis:'', matricula:'', tipoContrato:'CLT', salarioBase:'',
       categoriaProfissional:'', dependentesIrrf:0,
@@ -396,13 +397,26 @@ export default function Colaboradores() {
 
       <Modal
         open={!!modal}
-        onClose={() => setModal(null)}
+        onClose={() => {
+          setConfirmacao(null);
+          setModal(null);
+        }}
         title={modal === 'criar' ? 'Novo Colaborador' : modal ? `Editar: ${modal.nome}` : ''}
         titleId="modal-colaborador-title"
         maxWidth={520}
+        closeOnOverlay={confirmacao == null}
         footer={(
           <>
-            <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)}>Cancelar</button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-full"
+              onClick={() => {
+                setConfirmacao(null);
+                setModal(null);
+              }}
+            >
+              Cancelar
+            </button>
             <button type="submit" form="form-colaborador" className="btn btn-primary btn-full" disabled={salvando}>
               {salvando ? 'Salvando...' : 'Salvar'}
             </button>
@@ -413,6 +427,36 @@ export default function Colaboradores() {
           id="form-colaborador"
           onSubmit={(e) => {
             e.preventDefault();
+            setErro('');
+            const nome = String(form.nome || '').trim();
+            const email = String(form.email || '').trim();
+            const pin = String(form.pin || '').trim();
+
+            if (!nome) {
+              setErro('Nome completo é obrigatório.');
+              return;
+            }
+            if (!email) {
+              setErro('E-mail é obrigatório.');
+              return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+              setErro('Informe um e-mail válido.');
+              return;
+            }
+            if (modal === 'criar') {
+              if (!pin) {
+                setErro('PIN é obrigatório.');
+                return;
+              }
+              if (!/^\d{4,6}$/.test(pin)) {
+                setErro('PIN deve ter de 4 a 6 dígitos numéricos.');
+                return;
+              }
+            } else if (pin && !/^\d{4,6}$/.test(pin)) {
+              setErro('Novo PIN deve ter de 4 a 6 dígitos numéricos (ou deixe vazio para não alterar).');
+              return;
+            }
             setConfirmacao('salvar');
           }}
         >
@@ -420,19 +464,34 @@ export default function Colaboradores() {
               {[
                 { key:'nome', label:'Nome completo', type:'text', required:true },
                 { key:'email', label:'E-mail', type:'email', required:true },
-                { key:'pin', label: modal === 'criar' ? 'PIN (4-6 dígitos)' : 'Novo PIN (deixe vazio para não alterar)', type: 'password', required: modal === 'criar' },
+                {
+                  key:'pin',
+                  label: modal === 'criar' ? 'PIN (4-6 dígitos)' : 'Novo PIN (deixe vazio para não alterar)',
+                  type: 'password',
+                  required: modal === 'criar',
+                  inputMode: 'numeric',
+                  pattern: modal === 'criar' ? '\\d{4,6}' : undefined,
+                  maxLength: 6,
+                },
                 { key:'cargo', label:'Cargo', type:'text' },
                 { key:'departamento', label:'Departamento', type:'text' },
               ].map(f => (
                 <div key={f.key}>
-                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>{f.label}</label>
+                  <label style={{ display:'block', fontSize:'13px', fontWeight:'500', color:'var(--cinza-700)', marginBottom:'6px' }}>
+                    {f.label}
+                    {f.required ? <span style={{ color: 'var(--vermelho)', marginLeft: 4 }} aria-hidden="true">*</span> : null}
+                  </label>
                   {f.key === 'pin' ? (
                     <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
                       <input
                         className="input"
                         type={f.type}
+                        inputMode={f.inputMode}
+                        pattern={f.pattern}
+                        maxLength={f.maxLength}
+                        autoComplete="new-password"
                         value={form[f.key] || ''}
-                        onChange={e => setForm(p => ({...p, [f.key]: e.target.value}))}
+                        onChange={e => setForm(p => ({...p, [f.key]: e.target.value.replace(/\D/g, '').slice(0, 6)}))}
                         required={f.required}
                         style={{ flex: 1 }}
                       />
@@ -448,7 +507,14 @@ export default function Colaboradores() {
                       )}
                     </div>
                   ) : (
-                    <input className="input" type={f.type} value={form[f.key] || ''} onChange={e => setForm(p => ({...p, [f.key]: e.target.value}))} required={f.required} />
+                    <input
+                      className="input"
+                      type={f.type}
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(p => ({...p, [f.key]: e.target.value}))}
+                      required={f.required}
+                      autoComplete={f.key === 'email' ? 'email' : f.key === 'nome' ? 'name' : undefined}
+                    />
                   )}
                 </div>
               ))}
@@ -650,7 +716,7 @@ export default function Colaboradores() {
         onClose={() => setConfirmacao(null)}
         title="Confirmar salvamento"
         maxWidth={420}
-        zIndex={1100}
+        zIndex={10100}
         footer={(
           <>
             <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={salvando}>Cancelar</button>
@@ -662,8 +728,8 @@ export default function Colaboradores() {
       >
         <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.5, margin: 0 }}>
           {modal === 'criar'
-            ? 'Deseja cadastrar este colaborador com os dados informados?'
-            : `Deseja salvar as alterações em "${modal?.nome}"?`}
+            ? `Deseja cadastrar o colaborador "${String(form.nome || '').trim() || 'novo colaborador'}"?`
+            : `Deseja salvar as alterações em "${String(form.nome || modal?.nome || '').trim() || 'este colaborador'}"?`}
         </p>
       </Modal>
 
@@ -672,7 +738,7 @@ export default function Colaboradores() {
         onClose={() => setConfirmacao(null)}
         title="Excluir definitivamente"
         maxWidth={440}
-        zIndex={1100}
+        zIndex={10100}
         footer={(
           <>
             <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={excluindo}>Cancelar</button>
