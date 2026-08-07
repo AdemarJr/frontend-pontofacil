@@ -1,5 +1,6 @@
 /**
  * Base para tours (driver.js) — progresso, textos em PT, persistência em localStorage.
+ * Mantém no máx. 1 tour ativo; destroi ao sair da rota / iniciar outro.
  */
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -18,7 +19,27 @@ const DEFAULT_CONFIG = {
   stageRadius: 10,
 };
 
-/** Mantém só passos cujo seletor existe (útil quando parte da tela só aparece após escolha, ex.: escala com colaborador). */
+/** @type {ReturnType<typeof driver> | null} */
+let activeTour = null;
+
+/** Encerra tour aberto (evita tela embaçada / pointer-events:none ao navegar). */
+export function destroyActiveTour() {
+  if (!activeTour) return;
+  try {
+    activeTour.destroy();
+  } catch {
+    /* ignore */
+  }
+  activeTour = null;
+  try {
+    document.body.classList.remove('driver-active', 'driver-fade', 'driver-no-interaction');
+    document.documentElement.classList.remove('driver-active', 'driver-fade', 'driver-no-interaction');
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Mantém só passos cujo seletor existe. */
 export function filterStepsPresent(steps) {
   return steps.filter((step) => {
     if (!step.element) return true;
@@ -34,30 +55,32 @@ export function tourTargetsReady(steps) {
 }
 
 /**
- * Tour sob demanda: use force:true no botão "Como usar".
- * Auto (force:false) só deve ser chamado no 1º login (Início / Meu ponto).
- *
- * @param {{ storageKey: string, steps: import('driver.js').DriveStep[], force?: boolean }} opts
+ * @param {{ storageKey: string, steps: import('driver.js').DriveStep[], force?: boolean, driverConfig?: object }} opts
+ * @returns {(() => void) | undefined} cleanup para useEffect
  */
 export function startModuleTour(opts) {
-  const { storageKey, steps, force = false } = opts;
-  if (typeof window === 'undefined') return;
+  const { storageKey, steps, force = false, driverConfig = {} } = opts;
+  if (typeof window === 'undefined') return undefined;
 
   if (!force) {
     try {
-      if (localStorage.getItem(storageKey) === '1') return;
+      if (localStorage.getItem(storageKey) === '1') return undefined;
     } catch {
       /* ignore */
     }
   }
 
   const resolved = filterStepsPresent(steps);
-  if (resolved.length === 0) return;
+  if (resolved.length === 0) return undefined;
+
+  destroyActiveTour();
 
   const driverObj = driver({
     ...DEFAULT_CONFIG,
+    ...driverConfig,
     steps: resolved,
     onDestroyed: () => {
+      if (activeTour === driverObj) activeTour = null;
       try {
         localStorage.setItem(storageKey, '1');
       } catch {
@@ -66,5 +89,10 @@ export function startModuleTour(opts) {
     },
   });
 
+  activeTour = driverObj;
   driverObj.drive();
+
+  return () => {
+    if (activeTour === driverObj) destroyActiveTour();
+  };
 }

@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
- * Modal responsivo: overlay com scroll + corpo rolável + rodapé fixo (Salvar/Cancelar sempre acessíveis).
+ * Modal responsivo via portal no document.body (evita blur/travamento por transform/overflow do layout).
  */
 export default function Modal({
   open,
@@ -11,27 +12,37 @@ export default function Modal({
   children,
   footer,
   maxWidth = 480,
-  zIndex = 1000,
-  titleId,
+  zIndex = 10050,
+  titleId: titleIdProp,
   closeOnOverlay = true,
   variant = 'light',
   className = '',
 }) {
+  const autoTitleId = useId();
+  const titleId = titleIdProp || autoTitleId;
+
   useEffect(() => {
     if (!open) return undefined;
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    const scrollbarGap = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
+    if (scrollbarGap > 0) {
+      document.body.style.paddingRight = `${scrollbarGap}px`;
+    }
+
     const onKey = (e) => {
       if (e.key === 'Escape' && onClose) onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
       window.removeEventListener('keydown', onKey);
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
   const cardClass = [
     'modal-card',
@@ -45,7 +56,7 @@ export default function Modal({
     variant === 'dark' ? 'modal-overlay--dark' : '',
   ].filter(Boolean).join(' ');
 
-  return (
+  return createPortal(
     <div
       className={overlayClass}
       style={{ zIndex }}
@@ -57,7 +68,7 @@ export default function Modal({
         style={{ maxWidth }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-labelledby={title ? titleId : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || subtitle) && (
@@ -73,6 +84,7 @@ export default function Modal({
         <div className="modal-body">{children}</div>
         {footer ? <div className="modal-footer">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
