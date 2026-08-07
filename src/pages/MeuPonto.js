@@ -1352,7 +1352,8 @@ export default function MeuPonto() {
         onClose={() => {}}
         title="Uso de dados no registro de ponto"
         maxWidth={480}
-        zIndex={10000}
+        zIndex={10150}
+        closeOnOverlay={false}
         footer={(
           <button
             type="button"

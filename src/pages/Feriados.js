@@ -442,7 +442,6 @@ export default function Feriados() {
         onClose={() => setModal(null)}
         title={modal === 'criar' ? 'Novo feriado' : 'Editar feriado'}
         maxWidth={520}
-        zIndex={1100}
         footer={(
           <>
             <button type="button" className="btn btn-secondary btn-full" onClick={() => setModal(null)} disabled={salvando}>Cancelar</button>

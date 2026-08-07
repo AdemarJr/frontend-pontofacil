@@ -1,5 +1,16 @@
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+
+/** Pilha de modais abertos — Escape fecha só o do topo. */
+const escapeStack = [];
+
+function onGlobalEscape(e) {
+  if (e.key !== 'Escape') return;
+  const top = escapeStack[escapeStack.length - 1];
+  if (!top) return;
+  e.preventDefault();
+  top.onClose?.();
+}
 
 /**
  * Modal responsivo via portal no document.body (evita blur/travamento por transform/overflow do layout).
@@ -20,9 +31,12 @@ export default function Modal({
 }) {
   const autoTitleId = useId();
   const titleId = titleIdProp || autoTitleId;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
+
     const prevOverflow = document.body.style.overflow;
     const prevPaddingRight = document.body.style.paddingRight;
     const scrollbarGap = window.innerWidth - document.documentElement.clientWidth;
@@ -31,16 +45,27 @@ export default function Modal({
       document.body.style.paddingRight = `${scrollbarGap}px`;
     }
 
-    const onKey = (e) => {
-      if (e.key === 'Escape' && onClose) onClose();
+    const entry = {
+      onClose: () => onCloseRef.current?.(),
     };
-    window.addEventListener('keydown', onKey);
+    escapeStack.push(entry);
+    if (escapeStack.length === 1) {
+      window.addEventListener('keydown', onGlobalEscape);
+    }
+
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
-      window.removeEventListener('keydown', onKey);
+      const idx = escapeStack.indexOf(entry);
+      if (idx >= 0) escapeStack.splice(idx, 1);
+      if (escapeStack.length === 0) {
+        window.removeEventListener('keydown', onGlobalEscape);
+      }
+      // Só restaura scroll se não houver outro modal aberto
+      if (escapeStack.length === 0) {
+        document.body.style.overflow = prevOverflow;
+        document.body.style.paddingRight = prevPaddingRight;
+      }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || typeof document === 'undefined') return null;
 
