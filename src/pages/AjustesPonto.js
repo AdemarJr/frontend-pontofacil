@@ -67,6 +67,7 @@ export default function AjustesPonto() {
   const [usuarios, setUsuarios] = useState([]);
   const [relatorio, setRelatorio] = useState([]);
   const [carregando, setCarregando] = useState(false);
+  const [erroBusca, setErroBusca] = useState('');
 
   const [ajusteModal, setAjusteModal] = useState(null);
   const [ajusteForm, setAjusteForm] = useState({ dataHoraNova: '', motivo: '' });
@@ -105,6 +106,7 @@ export default function AjustesPonto() {
 
   async function buscar() {
     setCarregando(true);
+    setErroBusca('');
     try {
       const { data } = await relatorioService.espelhoPonto({
         mes,
@@ -112,6 +114,9 @@ export default function AjustesPonto() {
         ...(usuarioFiltro && { usuarioId: usuarioFiltro }),
       });
       setRelatorio(data.relatorio || []);
+    } catch (e) {
+      setRelatorio([]);
+      setErroBusca(e?.response?.data?.error || e?.message || 'Não foi possível carregar o espelho de ponto.');
     } finally {
       setCarregando(false);
     }
@@ -270,6 +275,10 @@ export default function AjustesPonto() {
     [relatorio, espelhoPage, espelhoPageSize]
   );
 
+  useEffect(() => {
+    if (espelhoSafePage !== espelhoPage) setEspelhoPage(espelhoSafePage);
+  }, [espelhoSafePage, espelhoPage]);
+
   function labelMes(i) {
     return format(new Date(2024, i, 1), 'MMMM', { locale: ptBR });
   }
@@ -330,6 +339,8 @@ export default function AjustesPonto() {
           <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
             <div className="spinner" />
           </div>
+        ) : erroBusca ? (
+          <p style={{ fontSize: 13, color: 'var(--vermelho)', margin: 0 }}>{erroBusca}</p>
         ) : totalEspelho === 0 ? (
           <p style={{ fontSize: 13, color: 'var(--cinza-400)', margin: 0 }}>Nenhum dado no período.</p>
         ) : (

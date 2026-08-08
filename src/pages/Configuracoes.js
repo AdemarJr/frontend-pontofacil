@@ -14,6 +14,7 @@ export default function Configuracoes() {
   const [form, setForm] = useState({});
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  const [erro, setErro] = useState('');
   const [locais, setLocais] = useState([]);
   const [novoLocal, setNovoLocal] = useState({ nome: '', latitude: '', longitude: '', raioMetros: 200 });
   const [salvandoLocal, setSalvandoLocal] = useState(false);
@@ -59,17 +60,23 @@ export default function Configuracoes() {
 
   async function salvar() {
     setSalvando(true);
+    setErro('');
     try {
       await tenantService.atualizar(form);
       setSucesso(true);
       setTimeout(() => setSucesso(false), 3000);
-    } finally { setSalvando(false); }
+    } catch (err) {
+      setErro(err.response?.data?.error || err.message || 'Não foi possível salvar as configurações.');
+    } finally {
+      setSalvando(false);
+    }
   }
 
   async function adicionarLocal(e) {
     e.preventDefault();
     if (!novoLocal.nome || novoLocal.latitude === '' || novoLocal.longitude === '') return;
     setSalvandoLocal(true);
+    setErro('');
     try {
       await localRegistroService.criar({
         nome: novoLocal.nome,
@@ -80,6 +87,8 @@ export default function Configuracoes() {
       });
       setNovoLocal({ nome: '', latitude: '', longitude: '', raioMetros: 200 });
       carregarLocais();
+    } catch (err) {
+      setErro(err.response?.data?.error || err.message || 'Não foi possível adicionar o local.');
     } finally {
       setSalvandoLocal(false);
     }
@@ -87,14 +96,23 @@ export default function Configuracoes() {
 
   async function removerLocal(id) {
     if (!window.confirm('Remover este local? Colaboradores vinculados ficarão sem restrição de local.')) return;
-    await localRegistroService.remover(id);
-    carregarLocais();
+    setErro('');
+    try {
+      await localRegistroService.remover(id);
+      carregarLocais();
+    } catch (err) {
+      setErro(err.response?.data?.error || err.message || 'Não foi possível remover o local.');
+    }
   }
 
   const { pageItems: locaisPagina, total: totalLocais, safePage: locaisSafePage } = useMemo(
     () => slicePaged(locais, locaisPage, locaisPageSize),
     [locais, locaisPage, locaisPageSize]
   );
+
+  useEffect(() => {
+    if (locaisSafePage !== locaisPage) setLocaisPage(locaisSafePage);
+  }, [locaisSafePage, locaisPage]);
 
   if (!config) return <Layout><div style={{ display:'flex', justifyContent:'center', padding:'80px' }}><div className="spinner" /></div></Layout>;
 
@@ -396,6 +414,12 @@ export default function Configuracoes() {
         </div>
 
         {folhaHabilitada && <FolhaConfigSection />}
+
+        {erro && (
+          <div style={{ background:'#fef2f2', color:'var(--vermelho)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>
+            {erro}
+          </div>
+        )}
 
         {sucesso && (
           <div style={{ background:'var(--verde-claro)', color:'var(--verde-escuro)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>
