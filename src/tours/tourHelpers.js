@@ -22,9 +22,13 @@ const DEFAULT_CONFIG = {
 /** @type {ReturnType<typeof driver> | null} */
 let activeTour = null;
 
+/** Se true, onDestroyed grava "visto" no localStorage (só conclusão real). */
+let persistSeenOnDestroy = false;
+
 /** Encerra tour aberto (evita tela embaçada / pointer-events:none ao navegar). */
 export function destroyActiveTour() {
   if (!activeTour) return;
+  persistSeenOnDestroy = false;
   try {
     activeTour.destroy();
   } catch {
@@ -75,12 +79,30 @@ export function startModuleTour(opts) {
 
   destroyActiveTour();
 
-  const driverObj = driver({
+  persistSeenOnDestroy = false;
+
+  /** @type {ReturnType<typeof driver>} */
+  let driverObj;
+  driverObj = driver({
     ...DEFAULT_CONFIG,
     ...driverConfig,
     steps: resolved,
+    onNextClick: () => {
+      if (driverObj.isLastStep()) {
+        persistSeenOnDestroy = true;
+        driverObj.destroy();
+        return;
+      }
+      driverObj.moveNext();
+    },
+    onCloseClick: () => {
+      persistSeenOnDestroy = false;
+      driverObj.destroy();
+    },
     onDestroyed: () => {
       if (activeTour === driverObj) activeTour = null;
+      if (!persistSeenOnDestroy) return;
+      persistSeenOnDestroy = false;
       try {
         localStorage.setItem(storageKey, '1');
       } catch {

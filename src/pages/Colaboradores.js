@@ -1,11 +1,13 @@
 // src/pages/Colaboradores.js
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Layout from '../components/dashboard/Layout';
 import Modal from '../components/Modal';
+import SystemMessage from '../components/SystemMessage';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { usuarioService, localRegistroService } from '../services/api';
 import { runColaboradoresTour } from '../tours/colaboradoresTour';
 import { useAuth } from '../hooks/useAuth';
+import { mensagemAposCriarColaborador, mensagemLimitePlano } from '../utils/colaboradorFeedback';
 
 export default function Colaboradores() {
   const { isAdmin, usuario: usuarioLogado, folhaHabilitada } = useAuth();
@@ -15,6 +17,8 @@ export default function Colaboradores() {
   const [form, setForm] = useState({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR' });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  /** @type {[null | { type: string, title?: string, text: string }, Function]} */
+  const [avisoSistema, setAvisoSistema] = useState(null);
   const [busca, setBusca] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -77,8 +81,11 @@ export default function Colaboradores() {
       const { data } = await usuarioService.obterPin(usuarioId);
       setPinsGerados((p) => ({ ...p, [usuarioId]: data.pin }));
     } catch (e) {
-      // Se ainda não existe pinEncrypted no banco, pedimos para resetar 1x.
-      alert(e.response?.data?.error || 'Não foi possível obter o PIN.');
+      setAvisoSistema({
+        type: 'warning',
+        title: 'PIN não disponível',
+        text: e.response?.data?.error || 'Não foi possível obter o PIN. Use “Reset PIN” se necessário.',
+      });
     } finally {
       setPinsCarregando((prev) => {
         const next = new Set(prev);
@@ -99,6 +106,7 @@ export default function Colaboradores() {
       usaVt: false, valorVtMensal:'', descontoVaMensal:'', descontoPlanoSaudeMensal:'',
     });
     setErro('');
+    setAvisoSistema(null);
     setModal('criar');
   }
 
@@ -158,27 +166,14 @@ export default function Colaboradores() {
       if (payload.dataDemissao === '') delete payload.dataDemissao;
       if (modal === 'criar') {
         const { data } = await usuarioService.criar(payload);
-        if (data.conviteEmailEnviado) {
-          alert('Cadastro concluído. Enviamos um e-mail com instruções e link para definir senha (confira spam).');
-        } else if (data.conviteEmailMotivo === 'envio_em_segundo_plano') {
-          alert(
-            'Cadastro concluído. O convite por e-mail está sendo enviado em segundo plano; em alguns instantes deve chegar (confira spam). Se não receber, verifique SMTP e os logs do servidor.'
-          );
-        } else if (data.conviteEmailMotivo === 'smtp_nao_configurado') {
-          alert(
-            'Cadastro concluído, mas o e-mail NÃO foi enviado: SMTP não configurado no servidor (defina SMTP_HOST, MAIL_FROM e credenciais SMTP_USER/SMTP_PASS no backend).'
-          );
-        } else if (data.conviteEmailMotivo === 'falha_envio') {
-          alert(
-            'Cadastro concluído, mas o envio do e-mail falhou. Verifique os logs do backend e as credenciais SMTP (Hostinger costuma exigir usuário/senha corretos e porta 465 com SSL).'
-          );
-        } else {
-          alert(
-            'Cadastro concluído. O e-mail de convite não foi enviado. O PIN do totem segue válido; o colaborador pode usar "Esqueci minha senha" no login quando o SMTP estiver OK.'
-          );
-        }
+        setAvisoSistema(mensagemAposCriarColaborador(data));
       } else {
         await usuarioService.atualizar(modal.id, payload);
+        setAvisoSistema({
+          type: 'success',
+          title: 'Alterações salvas',
+          text: `Os dados de "${form.nome || modal.nome}" foram atualizados.`,
+        });
       }
       setModal(null);
       try {
@@ -187,8 +182,16 @@ export default function Colaboradores() {
         console.error('[Colaboradores] Lista não atualizou após salvar:', reloadErr);
       }
     } catch (err) {
-      const msg = err.response?.data?.error || err.message;
-      setErro(msg || 'Erro ao salvar');
+      const data = err.response?.data;
+      if (data?.code === 'PLAN_USER_LIMIT') {
+        const msg = mensagemLimitePlano(data);
+        setErro(msg.text);
+        setAvisoSistema(msg);
+      } else {
+        const msg = data?.error || err.message || 'Erro ao salvar';
+        setErro(msg);
+        setAvisoSistema({ type: 'error', title: 'Não foi possível salvar', text: msg });
+      }
     } finally {
       setSalvando(false);
     }
@@ -204,26 +207,52 @@ export default function Colaboradores() {
       setConfirmacao(null);
       setModal(null);
       await carregar();
+      setAvisoSistema({
+        type: 'success',
+        title: 'Colaborador excluído',
+        text: `"${u.nome}" foi removido definitivamente.`,
+      });
     } catch (err) {
-      const msg = err.response?.data?.error || err.message;
-      alert(msg || 'Não foi possível excluir o colaborador');
+      const msg = err.response?.data?.error || err.message || 'Não foi possível excluir o colaborador';
+      setAvisoSistema({ type: 'error', title: 'Exclusão não concluída', text: msg });
     } finally {
       setExcluindo(false);
     }
   }
 
   async function toggleAtivo(u) {
-    await usuarioService.atualizar(u.id, { ativo: !u.ativo });
-    carregar();
+    try {
+      await usuarioService.atualizar(u.id, { ativo: !u.ativo });
+      carregar();
+      setAvisoSistema({
+        type: 'success',
+        title: u.ativo ? 'Colaborador desativado' : 'Colaborador ativado',
+        text: `"${u.nome}" foi ${u.ativo ? 'desativado' : 'ativado'}.`,
+      });
+    } catch (err) {
+      setAvisoSistema({
+        type: 'error',
+        title: 'Falha ao alterar status',
+        text: err.response?.data?.error || err.message || 'Tente novamente.',
+      });
+    }
   }
 
   async function reenviarConvite(u) {
     if (!window.confirm(`Reenviar convite por e-mail para ${u.email}?`)) return;
     try {
       const { data } = await usuarioService.reenviarConvite(u.id);
-      alert(data.mensagem || 'Convite enviado.');
+      setAvisoSistema({
+        type: 'success',
+        title: 'E-mail enviado',
+        text: data.mensagem || `Convite reenviado para ${u.email}.`,
+      });
     } catch (err) {
-      alert(err.response?.data?.error || 'Erro ao reenviar convite');
+      setAvisoSistema({
+        type: 'error',
+        title: 'E-mail não enviado',
+        text: err.response?.data?.error || 'Erro ao reenviar convite.',
+      });
     }
   }
 
@@ -231,9 +260,17 @@ export default function Colaboradores() {
     if (!window.confirm(`Enviar link de redefinição de senha para ${u.email}?`)) return;
     try {
       const { data } = await usuarioService.resetSenhaEmail(u.id);
-      alert(data.mensagem || 'E-mail enviado.');
+      setAvisoSistema({
+        type: 'success',
+        title: 'E-mail enviado',
+        text: data.mensagem || `Link de redefinição enviado para ${u.email}.`,
+      });
     } catch (err) {
-      alert(err.response?.data?.error || 'Erro ao enviar e-mail de reset');
+      setAvisoSistema({
+        type: 'error',
+        title: 'E-mail não enviado',
+        text: err.response?.data?.error || 'Erro ao enviar e-mail de reset.',
+      });
     }
   }
 
@@ -251,8 +288,25 @@ export default function Colaboradores() {
 
   const { pageItems: filtradosPagina, total: totalFiltrados, safePage } = slicePaged(filtrados, page, pageSize);
 
+  const fecharAvisoSistema = useCallback(() => setAvisoSistema(null), []);
+
+  useEffect(() => {
+    if (safePage !== page) setPage(safePage);
+  }, [safePage, page]);
+
   return (
     <Layout>
+      {avisoSistema ? (
+        <SystemMessage
+          type={avisoSistema.type}
+          title={avisoSistema.title}
+          autoHideMs={avisoSistema.type === 'success' || avisoSistema.type === 'info' ? 8000 : 0}
+          onClose={fecharAvisoSistema}
+        >
+          {avisoSistema.text}
+        </SystemMessage>
+      ) : null}
+
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'24px', flexWrap:'wrap', gap:12 }}>
         <div id="tour-colab-header">
           <h1 style={{ fontSize:'24px', fontWeight:'700' }}>Colaboradores</h1>

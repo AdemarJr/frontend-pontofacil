@@ -138,23 +138,33 @@ export default function Escalas() {
 
   async function remover(id) {
     if (!window.confirm('Remover esta escala?')) return;
-    await escalaService.remover(id);
-    const { data } = await escalaService.listar(usuarioId);
-    setEscalas(data);
-    escalaService
-      .resumo()
-      .then(({ data }) => setResumo(data.escalas || []))
-      .catch(() => {});
+    setErro('');
+    try {
+      await escalaService.remover(id);
+      const { data } = await escalaService.listar(usuarioId);
+      setEscalas(data);
+      escalaService
+        .resumo()
+        .then(({ data }) => setResumo(data.escalas || []))
+        .catch(() => {});
+    } catch (err) {
+      setErro(err.response?.data?.error || 'Erro ao remover escala');
+    }
   }
 
   async function toggleAtivo(esc) {
-    await escalaService.atualizar(esc.id, { ativo: !esc.ativo });
-    const { data } = await escalaService.listar(usuarioId);
-    setEscalas(data);
-    escalaService
-      .resumo()
-      .then(({ data }) => setResumo(data.escalas || []))
-      .catch(() => {});
+    setErro('');
+    try {
+      await escalaService.atualizar(esc.id, { ativo: !esc.ativo });
+      const { data } = await escalaService.listar(usuarioId);
+      setEscalas(data);
+      escalaService
+        .resumo()
+        .then(({ data }) => setResumo(data.escalas || []))
+        .catch(() => {});
+    } catch (err) {
+      setErro(err.response?.data?.error || 'Erro ao atualizar escala');
+    }
   }
 
   const cols = usuarios.find((u) => u.id === usuarioId);
@@ -163,6 +173,10 @@ export default function Escalas() {
     () => slicePaged(escalas, escalasPage, escalasPageSize),
     [escalas, escalasPage, escalasPageSize]
   );
+
+  useEffect(() => {
+    if (escalasSafePage !== escalasPage) setEscalasPage(escalasSafePage);
+  }, [escalasSafePage, escalasPage]);
 
   return (
     <Layout>

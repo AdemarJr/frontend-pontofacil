@@ -1251,7 +1251,7 @@ export default function MeuPonto() {
         subtitle={justificarModal ? `Dia: ${justificarModal.dia} · Tipo: ${TIPOS_LABEL[justificarModal.tipo]?.label || justificarModal.tipo}` : ''}
         variant="dark"
         maxWidth={520}
-        zIndex={9999}
+        zIndex={10150}
         footer={(
           <>
             <button type="button" className="btn btn-secondary btn-full" onClick={() => setJustificarModal(null)}>Cancelar</button>
@@ -1300,7 +1300,7 @@ export default function MeuPonto() {
         title="Turno de hoje ainda em aberto"
         variant="dark"
         maxWidth={520}
-        zIndex={9999}
+        zIndex={10150}
         footer={(
           <>
             <button
