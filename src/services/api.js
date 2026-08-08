@@ -87,6 +87,7 @@ api.interceptors.response.use(
         filaEspera = [];
         localStorage.clear();
         window.location.href = '/login';
+        return Promise.reject(err);
       } finally {
         refreshando = false;
       }
@@ -147,7 +148,7 @@ export const usuarioService = {
   listar: () => api.get('/usuarios'),
   buscar: (id) => api.get(`/usuarios/${id}`),
   obterPin: (id) => api.get(`/usuarios/${id}/pin`),
-  criar: (dados) => api.post('/usuarios', dados),
+  criar: (dados) => api.post('/usuarios', dados, { timeout: 60000 }),
   atualizar: (id, dados) => api.put(`/usuarios/${id}`, dados),
   remover: (id) => api.delete(`/usuarios/${id}`),
   excluirDefinitivo: (id) => api.delete(`/usuarios/${id}/definitivo`),
