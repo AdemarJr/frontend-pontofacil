@@ -2,9 +2,12 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { logoInternoUrl } from '../../utils/branding';
+import { useTheme } from '../../hooks/useTheme';
+import { logoSidebarUrl } from '../../utils/branding';
 import { feriasService } from '../../services/api';
 import AppIcon from '../AppIcon';
+import Breadcrumb from '../ui/Breadcrumb';
+import OfflineStatus from '../ui/OfflineStatus';
 import { destroyActiveTour } from '../../tours/tourHelpers';
 
 const MENU = [
@@ -31,13 +34,24 @@ const SECTIONS = [
   { id: 'gestao', label: 'Gestão' },
 ];
 
+const COLLAPSE_KEY = 'pf-sidebar-collapsed';
+
 export default function Layout({ children }) {
   const { usuario, logout, isAdmin, isSuperAdmin, refreshTenantFeatures, folhaHabilitada } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [feriasPendentes, setFeriasPendentes] = useState(0);
   const [navAberto, setNavAberto] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [buscaNav, setBuscaNav] = useState('');
   const payrollEnabled = folhaHabilitada;
 
   useEffect(() => {
@@ -95,7 +109,7 @@ export default function Layout({ children }) {
   }, [isAdmin, atualizarBadgeFerias]);
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 900px)');
+    const mq = window.matchMedia('(max-width: 1023px)');
     const fn = () => setMobile(mq.matches);
     fn();
     mq.addEventListener('change', fn);
@@ -105,6 +119,14 @@ export default function Layout({ children }) {
   useEffect(() => {
     setNavAberto(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }, [collapsed]);
 
   function handleLogout() {
     logout();
@@ -125,8 +147,29 @@ export default function Layout({ children }) {
     [payrollEnabled]
   );
 
+  const menuFiltrado = useMemo(() => {
+    const q = buscaNav.trim().toLowerCase();
+    if (!q) return menuVisivel;
+    return menuVisivel.filter((m) => m.label.toLowerCase().includes(q));
+  }, [menuVisivel, buscaNav]);
+
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: 'Painel', to: '/dashboard' },
+      { label: tituloPagina },
+    ],
+    [tituloPagina]
+  );
+
+  const shellClass = [
+    'admin-shell',
+    !mobile && collapsed ? 'admin-shell--collapsed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="admin-shell">
+    <div className={shellClass}>
       {mobile && navAberto ? (
         <button
           type="button"
@@ -139,11 +182,12 @@ export default function Layout({ children }) {
       <aside
         id="tour-sidebar"
         className={`admin-shell__sidebar${navAberto && mobile ? ' admin-shell__sidebar--open' : ''}`}
+        aria-label="Navegação principal"
       >
         <div className="admin-shell__brand">
           <div className="admin-shell__brand-inner">
             <img
-              src={logoInternoUrl()}
+              src={logoSidebarUrl(theme)}
               alt="Ponto Fácil"
               className="admin-shell__logo"
             />
@@ -151,11 +195,22 @@ export default function Layout({ children }) {
               <p className="admin-shell__tenant">{usuario.tenant.nomeFantasia}</p>
             )}
           </div>
+          {!mobile ? (
+            <button
+              type="button"
+              className="admin-shell__collapse-btn"
+              aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+              title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+              onClick={() => setCollapsed((v) => !v)}
+            >
+              <AppIcon name={collapsed ? 'panelOpen' : 'panelClose'} size={16} />
+            </button>
+          ) : null}
         </div>
 
         <nav className="admin-shell__nav" aria-label="Menu principal">
           {SECTIONS.map((sec) => {
-            const items = menuVisivel.filter((m) => m.section === sec.id);
+            const items = menuFiltrado.filter((m) => m.section === sec.id);
             if (!items.length) return null;
             return (
               <div key={sec.id} className="admin-shell__section">
@@ -165,6 +220,7 @@ export default function Layout({ children }) {
                     key={item.path}
                     to={item.path}
                     end={item.path === '/dashboard'}
+                    title={item.label}
                     onClick={() => mobile && setNavAberto(false)}
                     className={({ isActive }) =>
                       `admin-shell__link${isActive ? ' admin-shell__link--active' : ''}`
@@ -194,15 +250,15 @@ export default function Layout({ children }) {
             <div className="admin-shell__avatar" aria-hidden="true">
               {usuario?.nome?.[0]}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="admin-shell__user-meta" style={{ flex: 1, minWidth: 0 }}>
               <p className="admin-shell__user-name">{usuario?.nome}</p>
               <p className="admin-shell__user-role">
                 {usuario?.role === 'ADMIN' ? 'Administrador' : 'Usuário'}
               </p>
             </div>
           </div>
-          <button type="button" onClick={handleLogout} className="admin-shell__logout">
-            Sair
+          <button type="button" onClick={handleLogout} className="admin-shell__logout" title="Sair">
+            <span className="admin-shell__logout-label">Sair</span>
           </button>
         </div>
       </aside>
@@ -219,16 +275,45 @@ export default function Layout({ children }) {
               <AppIcon name="menu" size={20} aria-label="Abrir menu" />
             </button>
           ) : null}
+
           <div className="admin-shell__topbar-text">
-            <span className="admin-shell__topbar-kicker">Painel</span>
+            <Breadcrumb items={breadcrumbItems} />
             <span className="admin-shell__topbar-title">{tituloPagina}</span>
           </div>
-          <div className="admin-shell__topbar-user" title={usuario?.email || usuario?.nome}>
-            <span className="admin-shell__topbar-avatar">{usuario?.nome?.[0]}</span>
-            {!mobile ? <span className="admin-shell__topbar-name">{usuario?.nome?.split(' ')[0]}</span> : null}
+
+          <div className="admin-shell__topbar-actions">
+            <label className="admin-shell__search" aria-label="Buscar no menu">
+              <AppIcon name="search" size={16} />
+              <input
+                type="search"
+                placeholder="Buscar menu…"
+                value={buscaNav}
+                onChange={(e) => setBuscaNav(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+
+            <OfflineStatus />
+
+            <button
+              type="button"
+              className="btn btn-icon btn-ghost"
+              aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+              title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+              onClick={toggleTheme}
+            >
+              <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
+            </button>
+
+            <div className="admin-shell__topbar-user" title={usuario?.email || usuario?.nome}>
+              <span className="admin-shell__topbar-avatar">{usuario?.nome?.[0]}</span>
+              {!mobile ? <span className="admin-shell__topbar-name">{usuario?.nome?.split(' ')[0]}</span> : null}
+            </div>
           </div>
         </header>
-        <main className="admin-shell__main">{children}</main>
+        <main className="admin-shell__main">
+          <div className="admin-shell__main-inner">{children}</div>
+        </main>
       </div>
     </div>
   );

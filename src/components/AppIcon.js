@@ -27,6 +27,13 @@ import {
   CircleAlert,
   PenLine,
   MoreVertical,
+  Search,
+  Sun,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 
 const ICONS = {
@@ -58,6 +65,13 @@ const ICONS = {
   alert: CircleAlert,
   assinar: PenLine,
   more: MoreVertical,
+  search: Search,
+  sun: Sun,
+  moon: Moon,
+  panelClose: PanelLeftClose,
+  panelOpen: PanelLeftOpen,
+  trendUp: TrendingUp,
+  trendDown: TrendingDown,
 };
 
 export default function AppIcon({

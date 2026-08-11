@@ -5,15 +5,22 @@ import { escalaService, usuarioService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
 
-function validarJornadaCLT(cargaHorariaDiaria, diasSemana, intervaloMinutos) {
+function validarJornadaCLT(cargaHorariaDiaria, diasSemana, intervaloMinutos, { overnight = false } = {}) {
   const carga = Number(cargaHorariaDiaria) || 8;
   const dias = diasSemana?.length || 0;
-  if (carga > 8) return 'Carga diária não pode exceder 8 horas (CLT).';
+  const maxDiaria = overnight ? 12 : 8;
+  if (carga > maxDiaria) {
+    return overnight
+      ? 'Carga diária em turno noturno não pode exceder 12 horas.'
+      : 'Carga diária não pode exceder 8 horas (CLT).';
+  }
   if (carga * dias > 44) return `Jornada semanal (${(carga * dias).toFixed(1)}h) excede 44 horas (CLT).`;
   const horas = carga;
   let minIntervalo = 0;
   if (horas > 6) minIntervalo = 60;
   else if (horas >= 4) minIntervalo = 15;
+  // Plantão noturno sem intervalo cadastrado (vigilante): permite intervalo 0.
+  if (overnight && Number(intervaloMinutos) === 0) return null;
   if (minIntervalo > 0 && Number(intervaloMinutos) < minIntervalo) {
     return `Intervalo mínimo para jornada de ${carga}h é ${minIntervalo} minutos (CLT).`;
   }
@@ -103,7 +110,10 @@ export default function Escalas() {
       setErro('Selecione o colaborador e pelo menos um dia da semana.');
       return;
     }
-    const errClt = validarJornadaCLT(form.cargaHorariaDiaria, form.diasSemana, form.intervaloMinutos);
+    const overnight = Boolean(form.horaInicio && form.horaFim && form.horaFim <= form.horaInicio);
+    const errClt = validarJornadaCLT(form.cargaHorariaDiaria, form.diasSemana, form.intervaloMinutos, {
+      overnight,
+    });
     if (errClt) {
       setErro(errClt);
       return;
@@ -321,6 +331,13 @@ export default function Escalas() {
                   />
                 </div>
               </div>
+              {form.horaInicio && form.horaFim && form.horaFim <= form.horaInicio ? (
+                <p style={{ fontSize: 12, color: 'var(--verde-escuro)', margin: 0, lineHeight: 1.45 }}>
+                  Turno noturno detectado (cruza meia-noite), ex.: vigilante 18:00→06:00. As batidas de saída
+                  no dia seguinte fecham o plantão do dia de entrada. Preferível modo de marcação com 2 batidas
+                  (Entrada/Saída) se não houver intervalo de almoço.
+                </p>
+              ) : null}
               <div id="tour-escalas-almoco" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--cinza-400)' }}>Saída almoço (esperado)</label>
