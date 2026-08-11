@@ -957,6 +957,32 @@ export default function MeuPonto() {
           Cerca virtual ativa: o ponto só é aceito na área permitida pela empresa.
         </p>
       ) : null}
+      {aba === 'bater' && pendenciaCheckin?.turnoAberto && pendenciaCheckin?.cruzaMeiaNoite ? (
+        <div
+          style={{
+            marginTop: 10,
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: 'rgba(22, 163, 74, 0.14)',
+            border: '1px solid rgba(22, 163, 74, 0.35)',
+            maxWidth: 380,
+            width: '100%',
+          }}
+        >
+          <p style={{ margin: 0, color: '#bbf7d0', fontSize: 13, lineHeight: 1.5 }}>
+            Turno noturno em andamento (iniciado{' '}
+            {pendenciaCheckin?.ultimoEm
+              ? new Date(pendenciaCheckin.ultimoEm).toLocaleString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : 'ontem'}
+            ). A próxima batida continua o plantão — em geral a <strong>saída</strong>.
+          </p>
+        </div>
+      ) : null}
       {aba === 'bater' && pendenciaCheckin?.diaAnteriorEmAberto ? (
         <div
           style={{

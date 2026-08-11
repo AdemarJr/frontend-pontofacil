@@ -4,6 +4,20 @@ import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
 
+// Aplica tema persistido antes do paint (evita flash)
+try {
+  const stored = localStorage.getItem('pf-theme');
+  const theme =
+    stored === 'light' || stored === 'dark'
+      ? stored
+      : window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+} catch {
+  /* ignore */
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <HelmetProvider>
