@@ -1,0 +1,101 @@
+/**
+ * Design System — formulários e feedback (classes utilitárias complementares)
+ * Componentes React em src/components/ui/
+ */
+
+/* Switch helper when used as label wrap */
+label.ds-switch-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Confirmation / sheet surface */
+.ds-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+  max-height: min(90dvh, 720px);
+  overflow: auto;
+}
+
+@media (min-width: 640px) {
+  .ds-sheet {
+    border-radius: var(--radius-xl);
+    max-width: 480px;
+    margin: auto;
+  }
+}
+
+/* Stepper */
+.ds-stepper {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ds-stepper__step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-small);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.ds-stepper__index {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.ds-stepper__step--active { color: var(--green-700); }
+.ds-stepper__step--active .ds-stepper__index {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.ds-stepper__step--done .ds-stepper__index {
+  background: var(--green-100);
+  border-color: var(--green-200);
+  color: var(--green-700);
+}
+
+/* Tooltip (CSS-only basic) */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 6px 10px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition), transform var(--transition);
+  z-index: 100;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

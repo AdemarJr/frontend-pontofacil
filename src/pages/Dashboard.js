@@ -9,14 +9,19 @@ import { destroyActiveTour } from '../tours/tourHelpers';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-function CardMetrica({ label, valor, cor, icon }) {
+function CardMetrica({ label, valor, cor, icon, hint }) {
   return (
     <div className="card card-kpi" style={{ '--kpi-accent': cor }}>
-      <div className="card-kpi__icon">
-        <AppIcon name={icon} size={28} color={cor} />
+      <div className="card-kpi__top">
+        <p className="card-kpi__label">{label}</p>
+        <div className="card-kpi__icon">
+          <AppIcon name={icon} size={20} color={cor} />
+        </div>
       </div>
-      <p className="card-kpi__value">{valor}</p>
-      <p className="card-kpi__label">{label}</p>
+      <div>
+        <p className="card-kpi__value">{valor}</p>
+        {hint ? <p className="card-kpi__delta card-kpi__delta--neutral">{hint}</p> : null}
+      </div>
     </div>
   );
 }
@@ -149,10 +154,34 @@ export default function Dashboard() {
 
       {/* Métricas */}
       <div id="tour-dashboard-metrics" className="kpi-grid fade-in">
-        <CardMetrica label="Total de Colaboradores" valor={resumo?.totalColaboradores ?? '-'} cor="var(--azul)" icon="colaboradores" />
-        <CardMetrica label="Presentes Agora" valor={resumo?.presentes ?? '-'} cor="var(--verde)" icon="ok" />
-        <CardMetrica label="Ausentes" valor={resumo?.ausentes ?? '-'} cor="var(--vermelho)" icon="erro" />
-        <CardMetrica label="Registros Hoje" valor={resumo?.registrosHoje ?? '-'} cor="var(--amarelo)" icon="jornadas" />
+        <CardMetrica
+          label="Colaboradores"
+          valor={resumo?.totalColaboradores ?? '-'}
+          cor="var(--info)"
+          icon="colaboradores"
+          hint="Base ativa"
+        />
+        <CardMetrica
+          label="Presentes agora"
+          valor={resumo?.presentes ?? '-'}
+          cor="var(--color-primary)"
+          icon="ok"
+          hint="No expediente"
+        />
+        <CardMetrica
+          label="Ausentes"
+          valor={resumo?.ausentes ?? '-'}
+          cor="var(--error)"
+          icon="erro"
+          hint="Sem batida ativa"
+        />
+        <CardMetrica
+          label="Registros hoje"
+          valor={resumo?.registrosHoje ?? '-'}
+          cor="var(--warning)"
+          icon="jornadas"
+          hint="Atualizado em tempo real"
+        />
       </div>
 
       {resumo?.contextoDia?.feriado ? (
@@ -230,11 +259,12 @@ export default function Dashboard() {
         </div>
 
         {registros.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--cinza-400)' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-              <AppIcon name="inbox" size={34} color="var(--cinza-400)" />
+          <div className="ds-empty" style={{ padding: '48px 20px' }}>
+            <div className="ds-empty__icon">
+              <AppIcon name="inbox" size={34} color="var(--text-disabled)" />
             </div>
-            <p>Nenhum registro hoje ainda</p>
+            <p className="ds-empty__title">Nenhum registro hoje ainda</p>
+            <p className="ds-empty__desc">As batidas do dia aparecerão aqui em tempo real.</p>
           </div>
         ) : (
           <div className="table-scroll" style={{ marginTop: 12 }}>
