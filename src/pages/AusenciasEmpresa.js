@@ -4,6 +4,7 @@ import Layout from '../components/dashboard/Layout';
 import Modal from '../components/Modal';
 import { comprovanteAusenciaService } from '../services/api';
 import { runAusenciasTour } from '../tours/ausenciasTour';
+import { IconAction, TableActions } from '../components/ui';
 
 const STATUS_FILTRO = [
   { value: '', label: 'Todos' },
@@ -203,49 +204,35 @@ export default function AusenciasEmpresa() {
                   <td style={{ fontSize: 13 }}>{c.tipoArquivo === 'pdf' ? 'PDF' : 'Imagem'}</td>
                   <td>{badge(c.status)}</td>
                   <td>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        style={{ fontSize: 12, padding: '6px 12px' }}
+                    <TableActions>
+                      <IconAction
+                        icon="ver"
+                        label="Ver arquivo"
                         onClick={() => abrirPreviewComprovante(c.id)}
-                      >
-                        Ver arquivo
-                      </button>
+                      />
                       {c.status === 'PENDENTE' && (
                         <>
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            style={{ fontSize: 12, padding: '6px 12px' }}
+                          <IconAction
+                            icon="ok"
+                            label="Aprovar"
+                            tone="success"
                             onClick={() => {
                               setObs('');
                               setDecisaoModal({ item: c, acao: 'APROVADO' });
                             }}
-                          >
-                            Aprovar
-                          </button>
-                          <button
-                            type="button"
-                            style={{
-                              fontSize: 12,
-                              padding: '6px 12px',
-                              background: 'transparent',
-                              border: '1px solid var(--vermelho)',
-                              color: 'var(--vermelho)',
-                              borderRadius: 8,
-                              cursor: 'pointer',
-                            }}
+                          />
+                          <IconAction
+                            icon="erro"
+                            label="Rejeitar"
+                            tone="danger"
                             onClick={() => {
                               setObs('');
                               setDecisaoModal({ item: c, acao: 'REJEITADO' });
                             }}
-                          >
-                            Rejeitar
-                          </button>
+                          />
                         </>
                       )}
-                    </div>
+                    </TableActions>
                   </td>
                 </tr>
               ))}

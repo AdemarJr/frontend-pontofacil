@@ -8,6 +8,7 @@ import { usuarioService, localRegistroService } from '../services/api';
 import { runColaboradoresTour } from '../tours/colaboradoresTour';
 import { useAuth } from '../hooks/useAuth';
 import { mensagemAposCriarColaborador, mensagemLimitePlano } from '../utils/colaboradorFeedback';
+import { IconAction, TableActions } from '../components/ui';
 
 export default function Colaboradores() {
   const { isAdmin, usuario: usuarioLogado, folhaHabilitada } = useAuth();
@@ -337,7 +338,7 @@ export default function Colaboradores() {
         ) : (
           <table className="tabela" style={{ minWidth: 640 }}>
             <thead><tr>
-              <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Departamento</th><th>Função</th><th id="tour-colab-th-pin">PIN</th><th>Status</th><th id="tour-colab-th-acoes">Ações</th>
+              <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Departamento</th><th>Função</th><th id="tour-colab-th-pin">PIN</th><th>Status</th><th id="tour-colab-th-acoes" style={{ width: 1, whiteSpace: 'nowrap' }}>Ações</th>
             </tr></thead>
             <tbody>
               {filtradosPagina.map((u) => (
@@ -392,41 +393,38 @@ export default function Colaboradores() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ display:'flex', gap:'8px', flexWrap: 'wrap' }}>
-                      <button onClick={() => abrirEditar(u)} style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px' }}>Editar</button>
+                    <TableActions>
+                      <IconAction icon="editar" label="Editar" onClick={() => abrirEditar(u)} />
                       {u.ativo && (
                         <>
-                          <button
-                            type="button"
+                          <IconAction
+                            icon="mail"
+                            label="Reenviar convite (definir senha web)"
+                            tone="info"
                             onClick={() => reenviarConvite(u)}
-                            title="Envia e-mail com link para definir senha web (Meu Ponto)"
-                            style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px' }}
-                          >
-                            Reenviar convite
-                          </button>
-                          <button
-                            type="button"
+                          />
+                          <IconAction
+                            icon="key"
+                            label="Reset senha web"
                             onClick={() => resetSenhaColaborador(u)}
-                            title="Envia e-mail com link para redefinir senha web"
-                            style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px' }}
-                          >
-                            Reset senha
-                          </button>
+                          />
                         </>
                       )}
-                      <button onClick={() => toggleAtivo(u)} style={{ background:'none', border:'1px solid var(--cinza-200)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px', color: u.ativo ? 'var(--vermelho)' : 'var(--verde)' }}>
-                        {u.ativo ? 'Desativar' : 'Ativar'}
-                      </button>
+                      <IconAction
+                        icon={u.ativo ? 'suspender' : 'reativar'}
+                        label={u.ativo ? 'Desativar' : 'Ativar'}
+                        tone={u.ativo ? 'warning' : 'success'}
+                        onClick={() => toggleAtivo(u)}
+                      />
                       {usuarioLogado?.id !== u.id && (
-                        <button
-                          type="button"
+                        <IconAction
+                          icon="excluir"
+                          label="Excluir"
+                          tone="danger"
                           onClick={() => setConfirmacao({ tipo: 'excluir', usuario: u })}
-                          style={{ background:'none', border:'1px solid var(--vermelho)', borderRadius:'6px', padding:'4px 12px', cursor:'pointer', fontSize:'12px', color: 'var(--vermelho)' }}
-                        >
-                          Excluir
-                        </button>
+                        />
                       )}
-                    </div>
+                    </TableActions>
                   </td>
                 </tr>
               ))}
