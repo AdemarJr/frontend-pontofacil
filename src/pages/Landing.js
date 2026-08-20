@@ -29,6 +29,7 @@ const NAV_LINKS = [
   { href: '#inicio', label: 'Início' },
   { href: '#solucoes', label: 'Soluções' },
   { href: '#funcionalidades', label: 'Funcionalidades' },
+  { href: '#registro', label: 'INPI' },
   { href: '#planos', label: 'Planos' },
   { href: '#servicos', label: 'Serviços' },
   { href: '#como-funciona', label: 'Como funciona' },
@@ -43,25 +44,36 @@ const POSITIONING = [
 ];
 
 const PONTO_BENEFITS = [
+  'Registro apenas no local autorizado (cerca digital)',
+  'Funciona online e offline',
+  'Integração com folha de pagamento',
   'Registro pelo celular (PWA)',
   'Totem com PIN',
   'Dashboard em tempo real',
-  'Cerca virtual',
-  'Jornadas e escalas',
-  'Relatórios e espelho',
+  'Relatórios inteligentes e espelho',
   'Auditoria de alterações',
-  'Gestão em nuvem',
+];
+
+const PILLAR_FEATURES = [
+  { icon: 'mapa', title: 'Registro no local autorizado', text: 'A cerca digital libera a batida só dentro da área permitida pela empresa.' },
+  { icon: 'lock', title: 'Mais segurança e confiabilidade', text: 'Marcações rastreadas, com auditoria e isolamento por empresa.' },
+  { icon: 'relatorios', title: 'Relatórios inteligentes', text: 'Espelho, indicadores e exportações para decisões do RH e da gestão.' },
+  { icon: 'wifi', title: 'Online e offline', text: 'O colaborador registra no celular mesmo sem rede; a fila sincroniza depois.' },
+  { icon: 'folha', title: 'Integração com a folha', text: 'Horas do espelho alimentam folha mensal, férias, 13º e rescisão.' },
 ];
 
 const FEATURES = [
   { icon: 'dashboard', title: 'Dashboard do gestor', text: 'Visão do dia, equipe e configurações em um só lugar.', bento: '2x2', highlight: true },
+  { icon: 'mapa', title: 'Cerca digital', text: 'Registro apenas no local autorizado — menos contestações e mais controle.', bento: '2x1', highlight: true },
   { icon: 'monitor', title: 'Registro pelo celular', text: 'PWA no smartphone — colaborador registra com as regras da empresa.', bento: '2x1', highlight: true },
+  { icon: 'wifi', title: 'Online e offline', text: 'Batidas no celular mesmo sem internet; sincronização automática ao reconectar.', bento: '2x1', highlight: true },
+  { icon: 'folha', title: 'Folha de pagamento', text: 'Módulo opcional: processa horas, HE, faltas, férias, 13º e rescisão.', bento: '2x1', highlight: true },
   { icon: 'monitor', title: 'Totem com PIN', text: 'Tablet na recepção com teclado numérico e registro rápido.', bento: '1x1' },
-  { icon: 'mapa', title: 'Cerca virtual', text: 'Áreas permitidas para registro e menos contestações.', bento: '2x1', highlight: true },
-  { icon: 'jornadas', title: 'Jornadas e escalas', text: 'Horários flexíveis por colaborador ou escala reutilizável.', bento: '2x1' },
+  { icon: 'jornadas', title: 'Jornadas e escalas', text: 'Horários flexíveis por colaborador ou escala reutilizável, inclusive plantão noturno.', bento: '2x1' },
   { icon: 'relatorios', title: 'Espelho de ponto', text: 'Fechamento mensal com exportação CSV, Excel e PDF.', bento: '1x1' },
-  { icon: 'relatorios', title: 'Relatórios', text: 'Resumos e análises para RH e gestão operacional.', bento: '1x1' },
+  { icon: 'relatorios', title: 'Relatórios inteligentes', text: 'Resumos e análises para RH e gestão operacional.', bento: '1x1' },
   { icon: 'shield', title: 'Auditoria', text: 'Rastreabilidade de ajustes, configurações e registros.', bento: '2x1', highlight: true },
+  { icon: 'inpi', title: 'Registro no INPI', text: 'Software com registro de programa de computador no INPI.', bento: '1x1', highlight: true },
   { icon: 'empresa', title: 'Multiempresa', text: 'Cada cliente isolado no SaaS com políticas próprias.', bento: '1x1' },
   { icon: 'empresa', title: 'Gestão em nuvem', text: 'Acesso seguro de qualquer lugar, sem instalação local.', bento: '1x1' },
 ];
@@ -94,7 +106,8 @@ const PLANS = [
       'Tudo do plano Residencial',
       'Gestão de equipe ampliada',
       'Jornadas e escalas',
-      'Cerca virtual',
+      'Cerca digital',
+      'Registro online e offline',
       'Relatórios completos',
       'Suporte especializado',
     ],
@@ -114,6 +127,7 @@ const PLANS = [
       'Multiunidade',
       'Recursos avançados',
       'Auditoria e controle',
+      'Módulo de folha de pagamento',
       'Suporte à implantação',
     ],
     cta: 'Falar com especialista',
@@ -143,10 +157,10 @@ const PLANS = [
 ];
 
 const STATS = [
-  { icon: 'monitor', title: '100% Web', text: 'Acesse de qualquer lugar.' },
-  { icon: 'home', title: 'PWA', text: 'Use no celular, tablet ou computador.' },
-  { icon: 'empresa', title: 'Em nuvem', text: 'Tenha sua operação centralizada.' },
-  { icon: 'empresa', title: 'Multiempresa', text: 'Gerencie diferentes operações.' },
+  { icon: 'inpi', title: 'INPI', text: 'Programa de computador registrado no Instituto Nacional da Propriedade Industrial.' },
+  { icon: 'mapa', title: 'Cerca digital', text: 'Batida só no local autorizado.' },
+  { icon: 'wifi', title: 'Online e offline', text: 'Registra no celular mesmo sem rede.' },
+  { icon: 'folha', title: 'Folha', text: 'Horas do espelho na folha de pagamento.' },
   { icon: 'shield', title: 'Seguro', text: 'Dados protegidos e separados por empresa.' },
 ];
 
@@ -281,14 +295,16 @@ export default function Landing() {
         <div className="landing-hero-bg" aria-hidden />
         <div className="landing-hero-inner landing-reveal">
           <div className="landing-hero-copy">
+            <p className="landing-kicker landing-kicker--hero">Gestão de jornada inteligente</p>
             <div className="landing-hero-badges">
+              <span className="landing-badge landing-badge--inpi">Software registrado no INPI</span>
               <span className="landing-badge">100% digital</span>
               <span className="landing-badge">Web + PWA</span>
-              <span className="landing-badge">Celular + Tablet + Totem</span>
+              <span className="landing-badge">Cerca digital</span>
             </div>
-            <h1>Controle de ponto inteligente para empresas que querem crescer.</h1>
+            <h1>Ponto digital com cerca digital.</h1>
             <p className="lead">
-              Tenha mais controle sobre a jornada da sua equipe com uma plataforma moderna, segura e acessível de qualquer lugar.
+              Mais segurança e controle para a sua empresa. Registro só no local autorizado, funcionamento online e offline e integração com a folha de pagamento.
             </p>
             <div className="landing-hero-ctas">
               <a href="#solucoes" className="landing-btn-primary">Conheça o PontoFácil</a>
@@ -339,6 +355,23 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="landing-section landing-section--soft landing-pillars" aria-label="Diferenciais">
+        <div className="landing-section-inner landing-reveal">
+          <p className="landing-kicker">Tecnologia que protege. Gestão que conecta.</p>
+          <h2>O que muda no dia a dia da sua operação</h2>
+          <p className="sub">Cerca digital, registro confiável, relatórios para decisão, uso offline e ponte com a folha.</p>
+          <div className="landing-pillars-grid">
+            {PILLAR_FEATURES.map((item) => (
+              <article key={item.title} className="landing-pillar-card">
+                <div className="landing-pillar-icon"><AppIcon name={item.icon} size={22} /></div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="solucoes" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
           <p className="landing-kicker">Pyrou Web</p>
@@ -362,9 +395,9 @@ export default function Landing() {
         <div className="landing-section-inner landing-product-split landing-reveal">
           <div className="landing-product-copy">
             <p className="landing-kicker landing-kicker--blue">PontoFácil</p>
-            <h2>Seu controle de ponto. Mais simples. Mais inteligente.</h2>
+            <h2>Ponto digital com cerca digital — mais simples, mais inteligente.</h2>
             <p className="sub landing-sub--left">
-              O PontoFácil centraliza a gestão da jornada dos colaboradores em uma plataforma moderna, segura e acessível de qualquer lugar.
+              O PontoFácil centraliza a jornada da equipe: batida só no local autorizado, operação online e offline, relatórios e módulo de folha.
             </p>
             <ul className="landing-check-list">
               {PONTO_BENEFITS.map((b) => (
@@ -395,7 +428,7 @@ export default function Landing() {
       <section id="funcionalidades" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
           <h2>Funcionalidades pensadas para o dia a dia</h2>
-          <p className="sub">Tudo o que gestores e RH precisam — do registro ao fechamento do mês.</p>
+          <p className="sub">Do registro com cerca digital ao fechamento da folha — tudo na mesma plataforma.</p>
           <div className="landing-bento landing-bento--extended">
             {FEATURES.map((f) => (
               <article
@@ -549,6 +582,20 @@ export default function Landing() {
         </div>
       </section>
 
+      <section id="registro" className="landing-section landing-inpi">
+        <div className="landing-section-inner landing-section-inner--center landing-reveal">
+          <div className="landing-inpi-seal" aria-hidden>
+            <AppIcon name="inpi" size={28} />
+          </div>
+          <p className="landing-kicker">Instituto Nacional da Propriedade Industrial</p>
+          <h2>Software registrado no INPI</h2>
+          <p className="sub landing-sub--tight">
+            O PontoFácil possui registro de programa de computador no INPI.
+            A autoria e o código-fonte estão protegidos nos termos da legislação brasileira.
+          </p>
+        </div>
+      </section>
+
       <section className="landing-section landing-section--pwa">
         <div className="landing-section-inner landing-section-inner--center landing-reveal">
           <h2>Uso no celular, tablet ou totem — sem complicação</h2>
@@ -632,20 +679,24 @@ export default function Landing() {
         <div className="landing-footer-inner">
           <img src={publicUrl(LOGO_LANDING)} alt="PontoFácil" className="landing-footer-logo" width={240} height={52} decoding="async" />
           <p className="landing-footer-tagline">
-            <strong>Pyrou Web</strong><br />
-            Sistemas • SaaS • Automação • Inteligência Artificial
+            <strong>Tecnologia que protege. Gestão que conecta.</strong><br />
+            Pyrou Web — Sistemas • SaaS • Automação • Inteligência Artificial
           </p>
           <nav className="landing-footer-nav" aria-label="Rodapé">
             <a href="#solucoes">Soluções</a>
             <a href="#produto">PontoFácil</a>
+            <a href="#funcionalidades">Funcionalidades</a>
+            <a href="#registro">INPI</a>
             <a href="#servicos">Serviços</a>
             <a href="#planos">Planos</a>
             <a href="#contato">Contato</a>
             <Link to="/login">Entrar</Link>
           </nav>
           <p className="landing-footer-copy">
-            PontoFácil — desenvolvido pela{' '}
+            PontoFácil — software registrado no INPI · desenvolvido pela{' '}
             <a href="https://www.pyrou.com.br" target="_blank" rel="noopener noreferrer">Pyrou Web</a>
+            {' · '}
+            <a href="https://pontofacil.digital" target="_blank" rel="noopener noreferrer">pontofacil.digital</a>
           </p>
         </div>
       </footer>

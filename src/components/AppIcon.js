@@ -34,6 +34,9 @@ import {
   PanelLeftOpen,
   TrendingUp,
   TrendingDown,
+  Wifi,
+  CircleDollarSign,
+  Award,
 } from 'lucide-react';
 
 const ICONS = {
@@ -72,6 +75,9 @@ const ICONS = {
   panelOpen: PanelLeftOpen,
   trendUp: TrendingUp,
   trendDown: TrendingDown,
+  wifi: Wifi,
+  folha: CircleDollarSign,
+  inpi: Award,
 };
 
 export default function AppIcon({
