@@ -776,7 +776,7 @@ export default function MeuPonto() {
 
   if (authCarregando) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+      <div className="pwa-state pwa-state--loading">
         <div className="spinner" />
       </div>
     );
@@ -800,7 +800,7 @@ export default function MeuPonto() {
 
   if (etapa === 'carregando') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+      <div className="pwa-state pwa-state--loading">
         <div className="spinner" />
       </div>
     );
@@ -808,32 +808,28 @@ export default function MeuPonto() {
 
   if (etapa === 'sucesso') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#052e16', gap: 24, padding: 20 }}>
-        <div>
-          <AppIcon name="ok" size={80} color="#86efac" aria-label="Sucesso" />
-        </div>
-        <div style={{ color: 'white', fontSize: 22, fontWeight: 700, textAlign: 'center', whiteSpace: 'pre-line' }}>{mensagem}</div>
-        <p style={{ color: '#86efac', fontSize: 15 }}>Olá, {usuario.nome}</p>
+      <div className="pwa-state pwa-state--success">
+        <AppIcon name="ok" size={80} color="var(--pwa-success-fg)" aria-label="Sucesso" />
+        <div className="pwa-state__title">{mensagem}</div>
+        <p className="pwa-state__meta">Olá, {usuario.nome}</p>
       </div>
     );
   }
 
   if (etapa === 'erro') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#1c0202', gap: 20, padding: 20 }}>
-        <div>
-          <AppIcon name="erro" size={70} color="#fca5a5" aria-label="Erro" />
-        </div>
-        <div style={{ color: 'white', fontSize: 18, fontWeight: 600, textAlign: 'center' }}>{mensagem}</div>
+      <div className="pwa-state pwa-state--error">
+        <AppIcon name="erro" size={70} color="var(--pwa-error-fg)" aria-label="Erro" />
+        <div className="pwa-state__title">{mensagem}</div>
       </div>
     );
   }
 
   if (etapa === 'camera') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f172a', gap: 20, padding: 20 }}>
-        <p style={{ color: '#94a3b8', fontSize: 14 }}>Registro pelo app — {usuario.tenant?.nomeFantasia}</p>
-        <h2 style={{ color: 'white', fontSize: 22, marginTop: 0, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+      <div className="pwa-state pwa-state--camera">
+        <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0 }}>Registro pelo app — {usuario.tenant?.nomeFantasia}</p>
+        <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
           {tipoInfo?.label}
         </h2>
@@ -861,66 +857,29 @@ export default function MeuPonto() {
 
   return (
     <div className="colaborador-page">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%' }}>
-        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: '-0.02em', textAlign: 'center' }}>
+      <div className="colaborador-page__header">
+        <h1 className="colaborador-page__title">
           {aba === 'pendencias' ? 'Pendências' : 'Registrar ponto'}
         </h1>
         {aba === 'bater' ? (
           <button
             type="button"
+            className="colaborador-page__tour-btn"
             onClick={() => runMeuPontoTour({ force: true })}
-            style={{
-              padding: '8px 14px',
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#e2e8f0',
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              borderRadius: 999,
-              cursor: 'pointer',
-            }}
           >
             Como usar
           </button>
         ) : null}
+        {aba === 'bater' ? (
+          <p className="colaborador-page__subtitle">{usuario.tenant?.nomeFantasia}</p>
+        ) : (
+          <p className="colaborador-page__subtitle">Batidas faltantes e justificativas enviadas ao RH.</p>
+        )}
+        {aba === 'bater' ? <p className="colaborador-page__name">{usuario.nome}</p> : null}
       </div>
-      {aba === 'bater' ? (
-        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', maxWidth: 340, margin: '4px 0 0', lineHeight: 1.45 }}>
-          {usuario.tenant?.nomeFantasia}
-        </p>
-      ) : (
-        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', margin: '4px 0 0' }}>
-          Batidas faltantes e justificativas enviadas ao RH.
-        </p>
-      )}
-      {aba === 'bater' ? (
-        <p
-          style={{
-            color: '#fde047',
-            fontSize: 14,
-            fontWeight: 700,
-            textAlign: 'center',
-            maxWidth: 340,
-            margin: '6px 0 0',
-            letterSpacing: 0.02,
-          }}
-        >
-          {usuario.nome}
-        </p>
-      ) : null}
       {mostrarCardPermissoes ? (
-        <div
-          style={{
-            marginTop: 10,
-            padding: '12px 14px',
-            borderRadius: 12,
-            background: 'rgba(251, 191, 36, 0.12)',
-            border: '1px solid rgba(251, 191, 36, 0.35)',
-            maxWidth: 380,
-            width: '100%',
-          }}
-        >
-          <p style={{ margin: 0, color: '#fde68a', fontSize: 13, lineHeight: 1.5 }}>
+        <div className="pwa-card pwa-card--warn">
+          <p className="pwa-card__text">
             {permissoesNegadas
               ? 'O acesso foi bloqueado. Libere localização e câmera nas configurações do aparelho ou do navegador.'
               : (
@@ -943,33 +902,13 @@ export default function MeuPonto() {
         </div>
       ) : null}
       {aba === 'bater' && cercaVirtualAtiva ? (
-        <p
-          style={{
-            color: '#86efac',
-            fontSize: 12,
-            textAlign: 'center',
-            maxWidth: 360,
-            margin: '8px 0 0',
-            lineHeight: 1.45,
-            padding: '0 8px',
-          }}
-        >
+        <p className="colaborador-page__hint">
           Cerca virtual ativa: o ponto só é aceito na área permitida pela empresa.
         </p>
       ) : null}
       {aba === 'bater' && pendenciaCheckin?.turnoAberto && pendenciaCheckin?.cruzaMeiaNoite ? (
-        <div
-          style={{
-            marginTop: 10,
-            padding: '12px 14px',
-            borderRadius: 12,
-            background: 'rgba(22, 163, 74, 0.14)',
-            border: '1px solid rgba(22, 163, 74, 0.35)',
-            maxWidth: 380,
-            width: '100%',
-          }}
-        >
-          <p style={{ margin: 0, color: '#bbf7d0', fontSize: 13, lineHeight: 1.5 }}>
+        <div className="pwa-card pwa-card--ok">
+          <p className="pwa-card__text">
             Turno noturno em andamento (iniciado{' '}
             {pendenciaCheckin?.ultimoEm
               ? new Date(pendenciaCheckin.ultimoEm).toLocaleString('pt-BR', {
@@ -984,21 +923,11 @@ export default function MeuPonto() {
         </div>
       ) : null}
       {aba === 'bater' && pendenciaCheckin?.diaAnteriorEmAberto ? (
-        <div
-          style={{
-            marginTop: 10,
-            padding: '12px 14px',
-            borderRadius: 12,
-            background: 'rgba(59, 130, 246, 0.12)',
-            border: '1px solid rgba(59, 130, 246, 0.35)',
-            maxWidth: 380,
-            width: '100%',
-          }}
-        >
-          <p style={{ margin: 0, color: '#bfdbfe', fontSize: 13, lineHeight: 1.5 }}>
+        <div className="pwa-card pwa-card--info">
+          <p className="pwa-card__text">
             O dia anterior ficou com batidas em aberto. Registre o ponto de <strong>hoje</strong> normalmente abaixo.
             Batidas faltantes do dia anterior estão em{' '}
-            <Link to="/meu-ponto?tab=pendencias" style={{ color: '#93c5fd', fontWeight: 700 }}>
+            <Link to="/meu-ponto?tab=pendencias">
               Pendências
             </Link>{' '}
             para justificar ou solicitar ajuste ao RH.
@@ -1006,18 +935,8 @@ export default function MeuPonto() {
         </div>
       ) : null}
       {aba === 'bater' && offlinePendentes > 0 ? (
-        <div
-          style={{
-            marginTop: 10,
-            padding: '12px 14px',
-            borderRadius: 12,
-            background: 'rgba(251, 191, 36, 0.12)',
-            border: '1px solid rgba(251, 191, 36, 0.35)',
-            maxWidth: 380,
-            width: '100%',
-          }}
-        >
-          <p style={{ color: '#fde68a', fontSize: 13, margin: 0, lineHeight: 1.45, textAlign: 'center' }}>
+        <div className="pwa-card pwa-card--warn">
+          <p className="pwa-card__text" style={{ textAlign: 'center' }}>
             {offlinePendentes === 1
               ? '1 registro guardado neste aparelho aguardando envio.'
               : `${offlinePendentes} registros guardados neste aparelho aguardando envio.`}{' '}
@@ -1036,17 +955,7 @@ export default function MeuPonto() {
         </div>
       ) : null}
       {aba === 'bater' && typeof navigator !== 'undefined' && !navigator.onLine ? (
-        <p
-          style={{
-            color: '#fde047',
-            fontSize: 12,
-            textAlign: 'center',
-            maxWidth: 360,
-            margin: '10px 0 0',
-            lineHeight: 1.45,
-            padding: '0 8px',
-          }}
-        >
+        <p className="colaborador-page__hint" style={{ color: 'var(--pwa-accent)' }}>
           Sem conexão no momento: o ponto pode ser guardado neste aparelho e enviado depois.
         </p>
       ) : null}
@@ -1083,24 +992,13 @@ export default function MeuPonto() {
       ) : null}
 
       {aba === 'bater' ? (
-        <div
-          id="tour-meu-proximo"
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: 16,
-            padding: 'clamp(16px, 4vw, 28px)',
-            textAlign: 'center',
-            width: '100%',
-            maxWidth: 'min(420px, 100%)',
-            boxSizing: 'border-box',
-          }}
-        >
-          <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>Próximo registro</p>
-          <p style={{ color: 'white', fontSize: 26, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <div id="tour-meu-proximo" className="pwa-card pwa-card--center">
+          <p style={{ color: 'var(--pwa-muted)', fontSize: 13, marginBottom: 8 }}>Próximo registro</p>
+          <p style={{ color: 'var(--pwa-title)', fontSize: 26, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 10, margin: 0 }}>
             <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
             {tipoInfo?.label}
           </p>
-          <p style={{ color: '#64748b', fontSize: 13, marginTop: 12 }}>
+          <p style={{ color: 'var(--pwa-subtle)', fontSize: 13, marginTop: 12, marginBottom: 0 }}>
             {new Date().toLocaleString('pt-BR')}
           </p>
         </div>
@@ -1114,11 +1012,11 @@ export default function MeuPonto() {
               border: '1px solid rgba(29,158,117,0.28)',
               borderRadius: 14,
               padding: 14,
-              color: '#dcfce7',
+              color: 'var(--pwa-ok-title)',
             }}
           >
             <p style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>Sua escala foi criada/atualizada</p>
-            <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: '#bbf7d0', lineHeight: 1.45 }}>
+            <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: 'var(--pwa-ok-fg)', lineHeight: 1.45 }}>
               {avisoEscala.nome} — {avisoEscala.horaInicio} até {avisoEscala.horaFim}
             </p>
             <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
@@ -1137,12 +1035,12 @@ export default function MeuPonto() {
 
       {aba === 'bater' ? (
       <div id="tour-meu-lembretes" style={{ width: '100%', maxWidth: 420 }}>
-        <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14 }}>
+        <div style={{ background: 'var(--pwa-card)', borderRadius: 14, padding: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div>
-              <p style={{ color: 'white', fontSize: 14, fontWeight: 700, margin: 0 }}>🔔 Lembretes de ponto</p>
+              <p style={{ color: 'var(--pwa-title)', fontSize: 14, fontWeight: 700, margin: 0 }}>🔔 Lembretes de ponto</p>
               {permissaoNotificacao !== 'granted' && (
-                <p style={{ color: '#fbbf24', fontSize: 12, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
+                <p style={{ color: 'var(--pwa-accent)', fontSize: 12, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
                   Permissão de notificação: {permissaoNotificacao === 'denied' ? 'bloqueada' : 'não concedida'}.
                 </p>
               )}
@@ -1195,11 +1093,11 @@ export default function MeuPonto() {
       {/* Pendências do colaborador (batidas faltantes) */}
       {aba === 'pendencias' ? (
       <div style={{ width: '100%', maxWidth: 520 }}>
-        <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)' }}>
+        <div style={{ background: 'var(--pwa-card)', borderRadius: 14, padding: 14, border: '1px solid rgba(148,163,184,0.14)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div>
-              <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>🧾 Pendências de ponto</p>
-              <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
+              <p style={{ color: 'var(--pwa-title)', fontSize: 14, fontWeight: 800, margin: 0 }}>🧾 Pendências de ponto</p>
+              <p style={{ color: 'var(--pwa-muted)', fontSize: 12, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
                 Veja dias com batidas faltantes e envie uma justificativa para o administrador/RH.
               </p>
             </div>
@@ -1215,9 +1113,9 @@ export default function MeuPonto() {
           </div>
 
           {carregandoPendencias ? (
-            <p style={{ color: '#cbd5e1', fontSize: 12, marginTop: 12, marginBottom: 0 }}>Carregando…</p>
+            <p style={{ color: 'var(--pwa-muted)', fontSize: 12, marginTop: 12, marginBottom: 0 }}>Carregando…</p>
           ) : pendenciasDias.length === 0 ? (
-            <p style={{ color: '#cbd5e1', fontSize: 12, marginTop: 12, marginBottom: 0 }}>Nenhuma pendência recente.</p>
+            <p style={{ color: 'var(--pwa-muted)', fontSize: 12, marginTop: 12, marginBottom: 0 }}>Nenhuma pendência recente.</p>
           ) : (
             <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
               {pendenciasDias.slice(0, 8).map((p) => (
@@ -1236,8 +1134,8 @@ export default function MeuPonto() {
                   }}
                 >
                   <div>
-                    <p style={{ margin: 0, color: 'white', fontSize: 13, fontWeight: 800 }}>{p.dia}</p>
-                    <p style={{ marginTop: 6, marginBottom: 0, color: '#fbbf24', fontSize: 12 }}>
+                    <p style={{ margin: 0, color: 'var(--pwa-title)', fontSize: 13, fontWeight: 800 }}>{p.dia}</p>
+                    <p style={{ marginTop: 6, marginBottom: 0, color: 'var(--pwa-accent)', fontSize: 12 }}>
                       Faltando: {(p.faltando || []).map((t) => TIPOS_LABEL[t]?.label || t).join(', ')}
                     </p>
                   </div>
@@ -1260,7 +1158,7 @@ export default function MeuPonto() {
                 </div>
               ))}
               {pendenciasDias.length > 8 ? (
-                <p style={{ margin: 0, color: '#94a3b8', fontSize: 12 }}>
+                <p style={{ margin: 0, color: 'var(--pwa-muted)', fontSize: 12 }}>
                   Mostrando 8 pendências. Ajuste com o administrador/RH se houver mais.
                 </p>
               ) : null}
@@ -1294,7 +1192,7 @@ export default function MeuPonto() {
       >
         <div style={{ display: 'grid', gap: 12 }}>
           <div>
-            <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+            <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 12, marginBottom: 6 }}>
               Sugestão de horário (opcional)
             </label>
             <input
@@ -1305,7 +1203,7 @@ export default function MeuPonto() {
             />
           </div>
           <div>
-            <label style={{ display: 'block', color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+            <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 12, marginBottom: 6 }}>
               Justificativa *
             </label>
             <textarea
@@ -1363,10 +1261,10 @@ export default function MeuPonto() {
           </>
         )}
       >
-        <p style={{ margin: 0, color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>
+        <p style={{ margin: 0, color: 'var(--pwa-muted)', fontSize: 13, lineHeight: 1.5 }}>
           Seu último registro foi há aproximadamente <b>{pendenciaCheckin?.horasAberto}h</b> e pode faltar a saída de hoje.
         </p>
-        <p style={{ margin: '10px 0 0', color: '#94a3b8', fontSize: 12, lineHeight: 1.45 }}>
+        <p style={{ margin: '10px 0 0', color: 'var(--pwa-muted)', fontSize: 12, lineHeight: 1.45 }}>
           {pendenciaCheckin?.sugerirNovoTurno
             ? 'Você pode registrar a saída de hoje ou encerrar o turno e começar uma nova entrada (o RH pode ajustar depois).'
             : 'Registre a próxima batida do dia de hoje na sequência normal.'}

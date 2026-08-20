@@ -4,6 +4,7 @@ import Webcam from 'react-webcam';
 import { authService, pontoService } from '../services/api';
 import { logoInternoUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
+import { useTheme } from '../hooks/useTheme';
 
 const TENANT_ID = localStorage.getItem('totemTenantId') || '';
 
@@ -13,6 +14,26 @@ const TIPOS_LABEL = {
   RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', icon: 'dot' },
   SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
+
+function TotemThemeBtn() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      type="button"
+      className="colaborador-app__theme-btn totem-shell__theme"
+      aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+      title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+      onClick={toggleTheme}
+      style={{
+        background: 'var(--pwa-card)',
+        border: '1px solid var(--pwa-card-border)',
+        color: 'var(--pwa-fg)',
+      }}
+    >
+      <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} size={18} color="var(--pwa-fg)" />
+    </button>
+  );
+}
 
 export default function Totem() {
   const [etapa, setEtapa] = useState('pin'); // pin | confirmar | camera | sucesso | erro
@@ -151,20 +172,21 @@ export default function Totem() {
   // Config inicial do Tenant
   if (configTenant || !tenantId) {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f2027', padding:'40px', gap:'20px' }}>
-        <div>
-          <AppIcon name="configuracoes" size={52} color="white" aria-label="Configuração" />
-        </div>
-        <h2 style={{ color:'white', fontSize:'22px', textAlign:'center' }}>Configuração do Totem</h2>
-        <p style={{ color:'#9CA3AF', fontSize:'14px', textAlign:'center' }}>Cole o ID da empresa fornecido pelo administrador</p>
+      <div className="totem-shell">
+        <TotemThemeBtn />
+        <AppIcon name="configuracoes" size={52} color="var(--pwa-title)" aria-label="Configuração" />
+        <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, textAlign: 'center', margin: 0 }}>Configuração do Totem</h2>
+        <p style={{ color: 'var(--pwa-muted)', fontSize: 14, textAlign: 'center', margin: 0, maxWidth: 360 }}>
+          Cole o ID da empresa fornecido pelo administrador
+        </p>
         <input
           className="input"
-          style={{ maxWidth:'400px', textAlign:'center', fontFamily:'monospace', fontSize:'13px' }}
+          style={{ maxWidth: 400, width: '100%', textAlign: 'center', fontFamily: 'monospace', fontSize: 13 }}
           placeholder="ID da empresa (UUID)"
           value={tenantIdInput}
-          onChange={e => setTenantIdInput(e.target.value)}
+          onChange={(e) => setTenantIdInput(e.target.value)}
         />
-        <button className="btn btn-primary btn-lg" onClick={salvarTenant}>Confirmar</button>
+        <button type="button" className="btn btn-primary btn-lg" onClick={salvarTenant}>Confirmar</button>
       </div>
     );
   }
@@ -172,12 +194,11 @@ export default function Totem() {
   // Tela de sucesso
   if (etapa === 'sucesso') {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#052e16', gap:'24px' }}>
-        <div>
-          <AppIcon name="ok" size={88} color="#86efac" aria-label="Sucesso" />
-        </div>
-        <div style={{ color:'white', fontSize:'28px', fontWeight:'700', textAlign:'center', whiteSpace:'pre-line' }}>{mensagem}</div>
-        <p style={{ color:'#86efac', fontSize:'16px' }}>Obrigado, {usuario?.nome}!</p>
+      <div className="pwa-state pwa-state--success totem-shell" style={{ gap: 24 }}>
+        <TotemThemeBtn />
+        <AppIcon name="ok" size={88} color="var(--pwa-success-fg)" aria-label="Sucesso" />
+        <div className="pwa-state__title" style={{ fontSize: 28 }}>{mensagem}</div>
+        <p className="pwa-state__meta">Obrigado, {usuario?.nome}!</p>
       </div>
     );
   }
@@ -185,12 +206,11 @@ export default function Totem() {
   // Tela de erro
   if (etapa === 'erro') {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#1c0202', gap:'24px' }}>
-        <div>
-          <AppIcon name="erro" size={88} color="#fca5a5" aria-label="Erro" />
-        </div>
-        <div style={{ color:'white', fontSize:'24px', fontWeight:'600', textAlign:'center' }}>{mensagem}</div>
-        <p style={{ color:'#fca5a5', fontSize:'14px' }}>Retornando em instantes...</p>
+      <div className="pwa-state pwa-state--error totem-shell" style={{ gap: 24 }}>
+        <TotemThemeBtn />
+        <AppIcon name="erro" size={88} color="var(--pwa-error-fg)" aria-label="Erro" />
+        <div className="pwa-state__title" style={{ fontSize: 24 }}>{mensagem}</div>
+        <p className="pwa-state__meta">Retornando em instantes...</p>
       </div>
     );
   }
@@ -198,31 +218,32 @@ export default function Totem() {
   // Tela da câmera
   if (etapa === 'camera') {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f172a', gap:'24px', padding:'20px' }}>
-        <div style={{ textAlign:'center' }}>
-          <p style={{ color:'#94a3b8', fontSize:'14px' }}>Olhe para a câmera</p>
-          <h2 style={{ color:'white', fontSize:'22px', marginTop:'4px', display:'inline-flex', alignItems:'center', gap: 10 }}>
+      <div className="totem-shell" style={{ gap: 24 }}>
+        <TotemThemeBtn />
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0 }}>Olhe para a câmera</p>
+          <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
             <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
             {tipoInfo?.label}
           </h2>
         </div>
 
-        <div style={{ borderRadius:'16px', overflow:'hidden', border:'3px solid var(--verde)', width:'100%', maxWidth:'400px', aspectRatio:'4/3' }}>
+        <div style={{ borderRadius: 16, overflow: 'hidden', border: '3px solid var(--verde)', width: '100%', maxWidth: 400, aspectRatio: '4/3' }}>
           <Webcam
             ref={webcamRef}
             audio={false}
             screenshotFormat="image/jpeg"
             screenshotQuality={0.7}
             videoConstraints={{ facingMode: 'user', width: 640, height: 480 }}
-            style={{ width:'100%', height:'100%', objectFit:'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
 
-        <div style={{ display:'flex', gap:'16px', width:'100%', maxWidth:'400px' }}>
-          <button className="btn btn-secondary btn-full btn-lg" onClick={resetar}>Cancelar</button>
-          <button className="btn btn-primary btn-full btn-lg" onClick={capturarFoto} disabled={carregando}>
+        <div style={{ display: 'flex', gap: 16, width: '100%', maxWidth: 400 }}>
+          <button type="button" className="btn btn-secondary btn-full btn-lg" onClick={resetar}>Cancelar</button>
+          <button type="button" className="btn btn-primary btn-full btn-lg" onClick={capturarFoto} disabled={carregando}>
             {carregando ? (
-              <span className="spinner" style={{ width:'22px', height:'22px', borderWidth:'2px', borderTopColor:'white' }} />
+              <span className="spinner" style={{ width: 22, height: 22, borderWidth: 2, borderTopColor: 'white' }} />
             ) : (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <AppIcon name="camera" size={18} aria-hidden />
@@ -238,26 +259,31 @@ export default function Totem() {
   // Tela de confirmação (após PIN correto)
   if (etapa === 'confirmar') {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f172a', gap:'28px', padding:'40px' }}>
-        <div style={{ width:'80px', height:'80px', borderRadius:'50%', background:'var(--verde)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'36px' }}>
+      <div className="totem-shell" style={{ gap: 28 }}>
+        <TotemThemeBtn />
+        <div style={{
+          width: 80, height: 80, borderRadius: '50%', background: 'var(--verde)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 36, color: '#fff', fontWeight: 700,
+        }}>
           {usuario?.nome?.[0]?.toUpperCase()}
         </div>
-        <div style={{ textAlign:'center' }}>
-          <h2 style={{ color:'white', fontSize:'28px', fontWeight:'700' }}>{usuario?.nome}</h2>
-          <p style={{ color:'#94a3b8', marginTop:'4px' }}>{usuario?.cargo}</p>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ color: 'var(--pwa-title)', fontSize: 28, fontWeight: 700, margin: 0 }}>{usuario?.nome}</h2>
+          <p style={{ color: 'var(--pwa-muted)', marginTop: 4 }}>{usuario?.cargo}</p>
         </div>
-        <div style={{ background:'rgba(255,255,255,0.05)', borderRadius:'16px', padding:'20px 40px', textAlign:'center' }}>
-          <p style={{ color:'#94a3b8', fontSize:'14px' }}>Registrar</p>
-          <p style={{ color:'white', fontSize:'24px', fontWeight:'700', marginTop:'4px' }}>
-            {tipoInfo?.emoji} {tipoInfo?.label}
+        <div className="pwa-card pwa-card--center" style={{ maxWidth: 320 }}>
+          <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0 }}>Registrar</p>
+          <p style={{ color: 'var(--pwa-title)', fontSize: 24, fontWeight: 700, marginTop: 4, marginBottom: 0 }}>
+            {tipoInfo?.label}
           </p>
-          <p style={{ color:'#94a3b8', fontSize:'14px', marginTop:'8px' }}>
-            {new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}
+          <p style={{ color: 'var(--pwa-muted)', fontSize: 14, marginTop: 8, marginBottom: 0 }}>
+            {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
-        <div style={{ display:'flex', gap:'16px', width:'100%', maxWidth:'360px' }}>
-          <button className="btn btn-secondary btn-full btn-lg" onClick={resetar}>Cancelar</button>
-          <button className="btn btn-primary btn-full btn-lg" onClick={() => setEtapa('camera')}>
+        <div style={{ display: 'flex', gap: 16, width: '100%', maxWidth: 360 }}>
+          <button type="button" className="btn btn-secondary btn-full btn-lg" onClick={resetar}>Cancelar</button>
+          <button type="button" className="btn btn-primary btn-full btn-lg" onClick={() => setEtapa('camera')}>
             Continuar →
           </button>
         </div>
@@ -267,64 +293,86 @@ export default function Totem() {
 
   // Tela principal do Totem: teclado numérico
   return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'linear-gradient(180deg, #0f2027 0%, #203a43 50%, #0f2027 100%)', padding:'20px', gap:'32px' }}>
-      {/* Header */}
+    <div className="totem-shell" style={{ gap: 28 }}>
+      <TotemThemeBtn />
       <div style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
-        <div
-          style={{
-            padding: '18px 22px',
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #085041 0%, #1D9E75 100%)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
+        <div className="totem-brand">
           <img
             src={logoInternoUrl()}
             alt="Ponto Fácil"
-            style={{ maxHeight: 72, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
+            style={{ maxHeight: 64, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
           />
         </div>
-        <p style={{ color:'#94a3b8', marginTop:'16px', fontSize:'16px' }}>
-          {new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })}
+        <p style={{ color: 'var(--pwa-muted)', marginTop: 16, fontSize: 15, marginBottom: 0 }}>
+          {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
-        <p style={{ color:'#1D9E75', fontSize:'28px', fontWeight:'600', marginTop:'4px' }}>
-          {new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}
+        <p style={{ color: 'var(--verde)', fontSize: 28, fontWeight: 600, marginTop: 4, marginBottom: 0 }}>
+          {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
 
-      {/* Display do PIN */}
-      <div style={{ background:'rgba(255,255,255,0.07)', borderRadius:'16px', padding:'20px 40px', minWidth:'240px', textAlign:'center' }}>
-        <p style={{ color:'#64748b', fontSize:'13px', marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.1em' }}>Digite seu PIN</p>
-        <div style={{ display:'flex', gap:'12px', justifyContent:'center' }}>
+      <div className="totem-pin-display">
+        <p style={{
+          color: 'var(--pwa-subtle)', fontSize: 13, marginBottom: 12, marginTop: 0,
+          textTransform: 'uppercase', letterSpacing: '0.1em',
+        }}>
+          Digite seu PIN
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           {[...Array(Math.max(pin.length, 4))].map((_, i) => (
-            <div key={i} style={{
-              width:'16px', height:'16px', borderRadius:'50%',
-              background: i < pin.length ? 'var(--verde)' : 'rgba(255,255,255,0.15)',
-              transition:'background 0.15s'
-            }} />
+            <div
+              key={i}
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                background: i < pin.length ? 'var(--verde)' : 'var(--pwa-card-border)',
+                transition: 'background 0.15s',
+              }}
+            />
           ))}
         </div>
       </div>
 
-      {/* Teclado numérico */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'12px', width:'100%', maxWidth:'300px' }}>
-        {[1,2,3,4,5,6,7,8,9].map(n => (
-          <button key={n} className="totem-key" onClick={() => pressKey(String(n))}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 300 }}>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+          <button key={n} type="button" className="totem-key" onClick={() => pressKey(String(n))}>
             {n}
           </button>
         ))}
-        <button className="totem-key" style={{ fontSize:'20px', color:'var(--vermelho)', background:'rgba(226,75,74,0.1)' }} onClick={resetar}>✕</button>
-        <button className="totem-key" onClick={() => pressKey('0')}>0</button>
-        <button className="totem-key" style={{ fontSize:'20px', background:'rgba(29,158,117,0.1)', color:'var(--verde)' }} onClick={confirmarPin} disabled={pin.length < 4 || carregando}>
+        <button
+          type="button"
+          className="totem-key"
+          style={{ fontSize: 20, color: 'var(--vermelho)', background: 'rgba(226,75,74,0.1)' }}
+          onClick={resetar}
+        >
+          ✕
+        </button>
+        <button type="button" className="totem-key" onClick={() => pressKey('0')}>0</button>
+        <button
+          type="button"
+          className="totem-key"
+          style={{ fontSize: 20, background: 'rgba(29,158,117,0.12)', color: 'var(--verde)' }}
+          onClick={confirmarPin}
+          disabled={pin.length < 4 || carregando}
+        >
           {carregando ? '...' : '→'}
         </button>
       </div>
 
-      {/* Config admin (toque longo no rodapé) */}
       <button
-        style={{ position:'fixed', bottom:'16px', right:'16px', background:'transparent', border:'none', color:'rgba(255,255,255,0.15)', fontSize:'11px', cursor:'pointer' }}
+        type="button"
+        style={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          background: 'transparent',
+          border: 'none',
+          color: 'var(--pwa-subtle)',
+          fontSize: 11,
+          cursor: 'pointer',
+          opacity: 0.55,
+        }}
         onClick={() => setConfigTenant(true)}
       >
         ⚙ config

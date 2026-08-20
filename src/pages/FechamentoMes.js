@@ -202,7 +202,7 @@ function CanvasAssinatura({ onChange }) {
         />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 12, color: '#94a3b8' }}>Assine com o dedo ou mouse.</span>
+        <span style={{ fontSize: 12, color: 'var(--pwa-muted)' }}>Assine com o dedo ou mouse.</span>
         <button type="button" className="btn btn-secondary" onClick={limpar} style={{ padding: '8px 12px', fontSize: 12 }}>
           Limpar assinatura
         </button>
@@ -299,10 +299,10 @@ export default function FechamentoMes() {
 
   return (
     <div className="colaborador-page">
-      <h1 style={{ color: 'white', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+      <h1 style={{ color: 'var(--pwa-title)', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
         Fechamento do mês
       </h1>
-      <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 18, lineHeight: 1.55 }}>
+      <p style={{ color: 'var(--pwa-muted)', fontSize: 14, marginBottom: 18, lineHeight: 1.55 }}>
         Revise seu espelho de ponto e registre o aceite. Você pode baixar o PDF para arquivar.
       </p>
 
@@ -314,7 +314,7 @@ export default function FechamentoMes() {
             borderRadius: 14,
             border: '1px solid rgba(245,158,11,0.35)',
             background: 'rgba(245,158,11,0.10)',
-            color: '#fde68a',
+            color: 'var(--pwa-warn-fg)',
             fontSize: 13,
             lineHeight: 1.55,
           }}
@@ -338,7 +338,7 @@ export default function FechamentoMes() {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <label style={{ display: 'block', color: '#cbd5e1', fontSize: 12, marginBottom: 6, fontWeight: 700 }}>
+          <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 12, marginBottom: 6, fontWeight: 700 }}>
             Mês
           </label>
           <select
@@ -355,7 +355,7 @@ export default function FechamentoMes() {
           </select>
         </div>
         <div style={{ minWidth: 0 }}>
-          <label style={{ display: 'block', color: '#cbd5e1', fontSize: 12, marginBottom: 6, fontWeight: 700 }}>
+          <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 12, marginBottom: 6, fontWeight: 700 }}>
             Ano
           </label>
           <select
@@ -375,7 +375,7 @@ export default function FechamentoMes() {
 
       <div
         style={{
-          background: 'rgba(255,255,255,0.06)',
+          background: 'var(--pwa-card)',
           borderRadius: 16,
           padding: 18,
           marginBottom: 16,
@@ -384,8 +384,8 @@ export default function FechamentoMes() {
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 900, color: '#e2e8f0', fontSize: 14 }}>Competência</div>
-            <div style={{ color: '#94a3b8', fontSize: 13 }}>{titulo}</div>
+            <div style={{ fontWeight: 900, color: 'var(--pwa-fg)', fontSize: 14 }}>Competência</div>
+            <div style={{ color: 'var(--pwa-muted)', fontSize: 13 }}>{titulo}</div>
           </div>
           <button type="button" className="btn btn-secondary" onClick={baixarPdf} style={{ padding: '10px 14px', fontSize: 13 }}>
             Baixar PDF
@@ -399,7 +399,7 @@ export default function FechamentoMes() {
         ) : erro ? (
           <div style={{ marginTop: 12, color: '#fecaca', fontSize: 13, whiteSpace: 'pre-line' }}>{erro}</div>
         ) : !espelho ? (
-          <div style={{ marginTop: 12, color: '#94a3b8', fontSize: 13 }}>Sem dados para este mês.</div>
+          <div style={{ marginTop: 12, color: 'var(--pwa-muted)', fontSize: 13 }}>Sem dados para este mês.</div>
         ) : (
           <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
@@ -419,8 +419,8 @@ export default function FechamentoMes() {
                     minWidth: 0,
                   }}
                 >
-                  <div style={{ color: '#94a3b8', fontSize: 12, fontWeight: 800 }}>{it.label}</div>
-                  <div style={{ color: '#e2e8f0', fontSize: 16, fontWeight: 900, marginTop: 4, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+                  <div style={{ color: 'var(--pwa-muted)', fontSize: 12, fontWeight: 800 }}>{it.label}</div>
+                  <div style={{ color: 'var(--pwa-fg)', fontSize: 16, fontWeight: 900, marginTop: 4, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
                     {it.value || '—'}
                   </div>
                 </div>
@@ -428,8 +428,8 @@ export default function FechamentoMes() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ color: '#94a3b8', fontSize: 12 }}>
-                Hash do espelho: <span style={{ color: '#e2e8f0', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{shortHash(espelhoHash)}</span>
+              <div style={{ color: 'var(--pwa-muted)', fontSize: 12 }}>
+                Hash do espelho: <span style={{ color: 'var(--pwa-fg)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{shortHash(espelhoHash)}</span>
               </div>
               {homologado ? (
                 <span
@@ -441,7 +441,7 @@ export default function FechamentoMes() {
                     borderRadius: 999,
                     background: 'rgba(29,158,117,0.18)',
                     border: '1px solid rgba(29,158,117,0.30)',
-                    color: '#86efac',
+                    color: 'var(--pwa-success-fg)',
                     fontSize: 12,
                     fontWeight: 900,
                   }}
@@ -450,9 +450,9 @@ export default function FechamentoMes() {
                   ✓ Homologado em {fechamento?.aprovadoEm ? new Date(fechamento.aprovadoEm).toLocaleString('pt-BR') : '—'}
                 </span>
               ) : aguardandoGestor ? (
-                <span style={{ color: '#fbbf24', fontSize: 12, fontWeight: 900 }}>Aguardando sua assinatura (RH)</span>
+                <span style={{ color: 'var(--pwa-accent)', fontSize: 12, fontWeight: 900 }}>Aguardando sua assinatura (RH)</span>
               ) : (
-                <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 800 }}>Sem homologação ainda</span>
+                <span style={{ color: 'var(--pwa-muted)', fontSize: 12, fontWeight: 800 }}>Sem homologação ainda</span>
               )}
             </div>
           </div>
@@ -461,15 +461,15 @@ export default function FechamentoMes() {
 
       <div
         style={{
-          background: 'rgba(255,255,255,0.06)',
+          background: 'var(--pwa-card)',
           borderRadius: 16,
           padding: 18,
           border: '1px solid rgba(148,163,184,0.12)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-          <h2 style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 900, margin: 0 }}>Aceite do espelho (assinatura)</h2>
-          <span style={{ color: '#94a3b8', fontSize: 12 }}>
+          <h2 style={{ color: 'var(--pwa-fg)', fontSize: 15, fontWeight: 900, margin: 0 }}>Aceite do espelho (assinatura)</h2>
+          <span style={{ color: 'var(--pwa-muted)', fontSize: 12 }}>
             {assinaturaPadrao?.existe ? 'Assinatura salva' : 'Primeira vez: crie sua assinatura'}
           </span>
         </div>
@@ -482,7 +482,7 @@ export default function FechamentoMes() {
               borderRadius: 14,
               border: '1px solid rgba(148,163,184,0.16)',
               background: 'rgba(15,23,42,0.25)',
-              color: '#cbd5e1',
+              color: 'var(--pwa-muted)',
               fontSize: 13,
               lineHeight: 1.55,
             }}
@@ -500,7 +500,7 @@ export default function FechamentoMes() {
           <div style={{ marginTop: 12 }}>
             <div style={{ display: 'grid', gap: 10 }}>
               <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 800 }}>Como você quer assinar?</div>
+                <div style={{ color: 'var(--pwa-muted)', fontSize: 12, fontWeight: 800 }}>Como você quer assinar?</div>
                 <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
                   <input
                     type="radio"
@@ -509,7 +509,7 @@ export default function FechamentoMes() {
                     onChange={() => setModoAssinatura('auto')}
                     style={{ marginTop: 3 }}
                   />
-                  <span style={{ color: '#e2e8f0', fontSize: 13, lineHeight: 1.45 }}>
+                  <span style={{ color: 'var(--pwa-fg)', fontSize: 13, lineHeight: 1.45 }}>
                     Assinatura automática com meu nome (<strong>{usuario?.nome || '—'}</strong>) — recomendado
                   </span>
                 </label>
@@ -521,7 +521,7 @@ export default function FechamentoMes() {
                     onChange={() => setModoAssinatura('desenhar')}
                     style={{ marginTop: 3 }}
                   />
-                  <span style={{ color: '#e2e8f0', fontSize: 13, lineHeight: 1.45 }}>
+                  <span style={{ color: 'var(--pwa-fg)', fontSize: 13, lineHeight: 1.45 }}>
                     Desenhar assinatura (dedo/mouse)
                   </span>
                 </label>
@@ -538,8 +538,8 @@ export default function FechamentoMes() {
                     padding: 14,
                   }}
                 >
-                  <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 10 }}>Prévia da assinatura</div>
-                  <div style={{ color: '#e2e8f0', fontSize: 34, fontFamily: '"Brush Script MT", "Segoe Script", "Apple Chancery", cursive' }}>
+                  <div style={{ color: 'var(--pwa-muted)', fontSize: 12, marginBottom: 10 }}>Prévia da assinatura</div>
+                  <div style={{ color: 'var(--pwa-fg)', fontSize: 34, fontFamily: '"Brush Script MT", "Segoe Script", "Apple Chancery", cursive' }}>
                     {usuario?.nome || 'Assinatura'}
                   </div>
                 </div>
@@ -557,7 +557,7 @@ export default function FechamentoMes() {
                 }}
               >
                 <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} style={{ marginTop: 3 }} />
-                <span style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.45 }}>
+                <span style={{ color: 'var(--pwa-muted)', fontSize: 13, lineHeight: 1.45 }}>
                   Li e concordo com o espelho desta competência e confirmo a assinatura/homologação.
                 </span>
               </label>
@@ -578,7 +578,7 @@ export default function FechamentoMes() {
             }}
           >
             <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} style={{ marginTop: 3 }} />
-            <span style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.45 }}>
+            <span style={{ color: 'var(--pwa-muted)', fontSize: 13, lineHeight: 1.45 }}>
               Li e concordo com o espelho desta competência e confirmo a assinatura/homologação.
             </span>
           </label>
@@ -606,7 +606,7 @@ export default function FechamentoMes() {
           </button>
         </div>
 
-        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 10, lineHeight: 1.55 }}>
+        <p style={{ color: 'var(--pwa-muted)', fontSize: 12, marginTop: 10, lineHeight: 1.55 }}>
           Ao aprovar, registramos data/hora e um hash do espelho do mês (integridade). Se houver divergência, não aprove e solicite ajuste ao RH.
         </p>
       </div>

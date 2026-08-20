@@ -80,22 +80,22 @@ export default function ComprovantesColaborador() {
   }
 
   function badgeStatus(s) {
-    if (s === 'PENDENTE') return { label: 'Pendente', bg: 'rgba(251,191,36,0.2)', color: '#fbbf24' };
-    if (s === 'APROVADO') return { label: 'Aprovado', bg: 'rgba(34,197,94,0.2)', color: '#86efac' };
-    return { label: 'Rejeitado', bg: 'rgba(248,113,113,0.2)', color: '#fca5a5' };
+    if (s === 'PENDENTE') return { label: 'Pendente', bg: 'rgba(251,191,36,0.2)', color: 'var(--pwa-accent)' };
+    if (s === 'APROVADO') return { label: 'Aprovado', bg: 'rgba(34,197,94,0.2)', color: 'var(--pwa-success-fg)' };
+    return { label: 'Rejeitado', bg: 'rgba(248,113,113,0.2)', color: 'var(--pwa-error-fg)' };
   }
 
   return (
     <div className="colaborador-page">
-      <h1 style={{ color: 'white', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.02em' }}>Atestados e ausências</h1>
-      <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 22, lineHeight: 1.55 }}>
-        Envie foto do atestado ou PDF. O RH da <strong style={{ color: '#e2e8f0' }}>{usuario?.tenant?.nomeFantasia}</strong> analisa e registra a decisão.
+      <h1 style={{ color: 'var(--pwa-title)', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.02em' }}>Atestados e ausências</h1>
+      <p style={{ color: 'var(--pwa-muted)', fontSize: 14, marginBottom: 22, lineHeight: 1.55 }}>
+        Envie foto do atestado ou PDF. O RH da <strong style={{ color: 'var(--pwa-fg)' }}>{usuario?.tenant?.nomeFantasia}</strong> analisa e registra a decisão.
       </p>
 
       <form
         onSubmit={enviar}
         style={{
-          background: 'rgba(255,255,255,0.06)',
+          background: 'var(--pwa-card)',
           borderRadius: 16,
           padding: 20,
           marginBottom: 28,
@@ -103,7 +103,7 @@ export default function ComprovantesColaborador() {
         }}
       >
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, marginBottom: 6 }}>Data da falta (início)</label>
+          <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 13, marginBottom: 6 }}>Data da falta (início)</label>
           <input
             type="date"
             className="input"
@@ -114,7 +114,7 @@ export default function ComprovantesColaborador() {
           />
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', color: '#94a3b8', fontSize: 13, marginBottom: 6 }}>Último dia (opcional — vários dias)</label>
+          <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 13, marginBottom: 6 }}>Último dia (opcional — vários dias)</label>
           <input
             type="date"
             className="input"
@@ -125,7 +125,7 @@ export default function ComprovantesColaborador() {
           />
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', color: '#94a3b8', fontSize: 13, marginBottom: 6 }}>Observação (opcional)</label>
+          <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 13, marginBottom: 6 }}>Observação (opcional)</label>
           <textarea
             className="input"
             rows={2}
@@ -136,12 +136,12 @@ export default function ComprovantesColaborador() {
           />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, marginBottom: 6 }}>Foto ou PDF</label>
+          <label style={{ display: 'block', color: 'var(--pwa-muted)', fontSize: 13, marginBottom: 6 }}>Foto ou PDF</label>
           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" onChange={onFile} />
           {nomeArquivo ? (
-            <p style={{ color: '#86efac', fontSize: 12, marginTop: 8 }}>✓ {nomeArquivo}</p>
+            <p style={{ color: 'var(--pwa-success-fg)', fontSize: 12, marginTop: 8 }}>✓ {nomeArquivo}</p>
           ) : (
-            <p style={{ color: '#64748b', fontSize: 12, marginTop: 8 }}>JPG, PNG, WebP ou PDF · câmera ou arquivo</p>
+            <p style={{ color: 'var(--pwa-subtle)', fontSize: 12, marginTop: 8 }}>JPG, PNG, WebP ou PDF · câmera ou arquivo</p>
           )}
         </div>
         {erro && (
@@ -154,11 +154,11 @@ export default function ComprovantesColaborador() {
         </button>
       </form>
 
-      <h2 style={{ color: 'white', fontSize: 17, fontWeight: 800, marginBottom: 12 }}>Meus envios</h2>
+      <h2 style={{ color: 'var(--pwa-title)', fontSize: 17, fontWeight: 800, marginBottom: 12 }}>Meus envios</h2>
       {carregandoLista ? (
         <div className="spinner" style={{ margin: '24px auto' }} />
       ) : lista.length === 0 ? (
-        <p style={{ color: '#64748b', fontSize: 14 }}>Nenhum comprovante enviado ainda.</p>
+        <p style={{ color: 'var(--pwa-subtle)', fontSize: 14 }}>Nenhum comprovante enviado ainda.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {lista.map((c) => {
@@ -167,7 +167,7 @@ export default function ComprovantesColaborador() {
               <div
                 key={c.id}
                 style={{
-                  background: 'rgba(255,255,255,0.06)',
+                  background: 'var(--pwa-card)',
                   borderRadius: 12,
                   padding: 14,
                   fontSize: 13,
@@ -175,7 +175,7 @@ export default function ComprovantesColaborador() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ color: '#e2e8f0' }}>
+                  <span style={{ color: 'var(--pwa-fg)' }}>
                     {c.dataReferencia}
                     {c.dataFim && c.dataFim !== c.dataReferencia ? ` → ${c.dataFim}` : ''}
                   </span>
@@ -183,9 +183,9 @@ export default function ComprovantesColaborador() {
                     {b.label}
                   </span>
                 </div>
-                {c.descricao && <p style={{ color: '#94a3b8', margin: '8px 0 0' }}>{c.descricao}</p>}
+                {c.descricao && <p style={{ color: 'var(--pwa-muted)', margin: '8px 0 0' }}>{c.descricao}</p>}
                 {c.observacaoAdmin && (
-                  <p style={{ color: '#cbd5e1', margin: '8px 0 0', fontSize: 12 }}>
+                  <p style={{ color: 'var(--pwa-muted)', margin: '8px 0 0', fontSize: 12 }}>
                     <strong>Resposta:</strong> {c.observacaoAdmin}
                   </p>
                 )}
@@ -205,8 +205,8 @@ export default function ComprovantesColaborador() {
         </div>
       )}
 
-      <p style={{ color: '#64748b', fontSize: 12, marginTop: 28, lineHeight: 1.5 }}>
-        Dúvidas sobre documentos? Use <strong style={{ color: '#94a3b8' }}>Ajuda</strong> na tela inicial ou fale com o RH.
+      <p style={{ color: 'var(--pwa-subtle)', fontSize: 12, marginTop: 28, lineHeight: 1.5 }}>
+        Dúvidas sobre documentos? Use <strong style={{ color: 'var(--pwa-muted)' }}>Ajuda</strong> na tela inicial ou fale com o RH.
       </p>
     </div>
   );
