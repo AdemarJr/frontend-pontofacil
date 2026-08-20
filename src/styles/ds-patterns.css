@@ -99,3 +99,96 @@ label.ds-switch-field {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ---- Table icon actions ---- */
+.table-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.icon-action.btn-icon {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  min-width: 32px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.icon-action.btn-icon:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.icon-action--danger {
+  color: var(--error) !important;
+}
+.icon-action--danger:hover:not(:disabled) {
+  background: var(--error-soft) !important;
+  color: var(--error) !important;
+}
+
+.icon-action--success {
+  color: var(--success) !important;
+}
+.icon-action--success:hover:not(:disabled) {
+  background: var(--success-soft) !important;
+  color: var(--success) !important;
+}
+
+.icon-action--warning {
+  color: var(--warning) !important;
+}
+.icon-action--warning:hover:not(:disabled) {
+  background: var(--warning-soft) !important;
+  color: var(--warning) !important;
+}
+
+.icon-action--info {
+  color: var(--info) !important;
+}
+.icon-action--info:hover:not(:disabled) {
+  background: var(--info-soft) !important;
+  color: var(--info) !important;
+}
+
+.icon-action--accent {
+  color: #7c3aed !important;
+}
+.icon-action--accent:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.12) !important;
+  color: #7c3aed !important;
+}
+
+[data-theme='dark'] .icon-action--accent {
+  color: #a78bfa !important;
+}
+[data-theme='dark'] .icon-action--accent:hover:not(:disabled) {
+  background: rgba(167, 139, 250, 0.16) !important;
+  color: #a78bfa !important;
+}
+
+/* Configurações — grid responsivo */
+.cfg-layout {
+  display: grid;
+  gap: var(--space-5);
+  max-width: min(1120px, 100%);
+  width: 100%;
+  min-width: 0;
+}
+.cfg-layout > .card,
+.cfg-layout > .cfg-span-full {
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .cfg-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cfg-span-full {
+    grid-column: 1 / -1;
+  }
+}

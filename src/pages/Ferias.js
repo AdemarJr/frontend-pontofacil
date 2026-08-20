@@ -5,6 +5,7 @@ import ListPagination, { slicePaged } from '../components/ListPagination';
 import { feriasService, usuarioService } from '../services/api';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { IconAction, TableActions } from '../components/ui';
 
 function isoHoje() {
   const d = new Date();
@@ -248,17 +249,19 @@ export default function Ferias() {
                   </div>
                   {f.observacao ? <div style={{ fontSize: 13, marginTop: 8, color: 'var(--cinza-700)' }}>“{f.observacao}”</div> : null}
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button type="button" className="btn btn-primary" style={{ fontSize: 13 }} onClick={() => { setDecidirModal({ id: f.id, acao: 'APROVAR', titulo: f.usuario?.nome }); setDecidirForm({ resposta: '' }); }}>
-                    Aprovar
-                  </button>
-                  <button
-                    type="button"
-                    style={{ fontSize: 13, padding: '8px 14px', background: 'white', border: '1px solid var(--vermelho)', color: 'var(--vermelho)', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                  <IconAction
+                    icon="ok"
+                    label="Aprovar"
+                    tone="success"
+                    onClick={() => { setDecidirModal({ id: f.id, acao: 'APROVAR', titulo: f.usuario?.nome }); setDecidirForm({ resposta: '' }); }}
+                  />
+                  <IconAction
+                    icon="erro"
+                    label="Recusar"
+                    tone="danger"
                     onClick={() => { setDecidirModal({ id: f.id, acao: 'REJEITAR', titulo: f.usuario?.nome }); setDecidirForm({ resposta: '' }); }}
-                  >
-                    Recusar
-                  </button>
+                  />
                 </div>
               </div>
             ))}
@@ -306,31 +309,32 @@ export default function Ferias() {
                   <td>{badgeStatus(f.status)}</td>
                   <td style={{ fontSize: 12, color: 'var(--cinza-600)' }}>{f.respostaAdmin || '—'}</td>
                   <td>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <TableActions>
                       {f.status === 'PENDENTE' && (
                         <>
-                          <button type="button" className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => { setDecidirModal({ id: f.id, acao: 'APROVAR', titulo: f.usuario?.nome }); setDecidirForm({ resposta: '' }); }}>
-                            Aprovar
-                          </button>
-                          <button
-                            type="button"
-                            style={{ fontSize: 12, padding: '6px 12px', background: 'transparent', border: '1px solid var(--vermelho)', color: 'var(--vermelho)', borderRadius: 8, cursor: 'pointer' }}
+                          <IconAction
+                            icon="ok"
+                            label="Aprovar"
+                            tone="success"
+                            onClick={() => { setDecidirModal({ id: f.id, acao: 'APROVAR', titulo: f.usuario?.nome }); setDecidirForm({ resposta: '' }); }}
+                          />
+                          <IconAction
+                            icon="erro"
+                            label="Recusar"
+                            tone="danger"
                             onClick={() => { setDecidirModal({ id: f.id, acao: 'REJEITAR', titulo: f.usuario?.nome }); setDecidirForm({ resposta: '' }); }}
-                          >
-                            Recusar
-                          </button>
+                          />
                         </>
                       )}
                       {f.status === 'APROVADA' && (
-                        <button
-                          type="button"
-                          style={{ fontSize: 12, padding: '6px 12px', background: 'transparent', border: '1px solid var(--vermelho)', color: 'var(--vermelho)', borderRadius: 8, cursor: 'pointer' }}
+                        <IconAction
+                          icon="ban"
+                          label="Cancelar férias aprovadas"
+                          tone="danger"
                           onClick={() => cancelarAprovada(f)}
-                        >
-                          Cancelar
-                        </button>
+                        />
                       )}
-                    </div>
+                    </TableActions>
                   </td>
                 </tr>
               ))}
