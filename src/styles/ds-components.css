@@ -355,6 +355,11 @@
   color: var(--text-secondary);
 }
 
+[data-theme='dark'] .btn-primary {
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+}
+
 [data-theme='dark'] .btn-ghost {
   color: var(--text-secondary);
 }
