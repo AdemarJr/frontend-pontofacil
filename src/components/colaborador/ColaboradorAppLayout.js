@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { logoInternoUrl } from '../../utils/branding';
 import { ColaboradorChromeContext } from '../../context/ColaboradorChromeContext';
 import AppIcon from '../AppIcon';
@@ -21,6 +22,7 @@ const NAV = [
 
 export default function ColaboradorAppLayout() {
   const { usuario, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [chromeHidden, setChromeHidden] = useState(false);
@@ -52,15 +54,26 @@ export default function ColaboradorAppLayout() {
                 <span className="colaborador-app__title">Olá, {nome}</span>
                 <span className="colaborador-app__subtitle">{usuario?.tenant?.nomeFantasia || '\u00A0'}</span>
               </div>
-              <button
-                type="button"
-                className="colaborador-app__menu-btn"
-                aria-label="Menu"
-                aria-expanded={menuAberto}
-                onClick={() => setMenuAberto((v) => !v)}
-              >
-                <AppIcon name="more" size={20} aria-label="Menu" />
-              </button>
+              <div className="colaborador-app__header-actions">
+                <button
+                  type="button"
+                  className="colaborador-app__theme-btn"
+                  aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                  onClick={toggleTheme}
+                >
+                  <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} size={18} color="#FFFFFF" />
+                </button>
+                <button
+                  type="button"
+                  className="colaborador-app__menu-btn"
+                  aria-label="Menu"
+                  aria-expanded={menuAberto}
+                  onClick={() => setMenuAberto((v) => !v)}
+                >
+                  <AppIcon name="more" size={20} aria-label="Menu" />
+                </button>
+              </div>
               {menuAberto ? (
                 <div className="colaborador-app__menu-pop" role="menu">
                   <Link
@@ -71,7 +84,7 @@ export default function ColaboradorAppLayout() {
                   >
                     Alterar senha
                   </Link>
-                  <button type="button" className="colaborador-app__menu-item" onClick={sair}>
+                  <button type="button" className="colaborador-app__menu-item" role="menuitem" onClick={sair}>
                     Sair da conta
                   </button>
                 </div>
