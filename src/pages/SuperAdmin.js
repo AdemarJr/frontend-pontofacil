@@ -2,15 +2,28 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { logoInternoUrl } from '../utils/branding';
 import { superAdminService, API_URL } from '../services/api';
 import { isFolhaHabilitada } from '../utils/features';
 import { format } from 'date-fns';
 import Modal from '../components/Modal';
+import AppIcon from '../components/AppIcon';
 import SuperAdminPlanos from '../components/SuperAdminPlanos';
 import SuperAdminIntegracoes from '../components/SuperAdminIntegracoes';
 import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
+
+/** Botão outline da tabela — transparente para não virar bloco branco no dark */
+const saActionBtn = (cor) => ({
+  background: 'transparent',
+  border: `1px solid ${cor}`,
+  color: cor,
+  borderRadius: '6px',
+  padding: '3px 10px',
+  cursor: 'pointer',
+  fontSize: '12px',
+});
 
 const STATUS_BADGE = {
   ATIVO: { label:'Ativo', classe:'badge-verde' },
@@ -69,6 +82,7 @@ function SelectModoMarcacao({ value, onChange }) {
 
 export default function SuperAdmin() {
   const { usuario, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [tenants, setTenants] = useState([]);
   const [planos, setPlanos] = useState([]);
@@ -402,7 +416,7 @@ export default function SuperAdmin() {
   );
 
   return (
-    <div style={{ minHeight:'100vh', background:'var(--cinza-100)' }}>
+    <div style={{ minHeight:'100vh', background:'var(--bg)', color:'var(--text)' }}>
       {/* Topbar */}
       <div
         style={{
@@ -433,9 +447,31 @@ export default function SuperAdmin() {
             SUPER ADMIN
           </span>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: '#FFFFFF', fontSize: '13px' }}>{usuario?.email}</span>
           <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              color: '#FFFFFF',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} size={18} color="#FFFFFF" />
+          </button>
+          <button
+            type="button"
             onClick={handleLogout}
             style={{
               background: 'rgba(255,255,255,0.15)',
@@ -458,23 +494,27 @@ export default function SuperAdmin() {
             { id: 'empresas', label: 'Empresas' },
             { id: 'planos', label: 'Planos comerciais' },
             { id: 'integracoes', label: 'Integrações' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setAba(tab.id)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                border: aba === tab.id ? '2px solid var(--verde)' : '1px solid var(--cinza-200)',
-                background: aba === tab.id ? 'var(--verde-claro)' : 'white',
-                fontWeight: aba === tab.id ? 600 : 500,
-                cursor: 'pointer',
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+          ].map((tab) => {
+            const ativo = aba === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setAba(tab.id)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  border: ativo ? '2px solid var(--verde)' : '1px solid var(--border)',
+                  background: ativo ? 'var(--verde-claro)' : 'var(--surface)',
+                  color: ativo ? 'var(--verde-escuro)' : 'var(--text-secondary)',
+                  fontWeight: ativo ? 600 : 500,
+                  cursor: 'pointer',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {aba === 'planos' ? (
@@ -539,7 +579,7 @@ export default function SuperAdmin() {
                               <button
                                 type="button"
                                 onClick={() => resetSenhaAdmin(t, t.usuarios[0])}
-                                style={{ background:'none', border:'1px solid var(--vermelho)', color:'var(--vermelho)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}
+                                style={saActionBtn('var(--vermelho)')}
                                 title="Gera uma senha temporária e aplica no admin"
                               >
                                 Reset senha
@@ -575,25 +615,25 @@ export default function SuperAdmin() {
                       <td style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{format(new Date(t.createdAt), 'dd/MM/yyyy')}</td>
                       <td>
                         <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
-                          <button type="button" onClick={() => abrirEditar(t)} style={{ background:'none', border:'1px solid var(--azul)', color:'var(--azul)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}>Editar</button>
-                          <button type="button" onClick={() => gerarCobrancaPlano(t)} style={{ background:'none', border:'1px solid #7c3aed', color:'#7c3aed', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }} title="Gerar link InfinitePay">Cobrar plano</button>
+                          <button type="button" onClick={() => abrirEditar(t)} style={saActionBtn('var(--azul)')}>Editar</button>
+                          <button type="button" onClick={() => gerarCobrancaPlano(t)} style={saActionBtn('#a78bfa')} title="Gerar link InfinitePay">Cobrar plano</button>
                           {t.status === 'ATIVO' && (
-                            <button type="button" onClick={() => abrirCadastroAdmin(t)} style={{ background:'none', border:'1px solid var(--verde)', color:'var(--verde)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }} title="Criar usuário administrador (acesso ao painel)">Cadastrar admin</button>
+                            <button type="button" onClick={() => abrirCadastroAdmin(t)} style={saActionBtn('var(--verde)')} title="Criar usuário administrador (acesso ao painel)">Cadastrar admin</button>
                           )}
                           {t.status === 'ATIVO' && (
-                            <button onClick={() => alterarStatus(t.id, 'SUSPENSO')} style={{ background:'none', border:'1px solid var(--amarelo)', color:'var(--amarelo)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}>Suspender</button>
+                            <button type="button" onClick={() => alterarStatus(t.id, 'SUSPENSO')} style={saActionBtn('var(--amarelo)')}>Suspender</button>
                           )}
                           {t.status === 'SUSPENSO' && (
-                            <button onClick={() => alterarStatus(t.id, 'ATIVO')} style={{ background:'none', border:'1px solid var(--verde)', color:'var(--verde)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}>Reativar</button>
+                            <button type="button" onClick={() => alterarStatus(t.id, 'ATIVO')} style={saActionBtn('var(--verde)')}>Reativar</button>
                           )}
                           {t.status !== 'CANCELADO' && (
-                            <button onClick={() => alterarStatus(t.id, 'CANCELADO')} style={{ background:'none', border:'1px solid var(--vermelho)', color:'var(--vermelho)', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}>Cancelar</button>
+                            <button type="button" onClick={() => alterarStatus(t.id, 'CANCELADO')} style={saActionBtn('var(--vermelho)')}>Cancelar</button>
                           )}
                           {t._count?.registros > 0 && (
                             <button
                               type="button"
                               onClick={() => limparPontosEmpresa(t)}
-                              style={{ background:'none', border:'1px solid var(--vermelho)', color:'#b91c1c', borderRadius:'6px', padding:'3px 10px', cursor:'pointer', fontSize:'12px' }}
+                              style={saActionBtn('var(--vermelho)')}
                               title="Apaga todos os registros de ponto e ajustes desta empresa (irreversível)"
                             >
                               Zerar pontos

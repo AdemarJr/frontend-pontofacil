@@ -7,6 +7,16 @@ function formatarReais(centavos) {
   return (Number(centavos || 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+const saActionBtn = (cor) => ({
+  background: 'transparent',
+  border: `1px solid ${cor}`,
+  color: cor,
+  borderRadius: 6,
+  padding: '3px 10px',
+  cursor: 'pointer',
+  fontSize: 12,
+});
+
 const formVazio = () => ({
   nome: '',
   descricao: '',
@@ -134,8 +144,8 @@ export default function SuperAdminPlanos() {
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <button type="button" onClick={() => abrirEditar(p)} style={{ background: 'none', border: '1px solid var(--azul)', color: 'var(--azul)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 12 }}>Editar</button>
-                      <button type="button" onClick={() => excluir(p)} style={{ background: 'none', border: '1px solid var(--vermelho)', color: 'var(--vermelho)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 12 }}>Excluir</button>
+                      <button type="button" onClick={() => abrirEditar(p)} style={saActionBtn('var(--azul)')}>Editar</button>
+                      <button type="button" onClick={() => excluir(p)} style={saActionBtn('var(--vermelho)')}>Excluir</button>
                     </div>
                   </td>
                 </tr>
