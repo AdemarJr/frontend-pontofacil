@@ -4,21 +4,23 @@ import { getSiteUrl } from '../../utils/siteUrl';
 const SITE_NAME = 'PontoFácil';
 
 const TITLE =
-  'PontoFácil — Ponto eletrônico web/PWA para empresas e órgãos públicos | REP-P';
+  'PontoFácil — Ponto digital com cerca digital | Software registrado no INPI';
 
 const DESCRIPTION =
-  'Sistema REP-P 100% web: PWA no celular, totem com PIN, cerca virtual, jornadas, espelho de ponto, NSR, auditoria e exportações. Modo entrada/saída para prefeituras.';
+  'Ponto eletrônico web/PWA com cerca digital, registro online e offline, totem com PIN, espelho, NSR e integração com folha. Software registrado no INPI. Pyrou Web.';
 
 const KEYWORDS = [
   'ponto eletrônico web',
+  'cerca digital',
+  'geofence ponto',
   'REP-P',
   'controle de ponto digital',
   'ponto para prefeitura',
-  'ponto entrada e saída',
   'totem de ponto',
   'espelho de ponto',
-  'cerca virtual ponto',
+  'folha de pagamento',
   'PWA ponto',
+  'software registrado INPI',
   'Portaria 671',
 ].join(', ');
 
@@ -47,7 +49,7 @@ function buildJsonLd(base) {
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         description:
-          'Sistema REP-P web e PWA: totem com PIN, Meu ponto no celular, cerca virtual, jornadas, espelho de ponto, NSR, auditoria e exportações administrativas.',
+          'Sistema REP-P web e PWA com cerca digital, registro online e offline, totem com PIN, espelho de ponto e folha. Software registrado no INPI.',
         url: base,
         publisher: { '@id': `${base}/#organization` },
       },

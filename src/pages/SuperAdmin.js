@@ -434,8 +434,21 @@ export default function SuperAdmin() {
           </span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'16px' }}>
-          <span style={{ color:'#94a3b8', fontSize:'13px' }}>{usuario?.email}</span>
-          <button onClick={handleLogout} style={{ background:'rgba(226,75,74,0.15)', border:'none', color:'#f87171', padding:'6px 14px', borderRadius:'6px', cursor:'pointer', fontSize:'13px' }}>Sair</button>
+          <span style={{ color: '#FFFFFF', fontSize: '13px' }}>{usuario?.email}</span>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              color: '#FFFFFF',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Sair
+          </button>
         </div>
       </div>
 
