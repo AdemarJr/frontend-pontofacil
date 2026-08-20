@@ -37,6 +37,16 @@ import {
   Wifi,
   CircleDollarSign,
   Award,
+  Pencil,
+  Trash2,
+  PauseCircle,
+  PlayCircle,
+  UserPlus,
+  Mail,
+  Eye,
+  Ban,
+  Plus,
+  FilePenLine,
 } from 'lucide-react';
 
 const ICONS = {
@@ -78,6 +88,17 @@ const ICONS = {
   wifi: Wifi,
   folha: CircleDollarSign,
   inpi: Award,
+  editar: Pencil,
+  excluir: Trash2,
+  suspender: PauseCircle,
+  reativar: PlayCircle,
+  userPlus: UserPlus,
+  mail: Mail,
+  ver: Eye,
+  ban: Ban,
+  plus: Plus,
+  justificar: FilePenLine,
+  cobrar: CircleDollarSign,
 };
 
 export default function AppIcon({

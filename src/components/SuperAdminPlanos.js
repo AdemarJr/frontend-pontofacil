@@ -1,21 +1,12 @@
 // Gestão de planos comerciais (Super Admin)
 import { useEffect, useState } from 'react';
 import Modal from '../components/Modal';
+import { IconAction, TableActions } from '../components/ui';
 import { superAdminService } from '../services/api';
 
 function formatarReais(centavos) {
   return (Number(centavos || 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-
-const saActionBtn = (cor) => ({
-  background: 'transparent',
-  border: `1px solid ${cor}`,
-  color: cor,
-  borderRadius: 6,
-  padding: '3px 10px',
-  cursor: 'pointer',
-  fontSize: 12,
-});
 
 const formVazio = () => ({
   nome: '',
@@ -143,10 +134,10 @@ export default function SuperAdminPlanos() {
                     </span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <button type="button" onClick={() => abrirEditar(p)} style={saActionBtn('var(--azul)')}>Editar</button>
-                      <button type="button" onClick={() => excluir(p)} style={saActionBtn('var(--vermelho)')}>Excluir</button>
-                    </div>
+                    <TableActions>
+                      <IconAction icon="editar" label="Editar plano" tone="info" onClick={() => abrirEditar(p)} />
+                      <IconAction icon="excluir" label="Excluir plano" tone="danger" onClick={() => excluir(p)} />
+                    </TableActions>
                   </td>
                 </tr>
               ))}

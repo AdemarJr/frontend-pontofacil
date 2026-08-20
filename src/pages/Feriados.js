@@ -15,6 +15,7 @@ import {
   getISODay,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { IconAction, TableActions } from '../components/ui';
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -417,18 +418,12 @@ export default function Feriados() {
                       <div style={{ fontSize: 12, color: 'var(--cinza-400)', fontFamily: 'monospace' }}>{f.data}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     {f.suspendeExpediente !== false ? <span className="badge badge-vermelho">Suspenso</span> : <span className="badge badge-cinza">Normal</span>}
-                    <button type="button" className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => abrirEditar(f)}>
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      style={{ fontSize: 12, padding: '6px 12px', background: 'transparent', border: '1px solid var(--vermelho)', color: 'var(--vermelho)', borderRadius: 8, cursor: 'pointer' }}
-                      onClick={() => excluir(f)}
-                    >
-                      Excluir
-                    </button>
+                    <TableActions>
+                      <IconAction icon="editar" label="Editar" onClick={() => abrirEditar(f)} />
+                      <IconAction icon="excluir" label="Excluir" tone="danger" onClick={() => excluir(f)} />
+                    </TableActions>
                   </div>
                 </div>
               ))}

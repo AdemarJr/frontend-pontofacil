@@ -12,18 +12,8 @@ import Modal from '../components/Modal';
 import AppIcon from '../components/AppIcon';
 import SuperAdminPlanos from '../components/SuperAdminPlanos';
 import SuperAdminIntegracoes from '../components/SuperAdminIntegracoes';
+import { IconAction, TableActions } from '../components/ui';
 import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
-
-/** Botão outline da tabela — transparente para não virar bloco branco no dark */
-const saActionBtn = (cor) => ({
-  background: 'transparent',
-  border: `1px solid ${cor}`,
-  color: cor,
-  borderRadius: '6px',
-  padding: '3px 10px',
-  cursor: 'pointer',
-  fontSize: '12px',
-});
 
 const STATUS_BADGE = {
   ATIVO: { label:'Ativo', classe:'badge-verde' },
@@ -488,7 +478,7 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      <div style={{ padding:'32px', maxWidth:'1100px', margin:'0 auto' }}>
+      <div style={{ padding: '28px clamp(16px, 3vw, 32px)', maxWidth: 'var(--container-max)', margin: '0 auto', width: '100%' }}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
           {[
             { id: 'empresas', label: 'Empresas' },
@@ -556,9 +546,9 @@ export default function SuperAdmin() {
           {carregando ? (
             <div style={{ display:'flex', justifyContent:'center', padding:'60px' }}><div className="spinner" /></div>
           ) : (
-            <table className="tabela" style={{ minWidth: 960 }}>
+            <table className="tabela" style={{ minWidth: 1080 }}>
               <thead><tr>
-                <th>Empresa</th><th>CNPJ</th><th>Admin</th><th>Plano</th><th>Status</th><th>Usuários</th><th>Registros</th><th>Desde</th><th>Ações</th>
+                <th>Empresa</th><th>CNPJ</th><th>Admin</th><th>Plano</th><th>Status</th><th>Usuários</th><th>Registros</th><th>Desde</th><th style={{ width: 1, whiteSpace: 'nowrap' }}>Ações</th>
               </tr></thead>
               <tbody>
                 {tenantsPagina.map(t => {
@@ -570,20 +560,18 @@ export default function SuperAdmin() {
                         <div style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{t.razaoSocial}</div>
                       </td>
                       <td style={{ fontFamily:'monospace', fontSize:'13px' }}>{t.cnpj}</td>
-                      <td style={{ fontSize:'12px', maxWidth:'180px' }}>
+                      <td style={{ fontSize:'12px', maxWidth:'200px' }}>
                         {t.usuarios?.[0] ? (
                           <>
                             <div style={{ fontWeight:'500' }}>{t.usuarios[0].nome}</div>
-                            <div style={{ color:'var(--cinza-400)' }}>{t.usuarios[0].email}</div>
-                            <div style={{ marginTop:'6px' }}>
-                              <button
-                                type="button"
+                            <div style={{ color:'var(--cinza-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.usuarios[0].email}>{t.usuarios[0].email}</div>
+                            <div style={{ marginTop:'4px' }}>
+                              <IconAction
+                                icon="key"
+                                label="Reset senha do admin"
+                                tone="danger"
                                 onClick={() => resetSenhaAdmin(t, t.usuarios[0])}
-                                style={saActionBtn('var(--vermelho)')}
-                                title="Gera uma senha temporária e aplica no admin"
-                              >
-                                Reset senha
-                              </button>
+                              />
                             </div>
                           </>
                         ) : (
@@ -614,32 +602,25 @@ export default function SuperAdmin() {
                       <td style={{ textAlign:'center' }}>{t._count.registros}</td>
                       <td style={{ fontSize:'12px', color:'var(--cinza-400)' }}>{format(new Date(t.createdAt), 'dd/MM/yyyy')}</td>
                       <td>
-                        <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
-                          <button type="button" onClick={() => abrirEditar(t)} style={saActionBtn('var(--azul)')}>Editar</button>
-                          <button type="button" onClick={() => gerarCobrancaPlano(t)} style={saActionBtn('#a78bfa')} title="Gerar link InfinitePay">Cobrar plano</button>
+                        <TableActions>
+                          <IconAction icon="editar" label="Editar empresa" tone="info" onClick={() => abrirEditar(t)} />
+                          <IconAction icon="cobrar" label="Cobrar plano (InfinitePay)" tone="accent" onClick={() => gerarCobrancaPlano(t)} />
                           {t.status === 'ATIVO' && (
-                            <button type="button" onClick={() => abrirCadastroAdmin(t)} style={saActionBtn('var(--verde)')} title="Criar usuário administrador (acesso ao painel)">Cadastrar admin</button>
+                            <IconAction icon="userPlus" label="Cadastrar admin" tone="success" onClick={() => abrirCadastroAdmin(t)} />
                           )}
                           {t.status === 'ATIVO' && (
-                            <button type="button" onClick={() => alterarStatus(t.id, 'SUSPENSO')} style={saActionBtn('var(--amarelo)')}>Suspender</button>
+                            <IconAction icon="suspender" label="Suspender" tone="warning" onClick={() => alterarStatus(t.id, 'SUSPENSO')} />
                           )}
                           {t.status === 'SUSPENSO' && (
-                            <button type="button" onClick={() => alterarStatus(t.id, 'ATIVO')} style={saActionBtn('var(--verde)')}>Reativar</button>
+                            <IconAction icon="reativar" label="Reativar" tone="success" onClick={() => alterarStatus(t.id, 'ATIVO')} />
                           )}
                           {t.status !== 'CANCELADO' && (
-                            <button type="button" onClick={() => alterarStatus(t.id, 'CANCELADO')} style={saActionBtn('var(--vermelho)')}>Cancelar</button>
+                            <IconAction icon="ban" label="Cancelar empresa" tone="danger" onClick={() => alterarStatus(t.id, 'CANCELADO')} />
                           )}
                           {t._count?.registros > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => limparPontosEmpresa(t)}
-                              style={saActionBtn('var(--vermelho)')}
-                              title="Apaga todos os registros de ponto e ajustes desta empresa (irreversível)"
-                            >
-                              Zerar pontos
-                            </button>
+                            <IconAction icon="excluir" label="Zerar pontos (irreversível)" tone="danger" onClick={() => limparPontosEmpresa(t)} />
                           )}
-                        </div>
+                        </TableActions>
                       </td>
                     </tr>
                   );

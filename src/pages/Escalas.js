@@ -4,6 +4,7 @@ import ListPagination, { slicePaged } from '../components/ListPagination';
 import { escalaService, usuarioService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
+import { IconAction, TableActions } from '../components/ui';
 
 function validarJornadaCLT(cargaHorariaDiaria, diasSemana, intervaloMinutos, { overnight = false } = {}) {
   const carga = Number(cargaHorariaDiaria) || 8;
@@ -463,24 +464,20 @@ export default function Escalas() {
                           .join(', ')}
                       </p>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        style={{ fontSize: '12px', padding: '6px 12px' }}
+                    <TableActions>
+                      <IconAction
+                        icon={e.ativo ? 'suspender' : 'reativar'}
+                        label={e.ativo ? 'Desativar' : 'Ativar'}
+                        tone={e.ativo ? 'warning' : 'success'}
                         onClick={() => toggleAtivo(e)}
-                      >
-                        {e.ativo ? 'Desativar' : 'Ativar'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--vermelho)' }}
+                      />
+                      <IconAction
+                        icon="excluir"
+                        label="Excluir"
+                        tone="danger"
                         onClick={() => remover(e.id)}
-                      >
-                        Excluir
-                      </button>
-                    </div>
+                      />
+                    </TableActions>
                   </div>
                 ))}
               </div>

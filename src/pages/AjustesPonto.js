@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { comprovanteAusenciaService, pontoService, relatorioService, usuarioService } from '../services/api';
 import { useSearchParams } from 'react-router-dom';
 import { mensagemDuplicataDia } from '../utils/duplicataPonto';
+import { IconAction, TableActions } from '../components/ui';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
@@ -386,40 +387,32 @@ export default function AjustesPonto() {
                                 </span>
                               ) : null}
                             </div>
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'nowrap' }}>
                               {ausencia?.manual ? (
-                                <button
-                                  type="button"
-                                  className="btn btn-secondary"
-                                  style={{ padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                <IconAction
+                                  icon="excluir"
+                                  label={`Remover ${ausencia.tipo === 'FOLGA' ? 'folga' : 'justificativa'}`}
+                                  tone="danger"
                                   disabled={busy}
                                   onClick={() => removerMarcador(r.usuario.id, dia, ausencia)}
-                                >
-                                  {busy ? '...' : `✕ Remover ${ausencia.tipo === 'FOLGA' ? 'folga' : 'justificativa'}`}
-                                </button>
+                                />
                               ) : podeMarcar ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    style={{ padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                <TableActions>
+                                  <IconAction
+                                    icon="ferias"
+                                    label="Marcar folga"
+                                    tone="accent"
                                     disabled={busy}
                                     onClick={() => marcarFolga(r.usuario.id, dia)}
-                                    title="Marcar este dia como folga (não conta como falta)"
-                                  >
-                                    {busy ? '...' : '🌴 Folga'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    style={{ padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                  />
+                                  <IconAction
+                                    icon="justificar"
+                                    label="Justificar falta"
+                                    tone="info"
                                     disabled={busy}
                                     onClick={() => justificarDia(r.usuario.id, dia)}
-                                    title="Justificar a falta deste dia (com motivo)"
-                                  >
-                                    {busy ? '...' : '📝 Justificar'}
-                                  </button>
-                                </>
+                                  />
+                                </TableActions>
                               ) : null}
                             </div>
                           </div>
@@ -454,10 +447,10 @@ export default function AjustesPonto() {
                                   ) : null}
                                 </div>
                                 {!it.v ? (
-                                  <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    style={{ padding: '6px 10px', fontSize: 12, whiteSpace: 'nowrap' }}
+                                  <IconAction
+                                    icon="plus"
+                                    label={`Inserir ${it.label}`}
+                                    tone="success"
                                     onClick={() => {
                                       setInserirModal({ usuarioId: r.usuario.id, dia, nome: r.usuario.nome });
                                       setInserirForm({
@@ -466,9 +459,7 @@ export default function AjustesPonto() {
                                         motivo: '',
                                       });
                                     }}
-                                  >
-                                    + Inserir
-                                  </button>
+                                  />
                                 ) : null}
                               </div>
                             ))}
@@ -492,27 +483,22 @@ export default function AjustesPonto() {
                                   </span>
                                 ) : null}
                                 {p.ajustado && <span className="badge badge-amarelo" style={{ fontSize: 10, padding: '1px 6px' }}>Ajustado</span>}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setAjusteModal(p);
-                                    setAjusteForm({ dataHoraNova: format(new Date(p.dataHora), "yyyy-MM-dd'T'HH:mm"), motivo: '' });
-                                  }}
-                                  className="btn btn-secondary"
-                                  style={{ padding: '4px 10px', fontSize: 12, minHeight: 32 }}
-                                  title="Ajustar horário"
-                                >
-                                  Editar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => excluirBatida(p)}
-                                  className="btn btn-secondary"
-                                  style={{ padding: '4px 10px', fontSize: 12, minHeight: 32, color: 'var(--vermelho)', borderColor: 'rgba(220,38,38,0.35)' }}
-                                  title="Excluir batida (com motivo)"
-                                >
-                                  Excluir
-                                </button>
+                                <TableActions>
+                                  <IconAction
+                                    icon="editar"
+                                    label="Ajustar horário"
+                                    onClick={() => {
+                                      setAjusteModal(p);
+                                      setAjusteForm({ dataHoraNova: format(new Date(p.dataHora), "yyyy-MM-dd'T'HH:mm"), motivo: '' });
+                                    }}
+                                  />
+                                  <IconAction
+                                    icon="excluir"
+                                    label="Excluir batida"
+                                    tone="danger"
+                                    onClick={() => excluirBatida(p)}
+                                  />
+                                </TableActions>
                               </div>
                             ))}
                           </div>

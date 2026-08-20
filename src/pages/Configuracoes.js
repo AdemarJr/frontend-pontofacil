@@ -7,6 +7,7 @@ import { tenantService, localRegistroService } from '../services/api';
 import { runConfiguracoesTour } from '../tours/configuracoesTour';
 import { useAuth } from '../hooks/useAuth';
 import FolhaConfigSection from '../components/folha/FolhaConfigSection';
+import { IconAction } from '../components/ui';
 
 export default function Configuracoes() {
   const { folhaHabilitada } = useAuth();
@@ -143,7 +144,7 @@ export default function Configuracoes() {
         </button>
       </div>
 
-      <div style={{ display:'grid', gap:'20px', maxWidth:'640px' }}>
+      <div className="cfg-layout">
         {/* ID do Totem */}
         <div id="tour-cfg-totem" className="card">
           <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>🖥 ID do Totem</h2>
@@ -256,7 +257,7 @@ export default function Configuracoes() {
         </div>
 
         {/* Locais nomeados (múltiplas cercas) */}
-        <div id="tour-cfg-locais" className="card">
+        <div id="tour-cfg-locais" className="card cfg-span-full">
           <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'8px' }}>📌 Locais permitidos (restrição de localização)</h2>
           <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'16px' }}>
             Cadastre filiais, obras ou entradas com nome, GPS e raio. Com cerca virtual ativa, basta existir um local cadastrado
@@ -269,7 +270,7 @@ export default function Configuracoes() {
               value={novoLocal.nome}
               onChange={(e) => setNovoLocal((p) => ({ ...p, nome: e.target.value }))}
             />
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:'8px' }}>
               <input
                 className="input"
                 type="number"
@@ -311,25 +312,25 @@ export default function Configuracoes() {
                     display:'flex',
                     alignItems:'center',
                     justifyContent:'space-between',
+                    gap: 12,
                     padding:'10px 0',
                     borderBottom:'1px solid var(--cinza-100)',
                     fontSize:'14px',
+                    minWidth: 0,
                   }}
                 >
-                  <span>
+                  <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
                     <strong>{l.nome}</strong>
                     <span style={{ color:'var(--cinza-400)', marginLeft:'8px', fontSize:'12px' }}>
                       {l.latitude?.toFixed(5)}, {l.longitude?.toFixed(5)} · {l.raioMetros}m
                     </span>
                   </span>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ fontSize:'12px', padding:'4px 10px', color:'var(--vermelho)' }}
+                  <IconAction
+                    icon="excluir"
+                    label="Remover local"
+                    tone="danger"
                     onClick={() => removerLocal(l.id)}
-                  >
-                    Remover
-                  </button>
+                  />
                 </li>
               ))}
             </ul>
@@ -350,7 +351,7 @@ export default function Configuracoes() {
         </div>
 
         {/* Registro */}
-        <div id="tour-cfg-registro" className="card">
+        <div id="tour-cfg-registro" className="card cfg-span-full">
           <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px', display:'inline-flex', alignItems:'center', gap: 10 }}>
             <AppIcon name="camera" size={18} aria-hidden />
             Registro de Ponto
@@ -373,7 +374,7 @@ export default function Configuracoes() {
             <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.4 }}>
               O colaborador verá um aviso ao tentar registrar muito rápido após a última marcação, com opção de confirmar.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               <div>
                 <label style={{ display:'block', fontSize:'12px', color:'var(--cinza-400)', marginBottom:'6px' }}>
                   Mínimo de trabalho antes de Saída/Saída almoço
@@ -406,30 +407,36 @@ export default function Configuracoes() {
                   style={{ maxWidth: '160px' }}
                 />
                 <p style={{ fontSize: 11, color: 'var(--cinza-400)', margin: '6px 0 0', lineHeight: 1.4 }}>
-                  Jornada acima de 6h: mínimo 1h (ou 30 min com convenção coletiva). Entre 4h e 6h: 15 min (fixo).
+                  Jornada acima de 6h: mínimo 1h (ou 30 min com convenção coletiva). Entre 4h e 6h: 15 min (ajuste).
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {folhaHabilitada && <FolhaConfigSection />}
+        {folhaHabilitada && (
+          <div className="cfg-span-full">
+            <FolhaConfigSection />
+          </div>
+        )}
 
         {erro && (
-          <div style={{ background:'#fef2f2', color:'var(--vermelho)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>
+          <div className="cfg-span-full" style={{ background:'var(--error-soft)', color:'var(--vermelho)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>
             {erro}
           </div>
         )}
 
         {sucesso && (
-          <div style={{ background:'var(--verde-claro)', color:'var(--verde-escuro)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>
+          <div className="cfg-span-full" style={{ background:'var(--verde-claro)', color:'var(--verde-escuro)', padding:'12px 16px', borderRadius:'8px', fontSize:'14px', fontWeight:'500' }}>
             ✓ Configurações salvas com sucesso!
           </div>
         )}
 
-        <button id="tour-cfg-salvar" className="btn btn-primary btn-lg" onClick={salvar} disabled={salvando}>
-          {salvando ? 'Salvando...' : 'Salvar Configurações'}
-        </button>
+        <div className="cfg-span-full">
+          <button id="tour-cfg-salvar" className="btn btn-primary btn-lg" onClick={salvar} disabled={salvando}>
+            {salvando ? 'Salvando...' : 'Salvar Configurações'}
+          </button>
+        </div>
       </div>
     </Layout>
   );
