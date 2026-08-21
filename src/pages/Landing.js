@@ -73,7 +73,7 @@ const FEATURES = [
   { icon: 'relatorios', title: 'Espelho de ponto', text: 'Fechamento mensal com exportação CSV, Excel e PDF.', bento: '1x1' },
   { icon: 'relatorios', title: 'Relatórios inteligentes', text: 'Resumos e análises para RH e gestão operacional.', bento: '1x1' },
   { icon: 'shield', title: 'Auditoria', text: 'Rastreabilidade de ajustes, configurações e registros.', bento: '2x1', highlight: true },
-  { icon: 'inpi', title: 'Registro no INPI', text: 'Software com registro de programa de computador no INPI.', bento: '1x1', highlight: true },
+  { icon: 'inpi', title: 'Registro no INPI', text: 'Programa de computador registrado no INPI.', bento: '1x1', highlight: true },
   { icon: 'empresa', title: 'Multiempresa', text: 'Cada cliente isolado no SaaS com políticas próprias.', bento: '1x1' },
   { icon: 'empresa', title: 'Gestão em nuvem', text: 'Acesso seguro de qualquer lugar, sem instalação local.', bento: '1x1' },
 ];
@@ -157,11 +157,38 @@ const PLANS = [
 ];
 
 const STATS = [
-  { icon: 'inpi', title: 'INPI', text: 'Programa de computador registrado no Instituto Nacional da Propriedade Industrial.' },
+  { icon: 'inpi', title: 'INPI', text: 'Programa de computador registrado no INPI.' },
   { icon: 'mapa', title: 'Cerca digital', text: 'Batida só no local autorizado.' },
   { icon: 'wifi', title: 'Online e offline', text: 'Registra no celular mesmo sem rede.' },
   { icon: 'folha', title: 'Folha', text: 'Horas do espelho na folha de pagamento.' },
   { icon: 'shield', title: 'Seguro', text: 'Dados protegidos e separados por empresa.' },
+];
+
+const PRODUCT_SHOTS = [
+  {
+    src: '/landing-painel-gestor.png',
+    alt: 'Painel do gestor PontoFácil — resumo do dia, presentes e registros',
+    caption: 'Painel do gestor',
+    width: 1024,
+    height: 920,
+    frame: 'browser',
+  },
+  {
+    src: '/landing-app-meu-ponto.png',
+    alt: 'App Meu ponto — registro de ponto no celular com cerca virtual',
+    caption: 'Meu ponto (PWA)',
+    width: 472,
+    height: 1024,
+    frame: 'phone',
+  },
+  {
+    src: '/landing-totem-pin.png',
+    alt: 'Totem PontoFácil — tela de PIN para registro na recepção',
+    caption: 'Totem com PIN',
+    width: 472,
+    height: 1024,
+    frame: 'phone',
+  },
 ];
 
 const PYROU_SERVICES = [
@@ -254,7 +281,7 @@ export default function Landing() {
       <header className={`landing-header${scrolled ? ' landing-header--scrolled' : ''}`}>
         <div className="landing-header-inner">
           <Link to="/" className="landing-logo" aria-label="PontoFácil — início" onClick={closeMenu}>
-            <img src={publicUrl(LOGO_LANDING)} alt="PontoFácil" className="landing-logo-img" width={200} height={52} />
+            <img src={publicUrl(LOGO_LANDING)} alt="PontoFácil" className="landing-logo-img" width={280} height={72} />
           </Link>
 
           <nav className="landing-nav" aria-label="Seções principais">
@@ -264,8 +291,10 @@ export default function Landing() {
           </nav>
 
           <div className="landing-header-actions">
-            <Link to="/login" className="landing-btn-header landing-btn-header--ghost">Entrar no sistema</Link>
-            <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-header landing-btn-header--primary">
+            <Link to="/login" className="landing-btn-header landing-btn-header--login">
+              Entrar
+            </Link>
+            <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-header landing-btn-header--primary landing-btn-header--desktop">
               Falar com especialista
             </a>
             <button
@@ -284,8 +313,10 @@ export default function Landing() {
           {NAV_LINKS.map((l) => (
             <a key={l.href} href={l.href} onClick={closeMenu}>{l.label}</a>
           ))}
-          <Link to="/login" className="landing-btn-header landing-btn-header--ghost" onClick={closeMenu}>Entrar no sistema</Link>
-          <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-header landing-btn-header--primary" onClick={closeMenu}>
+          <Link to="/login" className="landing-btn-header landing-btn-header--ghost landing-btn-header--menu" onClick={closeMenu}>
+            Entrar no sistema
+          </Link>
+          <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-header landing-btn-header--primary landing-btn-header--menu" onClick={closeMenu}>
             Falar com especialista
           </a>
         </div>
@@ -302,12 +333,13 @@ export default function Landing() {
               <span className="landing-badge">Web + PWA</span>
               <span className="landing-badge">Cerca digital</span>
             </div>
-            <h1>Ponto digital com cerca digital.</h1>
+            <h1>Ponto digital com <span>cerca digital</span>.</h1>
             <p className="lead">
               Mais segurança e controle para a sua empresa. Registro só no local autorizado, funcionamento online e offline e integração com a folha de pagamento.
             </p>
             <div className="landing-hero-ctas">
               <a href="#solucoes" className="landing-btn-primary">Conheça o PontoFácil</a>
+              <Link to="/login" className="landing-btn-secondary landing-btn-secondary--outline">Entrar no sistema</Link>
               <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-secondary">
                 <AppIcon name="whatsapp" size={18} aria-hidden />
                 Falar com especialista
@@ -321,8 +353,8 @@ export default function Landing() {
                 <img
                   src={publicUrl('/landing-painel-gestor.png')}
                   alt=""
-                  width={1200}
-                  height={675}
+                  width={1024}
+                  height={920}
                   loading="eager"
                   decoding="async"
                 />
@@ -331,8 +363,8 @@ export default function Landing() {
                 <img
                   src={publicUrl('/landing-app-meu-ponto.png')}
                   alt=""
-                  width={390}
-                  height={844}
+                  width={472}
+                  height={1024}
                   loading="eager"
                   decoding="async"
                 />
@@ -341,8 +373,8 @@ export default function Landing() {
                 <img
                   src={publicUrl('/landing-totem-pin.png')}
                   alt=""
-                  width={390}
-                  height={844}
+                  width={472}
+                  height={1024}
                   loading="lazy"
                   decoding="async"
                 />
@@ -357,9 +389,11 @@ export default function Landing() {
 
       <section className="landing-section landing-section--soft landing-pillars" aria-label="Diferenciais">
         <div className="landing-section-inner landing-reveal">
-          <p className="landing-kicker">Tecnologia que protege. Gestão que conecta.</p>
-          <h2>O que muda no dia a dia da sua operação</h2>
-          <p className="sub">Cerca digital, registro confiável, relatórios para decisão, uso offline e ponte com a folha.</p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Tecnologia que protege</p>
+            <h2>O que muda no <span>dia a dia</span> da sua operação</h2>
+            <p className="sub">Cerca digital, registro confiável, relatórios para decisão, uso offline e ponte com a folha.</p>
+          </div>
           <div className="landing-pillars-grid">
             {PILLAR_FEATURES.map((item) => (
               <article key={item.title} className="landing-pillar-card">
@@ -374,11 +408,13 @@ export default function Landing() {
 
       <section id="solucoes" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
-          <p className="landing-kicker">Pyrou Web</p>
-          <h2>Tecnologia para simplificar a gestão da sua empresa.</h2>
-          <p className="sub">
-            A Pyrou Web desenvolve sistemas e soluções digitais para transformar processos complexos em experiências simples, rápidas e inteligentes.
-          </p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Pyrou Web</p>
+            <h2>Tecnologia para <span>simplificar</span> a gestão da sua empresa</h2>
+            <p className="sub">
+              A Pyrou Web desenvolve sistemas e soluções digitais para transformar processos complexos em experiências simples, rápidas e inteligentes.
+            </p>
+          </div>
           <div className="landing-position-grid">
             {POSITIONING.map((item) => (
               <article key={item.title} className="landing-position-card">
@@ -395,7 +431,7 @@ export default function Landing() {
         <div className="landing-section-inner landing-product-split landing-reveal">
           <div className="landing-product-copy">
             <p className="landing-kicker landing-kicker--blue">PontoFácil</p>
-            <h2>Ponto digital com cerca digital — mais simples, mais inteligente.</h2>
+            <h2>Ponto digital com <span>cerca digital</span> — mais simples, mais inteligente.</h2>
             <p className="sub landing-sub--left">
               O PontoFácil centraliza a jornada da equipe: batida só no local autorizado, operação online e offline, relatórios e módulo de folha.
             </p>
@@ -415,20 +451,49 @@ export default function Landing() {
                 src={publicUrl('/landing-painel-gestor.png')}
                 alt="Painel do gestor PontoFácil com resumo do dia e registros"
                 className="landing-showcase-img"
-                width={1200}
-                height={675}
+                width={1024}
+                height={920}
                 loading="lazy"
                 decoding="async"
               />
             </figure>
           </div>
         </div>
+        <div className="landing-section-inner landing-product-shots landing-reveal">
+          <div className="landing-section-title">
+            <p className="landing-kicker">Na prática</p>
+            <h2 className="landing-product-shots-title">Painel, celular e totem — a <span>mesma operação</span></h2>
+          </div>
+          <div className="landing-shots-grid">
+            {PRODUCT_SHOTS.map((shot) => (
+              <figure
+                key={shot.src}
+                className={`landing-shot landing-shot--${shot.frame}`}
+              >
+                <div className="landing-shot-frame">
+                  <img
+                    src={publicUrl(shot.src)}
+                    alt={shot.alt}
+                    width={shot.width}
+                    height={shot.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <figcaption>{shot.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section id="funcionalidades" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
-          <h2>Funcionalidades pensadas para o dia a dia</h2>
-          <p className="sub">Do registro com cerca digital ao fechamento da folha — tudo na mesma plataforma.</p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Funcionalidades</p>
+            <h2>Pensadas para o <span>dia a dia</span></h2>
+            <p className="sub">Do registro com cerca digital ao fechamento da folha — tudo na mesma plataforma.</p>
+          </div>
           <div className="landing-bento landing-bento--extended">
             {FEATURES.map((f) => (
               <article
@@ -452,8 +517,11 @@ export default function Landing() {
 
       <section id="como-funciona" className="landing-section">
         <div className="landing-section-inner landing-reveal">
-          <h2>Como funciona</h2>
-          <p className="sub">Quatro passos do registro à gestão inteligente da jornada.</p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Como funciona</p>
+            <h2>Quatro passos até a <span>gestão inteligente</span></h2>
+            <p className="sub">Do registro à gestão inteligente da jornada.</p>
+          </div>
           <div className="landing-timeline">
             {STEPS.map((s, i) => (
               <article key={s.num} className="landing-timeline-step">
@@ -469,8 +537,11 @@ export default function Landing() {
 
       <section id="planos" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
-          <h2>Planos para cada porte de equipe</h2>
-          <p className="sub">Escolha o plano ideal e comece a digitalizar o controle de ponto da sua operação.</p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Planos</p>
+            <h2>Para cada <span>porte de equipe</span></h2>
+            <p className="sub">Escolha o plano ideal e comece a digitalizar o controle de ponto da sua operação.</p>
+          </div>
           <div className="landing-plans landing-plans--4">
             {PLANS.map((plan) => (
               <article
@@ -516,7 +587,10 @@ export default function Landing() {
 
       <section className="landing-section">
         <div className="landing-section-inner landing-reveal">
-          <h2>Por que escolher o PontoFácil</h2>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Diferenciais</p>
+            <h2>Por que escolher o <span>PontoFácil</span></h2>
+          </div>
           <div className="landing-stats-grid">
             {STATS.map((s) => (
               <article key={s.title} className="landing-stat-card">
@@ -531,8 +605,11 @@ export default function Landing() {
 
       <section id="servicos" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
-          <h2>Além do PontoFácil, criamos tecnologia para o seu negócio.</h2>
-          <p className="sub">A Pyrou Web atua como software house — do sistema sob medida ao SaaS escalável.</p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Serviços</p>
+            <h2>Além do PontoFácil, criamos <span>tecnologia</span> para o seu negócio</h2>
+            <p className="sub">A Pyrou Web atua como software house — do sistema sob medida ao SaaS escalável.</p>
+          </div>
           <div className="landing-services-grid">
             {PYROU_SERVICES.map((s) => (
               <article key={s.title} className="landing-service-card">
@@ -546,8 +623,11 @@ export default function Landing() {
 
       <section id="seguranca" className="landing-section">
         <div className="landing-section-inner landing-reveal">
-          <h2>Segurança e confiabilidade</h2>
-          <p className="sub">Arquitetura em nuvem com boas práticas — dados separados por empresa e operações protegidas.</p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Segurança</p>
+            <h2>Segurança e <span>confiabilidade</span></h2>
+            <p className="sub">Arquitetura em nuvem com boas práticas — dados separados por empresa e operações protegidas.</p>
+          </div>
           <div className="landing-security">
             {SECURITY.map((s) => (
               <div key={s.title} className="landing-security-item">
@@ -564,10 +644,13 @@ export default function Landing() {
 
       <section id="conformidade" className="landing-section landing-section--soft">
         <div className="landing-section-inner landing-reveal">
-          <h2>Conformidade REP-P (controle administrativo web)</h2>
-          <p className="sub">
-            O PontoFácil é um <strong>Registrador Eletrônico de Ponto por Programa (REP-P)</strong>: tudo roda no navegador ou PWA — não substitui relógio físico (REP-C). Recursos alinhados à Portaria MTE 671/2021 para gestão e auditoria interna.
-          </p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">Conformidade</p>
+            <h2>Conformidade <span>REP-P</span> (controle administrativo web)</h2>
+            <p className="sub">
+              O PontoFácil é um <strong>Registrador Eletrônico de Ponto por Programa (REP-P)</strong>: tudo roda no navegador ou PWA — não substitui relógio físico (REP-C). Recursos alinhados à Portaria MTE 671/2021 para gestão e auditoria interna.
+            </p>
+          </div>
           <div className="landing-rep-grid">
             {REP_P_FEATURES.map((item) => (
               <div key={item.title} className="landing-rep-item">
@@ -587,21 +670,24 @@ export default function Landing() {
           <div className="landing-inpi-seal" aria-hidden>
             <AppIcon name="inpi" size={28} />
           </div>
-          <p className="landing-kicker">Instituto Nacional da Propriedade Industrial</p>
-          <h2>Software registrado no INPI</h2>
+          <p className="landing-kicker">INPI</p>
+          <h2>Software registrado no <span>INPI</span></h2>
           <p className="sub landing-sub--tight">
-            O PontoFácil possui registro de programa de computador no INPI.
-            A autoria e o código-fonte estão protegidos nos termos da legislação brasileira.
+            Programa de computador com registro no Instituto Nacional da Propriedade Industrial —
+            autoria e código-fonte protegidos (Lei 9.609/98). Desenvolvido pela Pyrou Web.
           </p>
         </div>
       </section>
 
       <section className="landing-section landing-section--pwa">
         <div className="landing-section-inner landing-section-inner--center landing-reveal">
-          <h2>Uso no celular, tablet ou totem — sem complicação</h2>
-          <p className="sub landing-sub--tight">
-            O PontoFácil é uma PWA: seu time pode instalar no aparelho, abrir em tela cheia no totem e operar sem depender de loja de aplicativos.
-          </p>
+          <div className="landing-section-title">
+            <p className="landing-kicker">PWA</p>
+            <h2>Uso no celular, tablet ou totem — <span>sem complicação</span></h2>
+            <p className="sub landing-sub--tight">
+              O PontoFácil é uma PWA: seu time pode instalar no aparelho, abrir em tela cheia no totem e operar sem depender de loja de aplicativos.
+            </p>
+          </div>
           <div className="landing-pwa-actions">
             <Link to="/meu-ponto" className="landing-btn-primary">Abrir Meu ponto</Link>
             <Link to="/totem" className="landing-btn-secondary landing-btn-secondary--outline">Abrir Totem</Link>

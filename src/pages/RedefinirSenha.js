@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
-import { publicUrl } from '../utils/branding';
+import { logoDarkUrl } from '../utils/branding';
 import { validarSenhaAoDefinir, PASSWORD_HINT } from '../utils/passwordPolicy';
 
 export default function RedefinirSenha() {
@@ -59,25 +59,12 @@ export default function RedefinirSenha() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1D9E75 0%, #085041 100%)',
-        padding: '20px',
-      }}
-    >
-      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <img
-            src={publicUrl('/logo-stacked.png')}
-            alt="Ponto Fácil"
-            style={{ maxHeight: '72px', width: 'auto', maxWidth: '100%', objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
-          />
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--cinza-900)' }}>Nova senha</h1>
-          <p style={{ color: 'var(--cinza-400)', fontSize: '14px', marginTop: '8px' }}>
+    <div className="auth-shell">
+      <img src={logoDarkUrl()} alt="Ponto Fácil" className="auth-logo" width={220} height={172} />
+      <div className="card auth-card" style={{ maxWidth: 420 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <h1 className="page-title" style={{ fontSize: '1.25rem' }}>Nova senha</h1>
+          <p className="page-subtitle" style={{ marginTop: 8 }}>
             Defina uma senha para acessar pelo navegador (painel ou Meu ponto). Seu PIN do totem não é alterado aqui.
           </p>
         </div>

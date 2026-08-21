@@ -187,7 +187,7 @@ export default function Layout({ children }) {
         <div className="admin-shell__brand">
           <div className="admin-shell__brand-inner">
             <img
-              src={logoSidebarUrl(theme)}
+              src={logoSidebarUrl(theme, collapsed)}
               alt="Ponto Fácil"
               className="admin-shell__logo"
             />

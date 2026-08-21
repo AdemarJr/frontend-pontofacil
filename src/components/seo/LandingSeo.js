@@ -7,7 +7,7 @@ const TITLE =
   'PontoFácil — Ponto digital com cerca digital | Software registrado no INPI';
 
 const DESCRIPTION =
-  'Ponto eletrônico web/PWA com cerca digital, registro online e offline, totem com PIN, espelho, NSR e integração com folha. Software registrado no INPI. Pyrou Web.';
+  'Ponto eletrônico web/PWA com cerca digital, registro online e offline, totem com PIN, espelho, NSR e integração com folha. Programa de computador registrado no INPI (Lei 9.609/98). Pyrou Web.';
 
 const KEYWORDS = [
   'ponto eletrônico web',
@@ -49,7 +49,7 @@ function buildJsonLd(base) {
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         description:
-          'Sistema REP-P web e PWA com cerca digital, registro online e offline, totem com PIN, espelho de ponto e folha. Software registrado no INPI.',
+          'Sistema REP-P web e PWA com cerca digital, registro online e offline, totem com PIN, espelho de ponto e folha. Programa de computador registrado no INPI (Lei 9.609/98).',
         url: base,
         publisher: { '@id': `${base}/#organization` },
       },
