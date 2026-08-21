@@ -422,7 +422,7 @@ export default function SuperAdmin() {
           <img
             src={logoInternoUrl()}
             alt="Ponto Fácil"
-            style={{ height: '58px', width: 'auto', maxWidth: '280px', objectFit: 'contain' }}
+            style={{ height: '72px', width: 'auto', maxWidth: '160px', objectFit: 'contain' }}
           />
           <span
             style={{

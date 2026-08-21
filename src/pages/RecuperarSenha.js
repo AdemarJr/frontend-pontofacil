@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authService } from '../services/api';
-import { publicUrl } from '../utils/branding';
+import { logoDarkUrl } from '../utils/branding';
 
 export default function RecuperarSenha() {
   const [email, setEmail] = useState('');
@@ -43,13 +43,9 @@ export default function RecuperarSenha() {
 
   return (
     <div className="auth-shell">
+      <img src={logoDarkUrl()} alt="Ponto Fácil" className="auth-logo" width={220} height={172} />
       <div className="card auth-card" style={{ maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <img
-            src={publicUrl('/logo-stacked.png')}
-            alt="Ponto Fácil"
-            style={{ maxHeight: 72, width: 'auto', maxWidth: '100%', objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
-          />
           <h1 className="page-title" style={{ fontSize: '1.25rem' }}>Recuperar senha</h1>
           <p className="page-subtitle" style={{ marginTop: 8 }}>
             Enviaremos um link para o e-mail cadastrado na empresa.

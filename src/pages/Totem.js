@@ -300,7 +300,7 @@ export default function Totem() {
           <img
             src={logoInternoUrl()}
             alt="Ponto Fácil"
-            style={{ maxHeight: 64, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
+            style={{ maxHeight: 110, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
           />
         </div>
         <p style={{ color: 'var(--pwa-muted)', marginTop: 16, fontSize: 15, marginBottom: 0 }}>

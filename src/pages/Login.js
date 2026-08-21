@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/api';
-import { publicUrl } from '../utils/branding';
+import { logoDarkUrl } from '../utils/branding';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -36,14 +36,9 @@ export default function Login() {
 
   return (
     <div className="auth-shell">
+      <img src={logoDarkUrl()} alt="Ponto Fácil" className="auth-logo" width={220} height={172} />
       <div className="card auth-card">
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img
-            src={publicUrl('/logo-horizontal.png')}
-            alt="Ponto Fácil"
-            style={{ maxWidth: '100%', width: 'auto', height: 'auto', maxHeight: 52, objectFit: 'contain', margin: '0 auto 14px', display: 'block' }}
-          />
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <p className="page-subtitle" style={{ margin: 0 }}>Sistema de Controle de Ponto Digital</p>
         </div>
 
