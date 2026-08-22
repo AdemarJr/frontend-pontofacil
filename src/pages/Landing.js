@@ -20,27 +20,19 @@ const WA_ESPECIALISTA = waHref(
   'Olá! Gostaria de falar com um especialista sobre o PontoFácil.'
 );
 const WA_ORCAMENTO = waHref(
-  'Olá! Gostaria de solicitar um orçamento para soluções digitais da Pyrou Web / PontoFácil.'
+  'Olá! Gostaria de solicitar um orçamento do PontoFácil para minha empresa.'
 );
 
 const LOGO_LANDING = '/logo-horizontal.png';
 
 const NAV_LINKS = [
   { href: '#inicio', label: 'Início' },
-  { href: '#solucoes', label: 'Soluções' },
+  { href: '#produto', label: 'PontoFácil' },
   { href: '#funcionalidades', label: 'Funcionalidades' },
   { href: '#registro', label: 'INPI' },
   { href: '#planos', label: 'Planos' },
-  { href: '#servicos', label: 'Serviços' },
   { href: '#como-funciona', label: 'Como funciona' },
   { href: '#contato', label: 'Contato' },
-];
-
-const POSITIONING = [
-  { icon: 'monitor', title: 'Sistemas Web', text: 'Soluções personalizadas para as necessidades do seu negócio.' },
-  { icon: 'empresa', title: 'SaaS', text: 'Plataformas completas disponíveis na nuvem e acessíveis de qualquer lugar.' },
-  { icon: 'ajustes', title: 'Automação', text: 'Reduza tarefas manuais e aumente a produtividade da sua equipe.' },
-  { icon: 'relatorios', title: 'Integrações', text: 'Conecte sistemas, APIs e ferramentas em um único ecossistema.' },
 ];
 
 const PONTO_BENEFITS = [
@@ -120,7 +112,7 @@ const PLANS = [
     id: 'profissional',
     name: 'Profissional',
     price: '320,00',
-    limit: 'Até 50 funcionários',
+    limit: 'Até 40 funcionários',
     features: [
       'Tudo do Residencial Plus',
       'Gestão para equipes maiores',
@@ -131,26 +123,26 @@ const PLANS = [
       'Suporte à implantação',
     ],
     cta: 'Falar com especialista',
-    wa: WA_ESPECIALISTA,
+    wa: waHref('Olá! Tenho interesse no plano Profissional do PontoFácil (até 40 funcionários).'),
     featured: false,
     premium: false,
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
+    id: 'empresarial-plus',
+    name: 'Empresarial Plus',
     price: null,
     priceLabel: 'Personalizado',
-    limit: 'Acima de 50 funcionários',
+    limit: 'Acima de 40 funcionários',
     features: [
+      'Tudo do plano Profissional',
       'Estrutura personalizada',
-      'Grandes equipes',
-      'Multiempresa',
-      'Integrações',
-      'Implantação personalizada',
-      'Atendimento dedicado',
+      'Grandes equipes e multiempresa',
+      'Integrações avançadas',
+      'Implantação dedicada',
+      'Atendimento prioritário',
     ],
     cta: 'Solicitar proposta',
-    wa: waHref('Olá! Gostaria de solicitar proposta para o plano Enterprise do PontoFácil.'),
+    wa: waHref('Olá! Gostaria de solicitar proposta para o plano Empresarial Plus do PontoFácil.'),
     featured: false,
     premium: true,
   },
@@ -189,15 +181,6 @@ const PRODUCT_SHOTS = [
     height: 1024,
     frame: 'phone',
   },
-];
-
-const PYROU_SERVICES = [
-  { title: 'Desenvolvimento de Sistemas', text: 'Criamos plataformas web personalizadas para automatizar processos.' },
-  { title: 'Sistemas SaaS', text: 'Transforme sua solução em uma plataforma escalável na nuvem.' },
-  { title: 'Aplicações Web', text: 'Interfaces modernas, rápidas e responsivas para empresas.' },
-  { title: 'Integrações e APIs', text: 'Conectamos sistemas, bancos de dados e serviços externos.' },
-  { title: 'Automação de Processos', text: 'Automatize tarefas repetitivas e reduza custos operacionais.' },
-  { title: 'Inteligência Artificial', text: 'Agentes de IA e automações inteligentes para atendimento e negócios.' },
 ];
 
 const REP_P_FEATURES = [
@@ -338,7 +321,7 @@ export default function Landing() {
               Mais segurança e controle para a sua empresa. Registro só no local autorizado, funcionamento online e offline e integração com a folha de pagamento.
             </p>
             <div className="landing-hero-ctas">
-              <a href="#solucoes" className="landing-btn-primary">Conheça o PontoFácil</a>
+              <a href="#produto" className="landing-btn-primary">Conheça o PontoFácil</a>
               <Link to="/login" className="landing-btn-secondary landing-btn-secondary--outline">Entrar no sistema</Link>
               <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-secondary">
                 <AppIcon name="whatsapp" size={18} aria-hidden />
@@ -398,27 +381,6 @@ export default function Landing() {
             {PILLAR_FEATURES.map((item) => (
               <article key={item.title} className="landing-pillar-card">
                 <div className="landing-pillar-icon"><AppIcon name={item.icon} size={22} /></div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="solucoes" className="landing-section landing-section--soft">
-        <div className="landing-section-inner landing-reveal">
-          <div className="landing-section-title">
-            <p className="landing-kicker">Pyrou Web</p>
-            <h2>Tecnologia para <span>simplificar</span> a gestão da sua empresa</h2>
-            <p className="sub">
-              A Pyrou Web desenvolve sistemas e soluções digitais para transformar processos complexos em experiências simples, rápidas e inteligentes.
-            </p>
-          </div>
-          <div className="landing-position-grid">
-            {POSITIONING.map((item) => (
-              <article key={item.title} className="landing-position-card">
-                <div className="landing-position-icon"><AppIcon name={item.icon} size={22} /></div>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
               </article>
@@ -603,24 +565,6 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="servicos" className="landing-section landing-section--soft">
-        <div className="landing-section-inner landing-reveal">
-          <div className="landing-section-title">
-            <p className="landing-kicker">Serviços</p>
-            <h2>Além do PontoFácil, criamos <span>tecnologia</span> para o seu negócio</h2>
-            <p className="sub">A Pyrou Web atua como software house — do sistema sob medida ao SaaS escalável.</p>
-          </div>
-          <div className="landing-services-grid">
-            {PYROU_SERVICES.map((s) => (
-              <article key={s.title} className="landing-service-card">
-                <h3>{s.title}</h3>
-                <p>{s.text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="seguranca" className="landing-section">
         <div className="landing-section-inner landing-reveal">
           <div className="landing-section-title">
@@ -674,7 +618,7 @@ export default function Landing() {
           <h2>Software registrado no <span>INPI</span></h2>
           <p className="sub landing-sub--tight">
             Programa de computador com registro no Instituto Nacional da Propriedade Industrial —
-            autoria e código-fonte protegidos (Lei 9.609/98). Desenvolvido pela Pyrou Web.
+            autoria e código-fonte protegidos (Lei 9.609/98).
           </p>
         </div>
       </section>
@@ -744,9 +688,9 @@ export default function Landing() {
 
       <section id="contato" className="landing-cta">
         <div className="landing-cta-inner landing-reveal">
-          <h2>Sua empresa está pronta para dar o próximo passo?</h2>
+          <h2>Sua empresa está pronta para digitalizar o ponto?</h2>
           <p>
-            Conte-nos sobre o seu projeto. Nossa equipe pode ajudar você a transformar sua ideia ou processo em uma solução digital.
+            Fale com nossa equipe e descubra o plano ideal para controlar a jornada da sua equipe com cerca digital, relatórios e folha integrada.
           </p>
           <div className="landing-cta-buttons">
             <a href={WA_ESPECIALISTA} target="_blank" rel="noopener noreferrer" className="landing-btn-wa landing-btn-wa--lg">
@@ -766,22 +710,18 @@ export default function Landing() {
           <img src={publicUrl(LOGO_LANDING)} alt="PontoFácil" className="landing-footer-logo" width={240} height={52} decoding="async" />
           <p className="landing-footer-tagline">
             <strong>Tecnologia que protege. Gestão que conecta.</strong><br />
-            Pyrou Web — Sistemas • SaaS • Automação • Inteligência Artificial
+            Ponto digital com cerca virtual — online, offline e integrado à folha.
           </p>
           <nav className="landing-footer-nav" aria-label="Rodapé">
-            <a href="#solucoes">Soluções</a>
             <a href="#produto">PontoFácil</a>
             <a href="#funcionalidades">Funcionalidades</a>
             <a href="#registro">INPI</a>
-            <a href="#servicos">Serviços</a>
             <a href="#planos">Planos</a>
             <a href="#contato">Contato</a>
             <Link to="/login">Entrar</Link>
           </nav>
           <p className="landing-footer-copy">
-            PontoFácil — software registrado no INPI · desenvolvido pela{' '}
-            <a href="https://www.pyrou.com.br" target="_blank" rel="noopener noreferrer">Pyrou Web</a>
-            {' · '}
+            PontoFácil — software registrado no INPI ·{' '}
             <a href="https://pontofacil.digital" target="_blank" rel="noopener noreferrer">pontofacil.digital</a>
           </p>
         </div>
