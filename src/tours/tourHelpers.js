@@ -22,8 +22,17 @@ const DEFAULT_CONFIG = {
 /** @type {ReturnType<typeof driver> | null} */
 let activeTour = null;
 
-/** Se true, onDestroyed grava "visto" no localStorage (só conclusão real). */
+/** Se true, onDestroyed grava "visto" no localStorage. */
 let persistSeenOnDestroy = false;
+
+/** @param {string} storageKey */
+export function hasTourBeenSeen(storageKey) {
+  try {
+    return localStorage.getItem(storageKey) === '1';
+  } catch {
+    return false;
+  }
+}
 
 /** Encerra tour aberto (evita tela embaçada / pointer-events:none ao navegar). */
 export function destroyActiveTour() {
@@ -59,6 +68,18 @@ export function tourTargetsReady(steps) {
 }
 
 /**
+ * Marca tour como já exibido (auto só no 1º acesso; depois só via botão).
+ * @param {string} storageKey
+ */
+export function markTourSeen(storageKey) {
+  try {
+    localStorage.setItem(storageKey, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * @param {{ storageKey: string, steps: import('driver.js').DriveStep[], force?: boolean, driverConfig?: object }} opts
  * @returns {(() => void) | undefined} cleanup para useEffect
  */
@@ -79,7 +100,10 @@ export function startModuleTour(opts) {
 
   destroyActiveTour();
 
-  persistSeenOnDestroy = false;
+  // Auto-tour: marca como visto assim que inicia (fechar/X/navegar não reexibe no próximo login)
+  if (!force) markTourSeen(storageKey);
+
+  persistSeenOnDestroy = force;
 
   /** @type {ReturnType<typeof driver>} */
   let driverObj;
@@ -96,18 +120,15 @@ export function startModuleTour(opts) {
       driverObj.moveNext();
     },
     onCloseClick: () => {
-      persistSeenOnDestroy = false;
+      // Auto já foi marcado no start; force marca ao fechar também (usuário pediu o tour)
+      persistSeenOnDestroy = true;
       driverObj.destroy();
     },
     onDestroyed: () => {
       if (activeTour === driverObj) activeTour = null;
       if (!persistSeenOnDestroy) return;
       persistSeenOnDestroy = false;
-      try {
-        localStorage.setItem(storageKey, '1');
-      } catch {
-        /* ignore */
-      }
+      markTourSeen(storageKey);
     },
   });
 
