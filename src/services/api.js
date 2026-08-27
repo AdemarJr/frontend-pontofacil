@@ -1,5 +1,6 @@
 // src/services/api.js
 import axios from 'axios';
+import { clearAuthSession } from '../utils/authStorage';
 
 /**
  * Base da API: deve apontar para o prefixo `/api` do backend (Express monta tudo em `/api/...`).
@@ -85,7 +86,7 @@ api.interceptors.response.use(
       } catch (err) {
         filaEspera.forEach((p) => p.reject(err));
         filaEspera = [];
-        localStorage.clear();
+        clearAuthSession();
         window.location.href = '/login';
         return Promise.reject(err);
       } finally {

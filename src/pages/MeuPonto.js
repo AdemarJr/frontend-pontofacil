@@ -20,8 +20,8 @@ import {
   subscribeMeuPontoOfflineQueue,
 } from '../services/meuPontoOfflineQueue';
 import { getMeuPontoDeviceId } from '../utils/meuPontoDeviceId';
-import { runMeuPontoTour } from '../tours/meuPontoTour';
-import { destroyActiveTour } from '../tours/tourHelpers';
+import { runMeuPontoTour, STORAGE_TOUR_MEU_PONTO } from '../tours/meuPontoTour';
+import { hasTourBeenSeen } from '../tours/tourHelpers';
 import { publicUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
 import Modal from '../components/Modal';
@@ -111,6 +111,7 @@ export default function MeuPonto() {
   const [liberandoPermissoes, setLiberandoPermissoes] = useState(false);
   const proximoTipoRef = useRef(null);
   const lastSelfRegistroAt = useRef(0);
+  const autoTourTriedRef = useRef(hasTourBeenSeen(STORAGE_TOUR_MEU_PONTO));
   const [offlinePendentes, setOfflinePendentes] = useState(0);
   const [modoMarcacao, setModoMarcacao] = useState('QUATRO_BATIDAS');
   const [consentimentoAberto, setConsentimentoAberto] = useState(false);
@@ -350,17 +351,20 @@ export default function MeuPonto() {
     }
   }, [pendenciaCheckin?.diaAnteriorEmAberto, carregarPendencias]);
 
-  /** Tour automático só no 1º acesso ao Meu ponto; depois só via "Como usar" */
+  /** Tour automático só no 1º acesso ao Meu ponto (PWA); depois só via "Como usar" */
   useEffect(() => {
-    if (etapa !== 'confirmar') return undefined;
+    if (etapa !== 'confirmar' || autoTourTriedRef.current) return undefined;
     let tourCleanup;
     const t = setTimeout(() => {
       tourCleanup = runMeuPontoTour({ force: false });
+      // Marca tentativa: se o tour iniciou (ou já estava visto), não tenta de novo nesta sessão
+      if (hasTourBeenSeen(STORAGE_TOUR_MEU_PONTO) || tourCleanup) {
+        autoTourTriedRef.current = true;
+      }
     }, 900);
     return () => {
       clearTimeout(t);
       if (typeof tourCleanup === 'function') tourCleanup();
-      else destroyActiveTour();
     };
   }, [etapa]);
 

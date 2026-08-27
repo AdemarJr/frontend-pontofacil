@@ -1,11 +1,11 @@
 // src/pages/Dashboard.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination from '../components/ListPagination';
 import AppIcon from '../components/AppIcon';
 import { relatorioService, pontoService } from '../services/api';
-import { runAdminDashboardTour } from '../tours/adminDashboardTour';
-import { destroyActiveTour } from '../tours/tourHelpers';
+import { runAdminDashboardTour, STORAGE_TOUR_ADMIN_DASHBOARD } from '../tours/adminDashboardTour';
+import { hasTourBeenSeen } from '../tours/tourHelpers';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [limite, setLimite] = useState(10);
   const [totalRegistros, setTotalRegistros] = useState(0);
   const [filtroSituacao, setFiltroSituacao] = useState('');
+  const autoTourTriedRef = useRef(hasTourBeenSeen(STORAGE_TOUR_ADMIN_DASHBOARD));
 
   const ORIGEM_LABEL = {
     TOTEM: 'Totem',
@@ -79,15 +80,17 @@ export default function Dashboard() {
 
   /** Tour automático só no 1º acesso ao painel; depois só via "Como usar" */
   useEffect(() => {
-    if (carregando) return undefined;
+    if (carregando || autoTourTriedRef.current) return undefined;
     let tourCleanup;
     const timer = setTimeout(() => {
       tourCleanup = runAdminDashboardTour({ force: false });
+      if (hasTourBeenSeen(STORAGE_TOUR_ADMIN_DASHBOARD) || tourCleanup) {
+        autoTourTriedRef.current = true;
+      }
     }, 700);
     return () => {
       clearTimeout(timer);
       if (typeof tourCleanup === 'function') tourCleanup();
-      else destroyActiveTour();
     };
   }, [carregando]);
 

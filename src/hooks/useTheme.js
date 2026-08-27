@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'pf-theme';
+const STORAGE_KEY = 'pf-theme-v2';
 
-function resolveTheme(stored) {
-  if (stored === 'light' || stored === 'dark') return stored;
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
+function readStoredTheme() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch {
+    /* ignore */
   }
+  // Padrão do sistema: sempre claro (não segue prefers-color-scheme)
   return 'light';
 }
 
@@ -21,13 +24,7 @@ function applyTheme(theme) {
  * @returns {{ theme: 'light'|'dark', toggleTheme: () => void, setTheme: (t: 'light'|'dark') => void }}
  */
 export function useTheme() {
-  const [theme, setThemeState] = useState(() => {
-    try {
-      return resolveTheme(localStorage.getItem(STORAGE_KEY));
-    } catch {
-      return 'light';
-    }
-  });
+  const [theme, setThemeState] = useState(() => readStoredTheme());
 
   useEffect(() => {
     applyTheme(theme);

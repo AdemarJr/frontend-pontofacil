@@ -193,7 +193,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  /* color-scheme do SO só se o app estiver explicitamente em dark */
+  :root[data-theme='dark'] {
     color-scheme: dark;
   }
 }

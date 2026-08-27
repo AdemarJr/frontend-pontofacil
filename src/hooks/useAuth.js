@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { tenantService, authService } from '../services/api';
 import { featuresPadrao, isFolhaHabilitada } from '../utils/features';
+import { clearAuthSession } from '../utils/authStorage';
 
 const AuthContext = createContext(null);
 
@@ -92,7 +93,7 @@ export function AuthProvider({ children }) {
     } catch {
       // ignore — limpa sessão local mesmo se offline
     }
-    localStorage.clear();
+    clearAuthSession();
     setUsuario(null);
   }, []);
 
