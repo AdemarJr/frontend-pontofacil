@@ -3,16 +3,23 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
+import { migrateTourFlagsForExistingUsers } from './utils/authStorage';
 
-// Aplica tema persistido antes do paint (evita flash)
+// Tours: usuários que já usavam o app não veem o guia de novo após o bug do clear()
 try {
-  const stored = localStorage.getItem('pf-theme');
-  const theme =
-    stored === 'light' || stored === 'dark'
-      ? stored
-      : window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+  migrateTourFlagsForExistingUsers();
+} catch {
+  /* ignore */
+}
+
+// Aplica tema persistido antes do paint (evita flash).
+// Padrão: sempre claro. Dark só se o usuário escolheu (pf-theme-v2).
+try {
+  let theme = localStorage.getItem('pf-theme-v2');
+  if (theme !== 'light' && theme !== 'dark') {
+    theme = 'light';
+    localStorage.setItem('pf-theme-v2', 'light');
+  }
   document.documentElement.setAttribute('data-theme', theme);
 } catch {
   /* ignore */
