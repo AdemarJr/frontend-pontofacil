@@ -107,6 +107,7 @@ export default function Totem() {
 
   const capturarFoto = useCallback(async () => {
     setCarregando(true);
+    const tokenAntes = localStorage.getItem('accessToken');
     try {
       let fotoBase64 = null;
       if (webcamRef.current) {
@@ -114,39 +115,90 @@ export default function Totem() {
       }
 
       // Pega geolocalização se disponível
-      let latitude = null, longitude = null;
+      let latitude = null;
+      let longitude = null;
       try {
         const pos = await new Promise((res, rej) =>
           navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 })
         );
         latitude = pos.coords.latitude;
         longitude = pos.coords.longitude;
-      } catch {}
+      } catch {
+        /* geolocalização opcional no totem */
+      }
 
-      // Usa token do totem para registrar
-      const tokenOriginal = localStorage.getItem('accessToken');
-      localStorage.setItem('accessToken', totemToken);
+      if (totemToken) {
+        localStorage.setItem('accessToken', totemToken);
+      }
 
-      const { data: resData } = await pontoService.registrar({
+      const payloadBase = {
         tipo: proximoTipo,
         latitude,
         longitude,
         deviceId: getDeviceId(),
         fotoBase64,
-      });
+      };
 
-      localStorage.setItem('accessToken', tokenOriginal);
+      async function registrarComOpts(extra = {}) {
+        const { data } = await pontoService.registrar({ ...payloadBase, ...extra });
+        return data;
+      }
+
+      let resData;
+      try {
+        resData = await registrarComOpts();
+      } catch (err) {
+        // Mesmo fluxo do Meu Ponto: aviso de cedo demais com opção de confirmar
+        if (err?.response?.data?.code === 'REGISTRO_MUITO_CEDO') {
+          const d = err.response.data;
+          const minutos = Number(d.minutosDecorridos ?? 0);
+          const minimo = Number(d.minimoMinutos ?? 0);
+          const faltam = Math.max(0, minimo - minutos);
+          const ok = window.confirm(
+            (d.error || 'Registro muito cedo.') +
+              `\n\nDecorridos: ${minutos} min\nMínimo: ${minimo} min` +
+              (faltam > 0 ? `\nFaltam: ${faltam} min` : '') +
+              '\n\nDeseja registrar mesmo assim?'
+          );
+          if (ok) {
+            resData = await registrarComOpts({ confirmarRegistroCurto: true });
+          } else {
+            setMensagem(d.error || 'Registro cancelado.');
+            setEtapa('erro');
+            setTimeout(resetar, 4000);
+            return;
+          }
+        } else {
+          throw err;
+        }
+      }
 
       const nsrTxt = resData?.registro?.nsr ? `\nNSR: ${resData.registro.nsr}` : '';
-      setMensagem(`Ponto registrado com sucesso!\n${TIPOS_LABEL[proximoTipo]?.label} — ${new Date().toLocaleTimeString('pt-BR')}${nsrTxt}`);
+      setMensagem(
+        `Ponto registrado com sucesso!\n${TIPOS_LABEL[proximoTipo]?.label} — ${new Date().toLocaleTimeString('pt-BR')}${nsrTxt}`
+      );
       if (resData?.proximoTipo) setProximoTipo(resData.proximoTipo);
       setEtapa('sucesso');
       setTimeout(resetar, 4000);
     } catch (err) {
-      setMensagem(err.response?.data?.error || 'Erro ao registrar ponto');
+      const data = err?.response?.data;
+      let msg = data?.error || 'Erro ao registrar ponto';
+      if (data?.code === 'TIPO_INESPERADO' && data?.esperado) {
+        const label = TIPOS_LABEL[data.esperado]?.label || data.esperado;
+        msg = `Tipo inesperado. Próximo esperado: ${label}. Tente novamente.`;
+        if (data.esperado) setProximoTipo(data.esperado);
+      } else if (data?.code === 'REGISTRO_MUITO_RAPIDO') {
+        msg = data.error || 'Aguarde alguns segundos e tente novamente.';
+      } else if (data?.code === 'DUPLICADO_DIA') {
+        const label = data.tipo ? TIPOS_LABEL[data.tipo]?.label || data.tipo : 'este tipo';
+        msg = `Você já registrou ${label} hoje.`;
+      }
+      setMensagem(msg);
       setEtapa('erro');
       setTimeout(resetar, 4000);
     } finally {
+      if (tokenAntes != null) localStorage.setItem('accessToken', tokenAntes);
+      else localStorage.removeItem('accessToken');
       setCarregando(false);
     }
   }, [totemToken, proximoTipo]);
