@@ -381,16 +381,9 @@ export default function Colaboradores() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-                      <span className={`badge ${u.ativo ? 'badge-verde' : 'badge-vermelho'}`}>
-                        {u.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                      {u.ativo && u.senhaWebDefinida === false ? (
-                        <span className="badge badge-amarelo" style={{ fontSize: 11 }}>
-                          Aguardando 1º acesso
-                        </span>
-                      ) : null}
-                    </div>
+                    <span className={`badge ${u.ativo ? 'badge-verde' : 'badge-vermelho'}`}>
+                      {u.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
                   </td>
                   <td>
                     <TableActions>
