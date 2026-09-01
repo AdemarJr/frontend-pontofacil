@@ -8,6 +8,7 @@ import { runRelatoriosTour } from '../tours/relatoriosTour';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { useTenantTimezone } from '../hooks/useTenantTimezone';
 
 const TIPOS_LABEL = { ENTRADA:'Entrada', SAIDA_ALMOCO:'Saída Almoço', RETORNO_ALMOCO:'Retorno', SAIDA:'Saída' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
@@ -113,6 +114,7 @@ function BadgeFechamento({ fechamento }) {
 }
 
 export default function Relatorios() {
+  const { formatTime } = useTenantTimezone();
   const hoje = new Date();
   const navigate = useNavigate();
   const detalhesRef = useRef(null);
@@ -857,7 +859,7 @@ export default function Relatorios() {
                     <span style={{ width:'8px', height:'8px', borderRadius:'50%', background: TIPOS_COR[p.tipo], flexShrink:0 }} />
                     <span style={{ fontSize:'12px', color:'var(--cinza-700)' }}>{TIPOS_LABEL[p.tipo]}</span>
                     <span style={{ fontSize:'13px', fontWeight:'600', fontFamily:'monospace' }}>
-                      {format(new Date(p.dataHora), 'HH:mm')}
+                      {formatTime(p.dataHora, 'HH:mm')}
                     </span>
                     {p.origem ? (
                       <span className="badge" style={{ fontSize:'10px', padding:'1px 6px' }} title={p.origem}>

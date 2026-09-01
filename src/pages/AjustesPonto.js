@@ -9,6 +9,7 @@ import { comprovanteAusenciaService, pontoService, relatorioService, usuarioServ
 import { useSearchParams } from 'react-router-dom';
 import { mensagemDuplicataDia } from '../utils/duplicataPonto';
 import { IconAction, TableActions } from '../components/ui';
+import { useTenantTimezone } from '../hooks/useTenantTimezone';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
@@ -59,6 +60,7 @@ function encontrarPontoNoRelatorio(relatorioLista, registroId) {
 }
 
 export default function AjustesPonto() {
+  const { formatTime } = useTenantTimezone();
   const hoje = new Date();
   const [searchParams] = useSearchParams();
   const initFromQueryDone = useRef(false);
@@ -185,7 +187,7 @@ export default function AjustesPonto() {
           setInserirModal(null);
           setAjusteModal(existente);
           setAjusteForm({
-            dataHoraNova: format(new Date(existente.dataHora), "yyyy-MM-dd'T'HH:mm"),
+            dataHoraNova: formatTime(existente.dataHora, "yyyy-MM-dd'T'HH:mm"),
             motivo: '',
           });
         }
@@ -199,7 +201,7 @@ export default function AjustesPonto() {
 
   async function excluirBatida(ponto) {
     const motivo = window.prompt(
-      `Excluir batida "${TIPOS_LABEL[ponto.tipo] || ponto.tipo}" (${format(new Date(ponto.dataHora), 'dd/MM/yyyy HH:mm')})?\n\nInforme o motivo (obrigatório):`
+      `Excluir batida "${TIPOS_LABEL[ponto.tipo] || ponto.tipo}" (${formatTime(ponto.dataHora, 'dd/MM/yyyy HH:mm')})?\n\nInforme o motivo (obrigatório):`
     );
     if (!motivo || !String(motivo).trim()) return;
     try {
@@ -471,7 +473,7 @@ export default function AjustesPonto() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: TIPOS_COR[p.tipo], flexShrink: 0 }} />
                                 <span style={{ fontSize: 12, color: 'var(--cinza-700)' }}>{TIPOS_LABEL[p.tipo]}</span>
                                 <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'monospace' }}>
-                                  {format(new Date(p.dataHora), 'HH:mm')}
+                                  {formatTime(p.dataHora, 'HH:mm')}
                                 </span>
                                 {p.origem ? (
                                   <span
@@ -489,7 +491,7 @@ export default function AjustesPonto() {
                                     label="Ajustar horário"
                                     onClick={() => {
                                       setAjusteModal(p);
-                                      setAjusteForm({ dataHoraNova: format(new Date(p.dataHora), "yyyy-MM-dd'T'HH:mm"), motivo: '' });
+                                      setAjusteForm({ dataHoraNova: formatTime(p.dataHora, "yyyy-MM-dd'T'HH:mm"), motivo: '' });
                                     }}
                                   />
                                   <IconAction
@@ -550,7 +552,7 @@ export default function AjustesPonto() {
         )}
       >
         <div style={{ background: 'var(--cinza-100)', borderRadius: 8, padding: 12, marginBottom: 20, fontSize: 13, color: 'var(--cinza-700)' }}>
-          <strong>Horário original:</strong> {ajusteModal ? format(new Date(ajusteModal.dataHora), 'dd/MM/yyyy HH:mm:ss') : ''}
+          <strong>Horário original:</strong> {ajusteModal ? formatTime(ajusteModal.dataHora, 'dd/MM/yyyy HH:mm:ss') : ''}
         </div>
         <div style={{ display: 'grid', gap: 14 }}>
           <div>
