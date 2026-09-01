@@ -7,22 +7,23 @@ import { clearAuthSession } from '../utils/authStorage';
 const AuthContext = createContext(null);
 
 async function buscarFeaturesAtualizadas() {
+  let features = null;
+  let fusoHorario = null;
   try {
     const { data } = await tenantService.getFeatures();
     if (data && typeof data.payrollModuleEnabled !== 'undefined') {
-      return { features: data };
+      features = data;
     }
   } catch {
     // endpoint novo pode não existir em backend antigo
   }
   try {
     const { data } = await tenantService.meu();
-    return {
-      features: data?.features ?? featuresPadrao(data?.id),
-      fusoHorario: data?.fusoHorario,
-    };
+    features = features ?? data?.features ?? featuresPadrao(data?.id);
+    fusoHorario = data?.fusoHorario ?? null;
+    return { features, fusoHorario };
   } catch {
-    return null;
+    return features ? { features, fusoHorario: null } : null;
   }
 }
 
@@ -84,10 +85,10 @@ export function AuthProvider({ children }) {
     localStorage.setItem('usuario', JSON.stringify(usuarioInicial));
     setUsuario(usuarioInicial);
 
-    if (dadosUsuario.role === 'ADMIN' && dadosUsuario.tenant?.id) {
+    if (dadosUsuario.tenant?.id) {
       const atualizado = await buscarFeaturesAtualizadas();
       if (atualizado) {
-        features = atualizado.features;
+        features = atualizado.features ?? features;
         atualizarUsuario({
           tenant: {
             features,

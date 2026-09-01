@@ -9,9 +9,16 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTenantTimezone } from '../hooks/useTenantTimezone';
+import { formatTimeInTz, DEFAULT_TZ } from '../utils/timezone';
 
 const TIPOS_LABEL = { ENTRADA:'Entrada', SAIDA_ALMOCO:'Saída Almoço', RETORNO_ALMOCO:'Retorno', SAIDA:'Saída' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
+const SLOT_POR_TIPO = {
+  ENTRADA: 'entrada',
+  SAIDA_ALMOCO: 'saidaAlmoco',
+  RETORNO_ALMOCO: 'retornoAlmoco',
+  SAIDA: 'saida',
+};
 
 function fmtMinutos(m) {
   if (m == null || Number.isNaN(Number(m))) return '—';
@@ -114,7 +121,7 @@ function BadgeFechamento({ fechamento }) {
 }
 
 export default function Relatorios() {
-  const { formatTime } = useTenantTimezone();
+  const { fusoHorario: fusoAuth } = useTenantTimezone();
   const hoje = new Date();
   const navigate = useNavigate();
   const detalhesRef = useRef(null);
@@ -123,6 +130,7 @@ export default function Relatorios() {
   const [usuarioFiltro, setUsuarioFiltro] = useState('');
   const [usuarios, setUsuarios] = useState([]);
   const [relatorio, setRelatorio] = useState([]);
+  const [fusoEspelho, setFusoEspelho] = useState(null);
   const [carregando, setCarregando] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [solicitandoAssinatura, setSolicitandoAssinatura] = useState(false);
@@ -153,6 +161,17 @@ export default function Relatorios() {
     setEspelhoPage(1);
   }, [mes, ano, usuarioFiltro]);
 
+  const fusoAtivo = fusoEspelho || fusoAuth || DEFAULT_TZ;
+  const formatHora = (isoOrDate, pattern = 'HH:mm') =>
+    formatTimeInTz(isoOrDate, fusoAtivo, pattern);
+
+  function horaBatidaNoDia(dados, ponto) {
+    const slot = SLOT_POR_TIPO[ponto.tipo];
+    const marcacao = slot && dados.marcacoes?.[slot];
+    if (marcacao) return marcacao;
+    return formatHora(ponto.dataHora, 'HH:mm');
+  }
+
   async function buscar() {
     setCarregando(true);
     try {
@@ -161,6 +180,7 @@ export default function Relatorios() {
         ...(usuarioFiltro && { usuarioId: usuarioFiltro }),
       });
       setRelatorio(data.relatorio || []);
+      setFusoEspelho(data.fusoHorario || null);
     } finally { setCarregando(false); }
   }
 
@@ -859,7 +879,7 @@ export default function Relatorios() {
                     <span style={{ width:'8px', height:'8px', borderRadius:'50%', background: TIPOS_COR[p.tipo], flexShrink:0 }} />
                     <span style={{ fontSize:'12px', color:'var(--cinza-700)' }}>{TIPOS_LABEL[p.tipo]}</span>
                     <span style={{ fontSize:'13px', fontWeight:'600', fontFamily:'monospace' }}>
-                      {formatTime(p.dataHora, 'HH:mm')}
+                      {horaBatidaNoDia(dados, p)}
                     </span>
                     {p.origem ? (
                       <span className="badge" style={{ fontSize:'10px', padding:'1px 6px' }} title={p.origem}>
