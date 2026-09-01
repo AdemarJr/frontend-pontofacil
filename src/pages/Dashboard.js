@@ -8,6 +8,7 @@ import { runAdminDashboardTour, STORAGE_TOUR_ADMIN_DASHBOARD } from '../tours/ad
 import { hasTourBeenSeen } from '../tours/tourHelpers';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useTenantTimezone } from '../hooks/useTenantTimezone';
 
 function CardMetrica({ label, valor, cor, icon, hint }) {
   return (
@@ -37,6 +38,7 @@ const FILTRO_SITUACAO_OPCOES = [
 ];
 
 export default function Dashboard() {
+  const { formatTime } = useTenantTimezone();
   const [resumo, setResumo] = useState(null);
   const [registros, setRegistros] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -304,7 +306,7 @@ export default function Dashboard() {
                       )}
                     </td>
                     <td className="font-mono" style={{ fontSize: 14, fontWeight: 600 }}>
-                      {format(new Date(r.dataHora), 'HH:mm:ss')}
+                      {formatTime(r.dataHora, 'HH:mm:ss')}
                       {r.ajustado && <span className="badge badge-amarelo" style={{ marginLeft: 6, fontSize: 10 }}>Ajustado</span>}
                     </td>
                     <td>
