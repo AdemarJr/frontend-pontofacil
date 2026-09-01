@@ -368,10 +368,10 @@ export default function AjustesPonto() {
                       const busy = marcandoDia === `${r.usuario.id}-${dia}`;
                       const podeMarcar = ['FALTA', 'PARCIAL', 'EM_ABERTO'].includes(status);
                       const itens = [
-                        { t: 'ENTRADA', label: 'Entrada', v: dados?.marcacoes?.entrada, k: `${dia}-e` },
-                        { t: 'SAIDA_ALMOCO', label: 'Saída', v: dados?.marcacoes?.saidaAlmoco, k: `${dia}-sa` },
-                        { t: 'RETORNO_ALMOCO', label: 'Retorno', v: dados?.marcacoes?.retornoAlmoco, k: `${dia}-ra` },
-                        { t: 'SAIDA', label: 'Saída', v: dados?.marcacoes?.saida, k: `${dia}-s` },
+                        { t: 'ENTRADA', label: 'Entrada', v: dados?.marcacoes?.entrada, k: 'entrada' },
+                        { t: 'SAIDA_ALMOCO', label: 'Saída', v: dados?.marcacoes?.saidaAlmoco, k: 'saidaAlmoco' },
+                        { t: 'RETORNO_ALMOCO', label: 'Retorno', v: dados?.marcacoes?.retornoAlmoco, k: 'retornoAlmoco' },
+                        { t: 'SAIDA', label: 'Saída', v: dados?.marcacoes?.saida, k: 'saida' },
                       ];
 
                       return (
@@ -420,7 +420,7 @@ export default function AjustesPonto() {
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, width: '100%', minWidth: 0 }}>
                             {itens.map((it) => (
                               <div
-                                key={it.k}
+                                key={`${dia}-${it.k}`}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -439,9 +439,9 @@ export default function AjustesPonto() {
                                   <span style={{ fontSize: 11, color: !it.v ? 'var(--vermelho)' : 'var(--cinza-400)', fontWeight: 700 }}>
                                     {it.label}
                                   </span>
-                                  <span style={{ fontFamily: 'monospace', fontWeight: 800, color: 'white' }}>{it.v || '—'}</span>
+                                  <span style={{ fontFamily: 'monospace', fontWeight: 800, color: it.v ? 'var(--cinza-700)' : 'var(--cinza-400)' }}>{it.v || '—'}</span>
                                   {it.v && dados?.origens?.[it.k] ? (
-                                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
+                                    <span style={{ fontSize: 11, color: 'var(--cinza-400)', fontWeight: 700 }}>
                                       {ORIGEM_LABEL[dados.origens[it.k]] || dados.origens[it.k]}
                                     </span>
                                   ) : null}

@@ -837,11 +837,11 @@ export default function Relatorios() {
                         <span style={{ fontSize: 11, color: faltando ? 'var(--vermelho)' : 'var(--cinza-400)', fontWeight: 700 }}>
                           {it.label}
                         </span>
-                        <span style={{ fontFamily:'monospace', fontWeight: 800, color: 'white' }}>
+                        <span style={{ fontFamily:'monospace', fontWeight: 800, color: faltando ? 'var(--cinza-400)' : 'var(--cinza-700)' }}>
                           {it.v || '—'}
                         </span>
                         {!faltando && dados?.origens?.[it.k] ? (
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
+                          <span style={{ fontSize: 11, color: 'var(--cinza-400)', fontWeight: 700 }}>
                             {ORIGEM_LABEL[dados.origens[it.k]] || dados.origens[it.k]}
                           </span>
                         ) : null}
