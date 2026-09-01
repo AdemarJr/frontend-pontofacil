@@ -8,9 +8,10 @@ import { runConfiguracoesTour } from '../tours/configuracoesTour';
 import { useAuth } from '../hooks/useAuth';
 import FolhaConfigSection from '../components/folha/FolhaConfigSection';
 import { IconAction } from '../components/ui';
+import { BRAZIL_TIMEZONES, DEFAULT_TZ } from '../utils/timezone';
 
 export default function Configuracoes() {
-  const { folhaHabilitada } = useAuth();
+  const { folhaHabilitada, atualizarUsuario } = useAuth();
   const [config, setConfig] = useState(null);
   const [form, setForm] = useState({});
   const [salvando, setSalvando] = useState(false);
@@ -39,6 +40,7 @@ export default function Configuracoes() {
         modoMarcacao: data.modoMarcacao || 'QUATRO_BATIDAS',
         modoInviolavel: Boolean(data.modoInviolavel),
         exigirCpfPis: data.exigirCpfPis !== false,
+        fusoHorario: data.fusoHorario || DEFAULT_TZ,
       });
     });
   }, []);
@@ -64,6 +66,7 @@ export default function Configuracoes() {
     setErro('');
     try {
       await tenantService.atualizar(form);
+      atualizarUsuario({ tenant: { fusoHorario: form.fusoHorario || DEFAULT_TZ } });
       setSucesso(true);
       setTimeout(() => setSucesso(false), 3000);
     } catch (err) {
@@ -220,6 +223,23 @@ export default function Configuracoes() {
               Modo inviolável — impede exclusão de registros pelo painel (ajustes continuam auditados).
             </span>
           </label>
+        </div>
+
+        {/* Fuso horário */}
+        <div className="card">
+          <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>🕐 Fuso horário da empresa</h2>
+          <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'12px', lineHeight:1.5 }}>
+            Define como espelho de ponto, batidas e limites de dia são calculados. Escolha o fuso da <strong>localidade onde a empresa opera</strong>.
+          </p>
+          <select
+            className="input"
+            value={form.fusoHorario || DEFAULT_TZ}
+            onChange={(e) => setForm((p) => ({ ...p, fusoHorario: e.target.value }))}
+          >
+            {BRAZIL_TIMEZONES.map((tz) => (
+              <option key={tz.value} value={tz.value}>{tz.label}</option>
+            ))}
+          </select>
         </div>
 
         {/* Geofencing */}

@@ -13,6 +13,7 @@ import AppIcon from '../components/AppIcon';
 import SuperAdminPlanos from '../components/SuperAdminPlanos';
 import SuperAdminIntegracoes from '../components/SuperAdminIntegracoes';
 import { IconAction, TableActions } from '../components/ui';
+import { BRAZIL_TIMEZONES, DEFAULT_TZ } from '../utils/timezone';
 import { validarSenhaForte, PASSWORD_HINT } from '../utils/passwordPolicy';
 
 const STATUS_BADGE = {
@@ -70,6 +71,21 @@ function SelectModoMarcacao({ value, onChange }) {
   );
 }
 
+function SelectFusoHorario({ value, onChange }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '5px' }}>
+        Fuso horário da empresa
+      </label>
+      <select className="input" value={value || DEFAULT_TZ} onChange={onChange}>
+        {BRAZIL_TIMEZONES.map((tz) => (
+          <option key={tz.value} value={tz.value}>{tz.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function SuperAdmin() {
   const { usuario, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -83,12 +99,12 @@ export default function SuperAdmin() {
   const [modalEditar, setModalEditar] = useState(null);
   const [form, setForm] = useState({
     razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', planoComercialId:'',
-    modoMarcacao:'QUATRO_BATIDAS',
+    modoMarcacao:'QUATRO_BATIDAS', fusoHorario: DEFAULT_TZ,
     adminNome:'', adminEmail:'', adminSenha:'',
   });
   const [formEditar, setFormEditar] = useState({
     razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', planoComercialId:'',
-    modoMarcacao:'QUATRO_BATIDAS',
+    modoMarcacao:'QUATRO_BATIDAS', fusoHorario: DEFAULT_TZ,
     contractStartDate:'', periodoContrato:'', payrollModuleEnabled:false,
   });
   const [modalAdmin, setModalAdmin] = useState(null);
@@ -119,7 +135,7 @@ export default function SuperAdmin() {
     const primeiroPlano = planos.find((p) => p.ativo)?.id || '';
     setForm({
       razaoSocial:'', nomeFantasia:'', cnpj:'', email:'', telefone:'', planoComercialId: primeiroPlano,
-      modoMarcacao:'QUATRO_BATIDAS',
+      modoMarcacao:'QUATRO_BATIDAS', fusoHorario: DEFAULT_TZ,
       adminNome:'', adminEmail:'', adminSenha:'',
     });
     setModal(true);
@@ -211,6 +227,7 @@ export default function SuperAdmin() {
       telefone: t.telefone || '',
       planoComercialId: t.planoComercialId || t.planoComercial?.id || '',
       modoMarcacao: t.modoMarcacao || 'QUATRO_BATIDAS',
+      fusoHorario: t.fusoHorario || DEFAULT_TZ,
       contractStartDate: toInputDate(t.contractStartDate),
       periodoContrato: t.periodoContrato || 'SEM_LIMITE',
       payrollModuleEnabled: isFolhaHabilitada(t.features),
@@ -691,6 +708,10 @@ export default function SuperAdmin() {
                   value={form.modoMarcacao}
                   onChange={(e) => setForm((p) => ({ ...p, modoMarcacao: e.target.value }))}
                 />
+                <SelectFusoHorario
+                  value={form.fusoHorario}
+                  onChange={(e) => setForm((p) => ({ ...p, fusoHorario: e.target.value }))}
+                />
                 <p
                   style={{
                     fontSize: '12px',
@@ -766,6 +787,10 @@ export default function SuperAdmin() {
                 <SelectModoMarcacao
                   value={formEditar.modoMarcacao}
                   onChange={(e) => setFormEditar((p) => ({ ...p, modoMarcacao: e.target.value }))}
+                />
+                <SelectFusoHorario
+                  value={formEditar.fusoHorario}
+                  onChange={(e) => setFormEditar((p) => ({ ...p, fusoHorario: e.target.value }))}
                 />
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input

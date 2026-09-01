@@ -10,14 +10,17 @@ async function buscarFeaturesAtualizadas() {
   try {
     const { data } = await tenantService.getFeatures();
     if (data && typeof data.payrollModuleEnabled !== 'undefined') {
-      return data;
+      return { features: data };
     }
   } catch {
     // endpoint novo pode não existir em backend antigo
   }
   try {
     const { data } = await tenantService.meu();
-    return data?.features ?? featuresPadrao(data?.id);
+    return {
+      features: data?.features ?? featuresPadrao(data?.id),
+      fusoHorario: data?.fusoHorario,
+    };
   } catch {
     return null;
   }
@@ -52,13 +55,18 @@ export function AuthProvider({ children }) {
     } catch {
       return null;
     }
-    if (parsed.role !== 'ADMIN' || !parsed.tenant?.id) return null;
+    if (!parsed.tenant?.id) return null;
 
-    const features = await buscarFeaturesAtualizadas();
-    if (!features) return null;
+    const atualizado = await buscarFeaturesAtualizadas();
+    if (!atualizado) return null;
 
-    atualizarUsuario({ tenant: { features } });
-    return features;
+    atualizarUsuario({
+      tenant: {
+        ...(parsed.role === 'ADMIN' && atualizado.features ? { features: atualizado.features } : {}),
+        ...(atualizado.fusoHorario ? { fusoHorario: atualizado.fusoHorario } : {}),
+      },
+    });
+    return atualizado.features;
   }, [atualizarUsuario]);
 
   const login = useCallback(async (dadosUsuario, accessToken) => {
@@ -79,8 +87,13 @@ export function AuthProvider({ children }) {
     if (dadosUsuario.role === 'ADMIN' && dadosUsuario.tenant?.id) {
       const atualizado = await buscarFeaturesAtualizadas();
       if (atualizado) {
-        features = atualizado;
-        atualizarUsuario({ tenant: { features } });
+        features = atualizado.features;
+        atualizarUsuario({
+          tenant: {
+            features,
+            ...(atualizado.fusoHorario ? { fusoHorario: atualizado.fusoHorario } : {}),
+          },
+        });
       }
     }
 
@@ -116,6 +129,7 @@ export function AuthProvider({ children }) {
   const isSuperAdmin = usuario?.role === 'SUPER_ADMIN';
   const isAdmin = usuario?.role === 'ADMIN' || isSuperAdmin;
   const tenantId = usuario?.tenant?.id;
+  const fusoHorario = usuario?.tenant?.fusoHorario;
   const folhaHabilitada = isFolhaHabilitada(usuario?.tenant?.features);
 
   return (
@@ -128,6 +142,7 @@ export function AuthProvider({ children }) {
       isSuperAdmin,
       isAdmin,
       tenantId,
+      fusoHorario,
       folhaHabilitada,
       carregando,
     }}>
