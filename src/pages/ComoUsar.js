@@ -189,7 +189,7 @@ export default function ComoUsar() {
                   <strong>Abra o Totem</strong> em <Link to="/totem">/totem</Link> no tablet.
                 </li>
                 <li>
-                  <strong>Configure o ID da empresa</strong> quando solicitado (informado pelo gestor no momento da implantação).
+                  <strong>Configure o ID da empresa</strong> quando solicitado (Configurações → Copiar ID ou Copiar link <code>/totem?tenant=…</code>). O Totem valida a empresa automaticamente.
                 </li>
                 <li>
                   <strong>Cadastro do PIN</strong>: o gestor define o PIN de cada colaborador (evita filas e facilita o uso).

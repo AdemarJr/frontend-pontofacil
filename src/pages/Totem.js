@@ -1,12 +1,18 @@
 // src/pages/Totem.js
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import { authService, pontoService } from '../services/api';
+import { authService, pontoService, tenantService } from '../services/api';
 import { logoInternoUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
 import { useTheme } from '../hooks/useTheme';
-
-const TENANT_ID = localStorage.getItem('totemTenantId') || '';
+import {
+  normalizeTenantId,
+  isValidTenantUuid,
+  readStoredTotemTenant,
+  persistTotemTenant,
+  clearStoredTotemTenant,
+} from '../utils/totemTenant';
 
 const TIPOS_LABEL = {
   ENTRADA: { label: 'Entrada', cor: '#1D9E75', icon: 'dot' },
@@ -36,11 +42,17 @@ function TotemThemeBtn() {
 }
 
 export default function Totem() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stored = readStoredTotemTenant();
+
   const [etapa, setEtapa] = useState('pin'); // pin | confirmar | camera | sucesso | erro
   const [pin, setPin] = useState('');
-  const [tenantId, setTenantId] = useState(TENANT_ID);
-  const [tenantIdInput, setTenantIdInput] = useState('');
-  const [configTenant, setConfigTenant] = useState(false);
+  const [tenantId, setTenantId] = useState(stored.id);
+  const [tenantNome, setTenantNome] = useState(stored.nome);
+  const [tenantIdInput, setTenantIdInput] = useState(stored.id);
+  const [configTenant, setConfigTenant] = useState(!stored.id);
+  const [validandoTenant, setValidandoTenant] = useState(true);
+  const [erroConfig, setErroConfig] = useState('');
   const [usuario, setUsuario] = useState(null);
   const [totemToken, setTotemToken] = useState(null);
   const [proximoTipo, setProximoTipo] = useState('ENTRADA');
@@ -53,6 +65,90 @@ export default function Totem() {
     document.body.classList.add('totem-mode');
     return () => document.body.classList.remove('totem-mode');
   }, []);
+
+  const aplicarTenantValido = useCallback((data) => {
+    const id = persistTotemTenant(data.id, data.nomeFantasia || '');
+    setTenantId(id);
+    setTenantNome(data.nomeFantasia || '');
+    setTenantIdInput(id);
+    setConfigTenant(false);
+    setErroConfig('');
+    return id;
+  }, []);
+
+  const abrirConfigComErro = useCallback((msg, preferId = '') => {
+    clearStoredTotemTenant();
+    setTenantId('');
+    setTenantNome('');
+    setTenantIdInput(preferId || '');
+    setErroConfig(msg || 'Empresa não encontrada. Verifique o ID da empresa.');
+    setConfigTenant(true);
+  }, []);
+
+  // Bootstrap: ?tenant= / localStorage → valida na API antes de liberar o PIN
+  useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrap() {
+      setValidandoTenant(true);
+      const fromUrl = normalizeTenantId(
+        searchParams.get('tenant') || searchParams.get('tenantId') || ''
+      );
+      const fromStorage = readStoredTotemTenant().id;
+      const candidate = fromUrl || fromStorage;
+
+      if (!candidate) {
+        if (!cancelled) {
+          setConfigTenant(true);
+          setValidandoTenant(false);
+        }
+        return;
+      }
+
+      if (!isValidTenantUuid(candidate)) {
+        if (!cancelled) {
+          abrirConfigComErro(
+            'ID inválido. Cole o UUID completo da empresa (Configurações → ID do Totem).',
+            candidate
+          );
+          if (fromUrl) setSearchParams({}, { replace: true });
+          setValidandoTenant(false);
+        }
+        return;
+      }
+
+      try {
+        const { data } = await tenantService.info(candidate);
+        if (cancelled) return;
+        if (data.permitirTotem === false) {
+          abrirConfigComErro('Registro por totem está desativado para esta empresa.', data.id);
+        } else {
+          aplicarTenantValido(data);
+        }
+        if (fromUrl) setSearchParams({}, { replace: true });
+      } catch (err) {
+        if (cancelled) return;
+        const code = err?.response?.data?.code;
+        const apiMsg = err?.response?.data?.error;
+        if (code === 'TOTEM_DISABLED') {
+          abrirConfigComErro(apiMsg || 'Registro por totem está desativado.', candidate);
+        } else {
+          abrirConfigComErro(
+            apiMsg || 'Empresa não encontrada. Verifique o ID da empresa no totem.',
+            fromUrl ? candidate : ''
+          );
+        }
+        if (fromUrl) setSearchParams({}, { replace: true });
+      } finally {
+        if (!cancelled) setValidandoTenant(false);
+      }
+    }
+
+    bootstrap();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, setSearchParams, abrirConfigComErro, aplicarTenantValido]);
 
   // Resetar após 30s de inatividade
   useEffect(() => {
@@ -71,11 +167,7 @@ export default function Totem() {
 
   function pressKey(tecla) {
     if (pin.length >= 6) return;
-    setPin(prev => prev + tecla);
-  }
-
-  function apagar() {
-    setPin(prev => prev.slice(0, -1));
+    setPin((prev) => prev + tecla);
   }
 
   async function confirmarPin() {
@@ -91,13 +183,22 @@ export default function Totem() {
       setTotemToken(data.totemToken);
       localStorage.setItem('accessToken', data.totemToken);
 
-      // Busca próximo ponto esperado (requer JWT no header)
       const { data: ultimo } = await pontoService.ultimoPonto(data.usuario.id);
       setProximoTipo(ultimo.proximoTipo || 'ENTRADA');
 
       setEtapa('confirmar');
     } catch (err) {
-      setMensagem(err.response?.data?.error || 'PIN inválido');
+      const code = err?.response?.data?.code;
+      const apiMsg = err?.response?.data?.error || 'PIN inválido';
+
+      if (code === 'TENANT_NOT_FOUND') {
+        abrirConfigComErro(apiMsg, tenantId);
+        setEtapa('pin');
+        setPin('');
+        return;
+      }
+
+      setMensagem(apiMsg);
       setEtapa('erro');
       setTimeout(resetar, 3000);
     } finally {
@@ -114,7 +215,6 @@ export default function Totem() {
         fotoBase64 = webcamRef.current.getScreenshot();
       }
 
-      // Pega geolocalização se disponível
       let latitude = null;
       let longitude = null;
       try {
@@ -148,7 +248,6 @@ export default function Totem() {
       try {
         resData = await registrarComOpts();
       } catch (err) {
-        // Mesmo fluxo do Meu Ponto: aviso de cedo demais com opção de confirmar
         if (err?.response?.data?.code === 'REGISTRO_MUITO_CEDO') {
           const d = err.response.data;
           const minutos = Number(d.minutosDecorridos ?? 0);
@@ -212,14 +311,45 @@ export default function Totem() {
     return id;
   }
 
-  function salvarTenant() {
-    if (!tenantIdInput.trim()) return;
-    localStorage.setItem('totemTenantId', tenantIdInput.trim());
-    setTenantId(tenantIdInput.trim());
-    setConfigTenant(false);
+  async function salvarTenant() {
+    setErroConfig('');
+    const normalized = normalizeTenantId(tenantIdInput);
+    if (!normalized) {
+      setErroConfig('Cole o ID da empresa.');
+      return;
+    }
+    if (!isValidTenantUuid(normalized)) {
+      setErroConfig('ID inválido. Use o UUID completo (Configurações → Copiar).');
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      const { data } = await tenantService.info(normalized);
+      if (data.permitirTotem === false) {
+        setErroConfig('Registro por totem está desativado para esta empresa.');
+        return;
+      }
+      aplicarTenantValido(data);
+    } catch (err) {
+      const apiMsg = err?.response?.data?.error;
+      setErroConfig(apiMsg || 'Empresa não encontrada. Verifique o ID da empresa.');
+    } finally {
+      setCarregando(false);
+    }
   }
 
   const tipoInfo = TIPOS_LABEL[proximoTipo];
+
+  if (validandoTenant) {
+    return (
+      <div className="totem-shell">
+        <TotemThemeBtn />
+        <span className="spinner" style={{ width: 36, height: 36, borderWidth: 3 }} />
+        <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0 }}>Validando empresa…</p>
+      </div>
+    );
+  }
 
   // Config inicial do Tenant
   if (configTenant || !tenantId) {
@@ -227,9 +357,11 @@ export default function Totem() {
       <div className="totem-shell">
         <TotemThemeBtn />
         <AppIcon name="configuracoes" size={52} color="var(--pwa-title)" aria-label="Configuração" />
-        <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, textAlign: 'center', margin: 0 }}>Configuração do Totem</h2>
+        <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, textAlign: 'center', margin: 0 }}>
+          Configuração do Totem
+        </h2>
         <p style={{ color: 'var(--pwa-muted)', fontSize: 14, textAlign: 'center', margin: 0, maxWidth: 360 }}>
-          Cole o ID da empresa fornecido pelo administrador
+          Cole o ID da empresa (Configurações → ID do Totem) ou abra o link de implantação do administrador.
         </p>
         <input
           className="input"
@@ -237,8 +369,46 @@ export default function Totem() {
           placeholder="ID da empresa (UUID)"
           value={tenantIdInput}
           onChange={(e) => setTenantIdInput(e.target.value)}
+          onBlur={() => setTenantIdInput((v) => normalizeTenantId(v))}
+          autoComplete="off"
+          spellCheck={false}
         />
-        <button type="button" className="btn btn-primary btn-lg" onClick={salvarTenant}>Confirmar</button>
+        {erroConfig ? (
+          <p
+            role="alert"
+            style={{
+              color: 'var(--vermelho)',
+              fontSize: 13,
+              textAlign: 'center',
+              margin: 0,
+              maxWidth: 400,
+              lineHeight: 1.4,
+            }}
+          >
+            {erroConfig}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="btn btn-primary btn-lg"
+          onClick={salvarTenant}
+          disabled={carregando}
+        >
+          {carregando ? 'Validando…' : 'Confirmar'}
+        </button>
+        {tenantId ? (
+          <button
+            type="button"
+            className="btn btn-secondary btn-lg"
+            onClick={() => {
+              setErroConfig('');
+              setConfigTenant(false);
+            }}
+            disabled={carregando}
+          >
+            Cancelar
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -355,7 +525,12 @@ export default function Totem() {
             style={{ maxHeight: 110, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
           />
         </div>
-        <p style={{ color: 'var(--pwa-muted)', marginTop: 16, fontSize: 15, marginBottom: 0 }}>
+        {tenantNome ? (
+          <p style={{ color: 'var(--pwa-muted)', marginTop: 10, fontSize: 14, marginBottom: 0, fontWeight: 600 }}>
+            {tenantNome}
+          </p>
+        ) : null}
+        <p style={{ color: 'var(--pwa-muted)', marginTop: tenantNome ? 6 : 16, fontSize: 15, marginBottom: 0 }}>
           {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
         <p style={{ color: 'var(--verde)', fontSize: 28, fontWeight: 600, marginTop: 4, marginBottom: 0 }}>
@@ -425,7 +600,11 @@ export default function Totem() {
           cursor: 'pointer',
           opacity: 0.55,
         }}
-        onClick={() => setConfigTenant(true)}
+        onClick={() => {
+          setErroConfig('');
+          setTenantIdInput(tenantId);
+          setConfigTenant(true);
+        }}
       >
         ⚙ config
       </button>
