@@ -151,10 +151,25 @@ export default function Configuracoes() {
         {/* ID do Totem */}
         <div id="tour-cfg-totem" className="card">
           <h2 style={{ fontSize:'15px', fontWeight:'600', marginBottom:'16px' }}>🖥 ID do Totem</h2>
-          <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'10px' }}>Cole este ID na configuração do tablet/celular fixo</p>
-          <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+          <p style={{ fontSize:'13px', color:'var(--cinza-400)', marginBottom:'10px' }}>
+            Cole este ID no tablet ou abra o link de implantação (configura a empresa automaticamente).
+          </p>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'12px' }}>
             <code style={{ flex:1, background:'var(--cinza-100)', padding:'10px 14px', borderRadius:'8px', fontSize:'13px', fontFamily:'monospace', wordBreak:'break-all' }}>{tenantId}</code>
-            <button className="btn btn-secondary" style={{ flexShrink:0 }} onClick={() => navigator.clipboard.writeText(tenantId)}>Copiar</button>
+            <button type="button" className="btn btn-secondary" style={{ flexShrink:0 }} onClick={() => navigator.clipboard.writeText(tenantId)}>Copiar ID</button>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+            <code style={{ flex:1, background:'var(--cinza-100)', padding:'10px 14px', borderRadius:'8px', fontSize:'12px', fontFamily:'monospace', wordBreak:'break-all' }}>
+              {`${window.location.origin}/totem?tenant=${tenantId}`}
+            </code>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ flexShrink:0 }}
+              onClick={() => navigator.clipboard.writeText(`${window.location.origin}/totem?tenant=${tenantId}`)}
+            >
+              Copiar link
+            </button>
           </div>
         </div>
 
