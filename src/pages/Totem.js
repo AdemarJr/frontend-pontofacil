@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import { authService, pontoService, tenantService } from '../services/api';
+import { authService, pontoService, tenantService, pingApiHealth } from '../services/api';
 import { logoInternoUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
 import { useTheme } from '../hooks/useTheme';
@@ -20,6 +20,35 @@ const TIPOS_LABEL = {
   RETORNO_ALMOCO: { label: 'Retorno Almoço', cor: '#185FA5', icon: 'dot' },
   SAIDA: { label: 'Saída', cor: '#E24B4A', icon: 'dot' },
 };
+
+function isNetworkError(err) {
+  if (!err) return false;
+  if (!err.response) {
+    const code = err.code || '';
+    const msg = String(err.message || '').toLowerCase();
+    return (
+      code === 'ECONNABORTED' ||
+      code === 'ERR_NETWORK' ||
+      msg.includes('network') ||
+      msg.includes('timeout') ||
+      msg.includes('failed to fetch')
+    );
+  }
+  return err.response.status >= 502 && err.response.status <= 504;
+}
+
+function mensagemErroPin(err) {
+  const code = err?.response?.data?.code;
+  const apiMsg = err?.response?.data?.error;
+  if (code === 'TENANT_NOT_FOUND') return apiMsg || 'Empresa não encontrada.';
+  if (code === 'TENANT_CANCELLED' || code === 'TENANT_SUSPENDED') return apiMsg;
+  if (code === 'TOTEM_DISABLED') return apiMsg || 'Totem desativado para esta empresa.';
+  if (code === 'PIN_INVALID') return apiMsg || 'PIN inválido.';
+  if (isNetworkError(err)) {
+    return 'Sem conexão com o servidor. Verifique o Wi‑Fi e tente novamente.';
+  }
+  return apiMsg || 'Não foi possível validar o PIN. Tente de novo.';
+}
 
 function TotemThemeBtn() {
   const { theme, toggleTheme } = useTheme();
@@ -53,6 +82,8 @@ export default function Totem() {
   const [configTenant, setConfigTenant] = useState(!stored.id);
   const [validandoTenant, setValidandoTenant] = useState(true);
   const [erroConfig, setErroConfig] = useState('');
+  const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [apiOk, setApiOk] = useState(true);
   const [usuario, setUsuario] = useState(null);
   const [totemToken, setTotemToken] = useState(null);
   const [proximoTipo, setProximoTipo] = useState('ENTRADA');
@@ -64,6 +95,37 @@ export default function Totem() {
   useEffect(() => {
     document.body.classList.add('totem-mode');
     return () => document.body.classList.remove('totem-mode');
+  }, []);
+
+  // Status de rede + ping ao backend
+  useEffect(() => {
+    function syncNav() {
+      setOnline(navigator.onLine);
+    }
+    window.addEventListener('online', syncNav);
+    window.addEventListener('offline', syncNav);
+
+    let cancelled = false;
+    async function ping() {
+      if (!navigator.onLine) {
+        if (!cancelled) setApiOk(false);
+        return;
+      }
+      try {
+        await pingApiHealth({ timeoutMs: 4000 });
+        if (!cancelled) setApiOk(true);
+      } catch {
+        if (!cancelled) setApiOk(false);
+      }
+    }
+    ping();
+    const iv = setInterval(ping, 20000);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+      window.removeEventListener('online', syncNav);
+      window.removeEventListener('offline', syncNav);
+    };
   }, []);
 
   const aplicarTenantValido = useCallback((data) => {
@@ -176,9 +238,26 @@ export default function Totem() {
       setConfigTenant(true);
       return;
     }
+    if (!navigator.onLine) {
+      setMensagem('Sem conexão com a internet. Verifique o Wi‑Fi do tablet.');
+      setEtapa('erro');
+      setTimeout(resetar, 4000);
+      return;
+    }
     setCarregando(true);
     try {
-      const { data } = await authService.loginPin(pin, tenantId, getDeviceId());
+      let data;
+      try {
+        ({ data } = await authService.loginPin(pin, tenantId, getDeviceId()));
+      } catch (err) {
+        if (isNetworkError(err)) {
+          await new Promise((r) => setTimeout(r, 600));
+          ({ data } = await authService.loginPin(pin, tenantId, getDeviceId()));
+        } else {
+          throw err;
+        }
+      }
+      setApiOk(true);
       setUsuario(data.usuario);
       setTotemToken(data.totemToken);
       localStorage.setItem('accessToken', data.totemToken);
@@ -189,7 +268,7 @@ export default function Totem() {
       setEtapa('confirmar');
     } catch (err) {
       const code = err?.response?.data?.code;
-      const apiMsg = err?.response?.data?.error || 'PIN inválido';
+      const apiMsg = mensagemErroPin(err);
 
       if (code === 'TENANT_NOT_FOUND') {
         abrirConfigComErro(apiMsg, tenantId);
@@ -198,9 +277,11 @@ export default function Totem() {
         return;
       }
 
+      if (isNetworkError(err)) setApiOk(false);
+
       setMensagem(apiMsg);
       setEtapa('erro');
-      setTimeout(resetar, 3000);
+      setTimeout(resetar, isNetworkError(err) ? 4500 : 3000);
     } finally {
       setCarregando(false);
     }
@@ -514,9 +595,46 @@ export default function Totem() {
   }
 
   // Tela principal do Totem: teclado numérico
+  const conexaoOk = online && apiOk;
   return (
     <div className="totem-shell" style={{ gap: 28 }}>
       <TotemThemeBtn />
+      <div
+        style={{
+          position: 'fixed',
+          top: 12,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '6px 12px',
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 600,
+          background: conexaoOk ? 'rgba(29,158,117,0.15)' : 'rgba(226,75,74,0.15)',
+          color: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
+          border: `1px solid ${conexaoOk ? 'rgba(29,158,117,0.35)' : 'rgba(226,75,74,0.35)'}`,
+        }}
+        aria-live="polite"
+      >
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
+          }}
+        />
+        {conexaoOk
+          ? tenantNome
+            ? `Online · ${tenantNome}`
+            : 'Online · Empresa OK'
+          : !online
+            ? 'Sem internet — confira o Wi‑Fi'
+            : 'Servidor indisponível — aguarde'}
+      </div>
       <div style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
         <div className="totem-brand">
           <img
@@ -579,9 +697,13 @@ export default function Totem() {
         <button
           type="button"
           className="totem-key"
-          style={{ fontSize: 20, background: 'rgba(29,158,117,0.12)', color: 'var(--verde)' }}
+          style={{
+            fontSize: 20,
+            background: conexaoOk ? 'rgba(29,158,117,0.12)' : 'rgba(226,75,74,0.12)',
+            color: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
+          }}
           onClick={confirmarPin}
-          disabled={pin.length < 4 || carregando}
+          disabled={pin.length < 4 || carregando || !conexaoOk}
         >
           {carregando ? '...' : '→'}
         </button>
