@@ -16,6 +16,29 @@ function normalizeApiBaseUrl(raw) {
 
 export const API_URL = normalizeApiBaseUrl(process.env.REACT_APP_API_URL);
 
+/** Origem do backend sem /api (para /health). */
+export function apiOriginFromBase() {
+  return String(API_URL || '').replace(/\/api\/?$/, '');
+}
+
+export async function pingApiHealth({ timeoutMs = 5000 } = {}) {
+  const origin = apiOriginFromBase();
+  if (!origin) throw new Error('API não configurada');
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const t = setTimeout(() => ctrl?.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${origin}/health`, {
+      method: 'GET',
+      signal: ctrl?.signal,
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`health ${res.status}`);
+    return true;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 const api = axios.create({
   baseURL: API_URL,
   timeout: 30000,
@@ -109,7 +132,8 @@ api.interceptors.response.use(
 // ---- AUTH ----
 export const authService = {
   login: (email, senha) => api.post('/auth/login', { email, senha }),
-  loginPin: (pin, tenantId, deviceId) => api.post('/auth/login-pin', { pin, tenantId, deviceId }),
+  loginPin: (pin, tenantId, deviceId) =>
+    api.post('/auth/login-pin', { pin, tenantId, deviceId }, { timeout: 15000 }),
   refresh: () => api.post('/auth/refresh', {}),
   logout: () => api.post('/auth/logout', {}),
   forgotPassword: (body) => api.post('/auth/forgot-password', body),
