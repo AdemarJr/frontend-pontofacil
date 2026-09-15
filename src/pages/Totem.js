@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import { authService, pontoService, tenantService, pingApiHealth } from '../services/api';
+import { authService, pontoService, tenantService, pingApiHealth, totemAuthConfig } from '../services/api';
 import { logoInternoUrl } from '../utils/branding';
 import AppIcon from '../components/AppIcon';
 import { useTheme } from '../hooks/useTheme';
@@ -260,9 +260,12 @@ export default function Totem() {
       setApiOk(true);
       setUsuario(data.usuario);
       setTotemToken(data.totemToken);
-      localStorage.setItem('accessToken', data.totemToken);
+      // JWT do totem fica só em memória — não sobrescreve accessToken do painel/admin
 
-      const { data: ultimo } = await pontoService.ultimoPonto(data.usuario.id);
+      const { data: ultimo } = await pontoService.ultimoPonto(
+        data.usuario.id,
+        totemAuthConfig(data.totemToken)
+      );
       setProximoTipo(ultimo.proximoTipo || 'ENTRADA');
 
       setEtapa('confirmar');
@@ -289,7 +292,6 @@ export default function Totem() {
 
   const capturarFoto = useCallback(async () => {
     setCarregando(true);
-    const tokenAntes = localStorage.getItem('accessToken');
     try {
       let fotoBase64 = null;
       if (webcamRef.current) {
@@ -308,10 +310,7 @@ export default function Totem() {
         /* geolocalização opcional no totem */
       }
 
-      if (totemToken) {
-        localStorage.setItem('accessToken', totemToken);
-      }
-
+      const authCfg = totemAuthConfig(totemToken);
       const payloadBase = {
         tipo: proximoTipo,
         latitude,
@@ -321,7 +320,7 @@ export default function Totem() {
       };
 
       async function registrarComOpts(extra = {}) {
-        const { data } = await pontoService.registrar({ ...payloadBase, ...extra });
+        const { data } = await pontoService.registrar({ ...payloadBase, ...extra }, authCfg);
         return data;
       }
 
@@ -377,8 +376,6 @@ export default function Totem() {
       setEtapa('erro');
       setTimeout(resetar, 4000);
     } finally {
-      if (tokenAntes != null) localStorage.setItem('accessToken', tokenAntes);
-      else localStorage.removeItem('accessToken');
       setCarregando(false);
     }
   }, [totemToken, proximoTipo]);

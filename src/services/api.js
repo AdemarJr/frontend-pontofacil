@@ -45,10 +45,24 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Injeta token em todas as requisições
+// Injeta token em todas as requisições (não sobrescreve Authorization explícito — ex.: Totem)
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  // Totem / login-pin: não injetar accessToken do painel (Authorization explícito, se houver, permanece)
+  if (config.skipDefaultAuth) return config;
+
+  const headers = config.headers || {};
+  const jaTemAuth =
+    headers.Authorization ||
+    headers.authorization ||
+    (typeof headers.get === 'function' && (headers.get('Authorization') || headers.get('authorization')));
+  if (!jaTemAuth) {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      if (typeof headers.set === 'function') headers.set('Authorization', `Bearer ${token}`);
+      else headers.Authorization = `Bearer ${token}`;
+      config.headers = headers;
+    }
+  }
   return config;
 });
 
@@ -79,6 +93,10 @@ api.interceptors.response.use(
       } catch {
         // ignore
       }
+      return Promise.reject(error);
+    }
+    // Totem usa JWT curto em memória: não limpar sessão do painel nem redirecionar
+    if (original?.skipAuthRefresh) {
       return Promise.reject(error);
     }
     if (
@@ -130,10 +148,27 @@ api.interceptors.response.use(
 );
 
 // ---- AUTH ----
+/** Opções axios para JWT do Totem (não usa nem altera accessToken do painel). */
+export function totemAuthConfig(totemToken) {
+  return {
+    skipAuthRefresh: true,
+    skipDefaultAuth: true,
+    headers: totemToken ? { Authorization: `Bearer ${totemToken}` } : {},
+  };
+}
+
 export const authService = {
   login: (email, senha) => api.post('/auth/login', { email, senha }),
   loginPin: (pin, tenantId, deviceId) =>
-    api.post('/auth/login-pin', { pin, tenantId, deviceId }, { timeout: 15000 }),
+    api.post(
+      '/auth/login-pin',
+      { pin, tenantId, deviceId },
+      {
+        timeout: 15000,
+        skipAuthRefresh: true,
+        skipDefaultAuth: true,
+      }
+    ),
   refresh: () => api.post('/auth/refresh', {}),
   logout: () => api.post('/auth/logout', {}),
   forgotPassword: (body) => api.post('/auth/forgot-password', body),
@@ -143,9 +178,9 @@ export const authService = {
 
 // ---- PONTO ----
 export const pontoService = {
-  registrar: (dados) => api.post('/ponto/registrar', dados),
+  registrar: (dados, config) => api.post('/ponto/registrar', dados, config),
   listar: (params) => api.get('/ponto', { params }),
-  ultimoPonto: (usuarioId) => api.get(`/ponto/ultimo/${usuarioId}`),
+  ultimoPonto: (usuarioId, config) => api.get(`/ponto/ultimo/${usuarioId}`, config),
   pendencias: (params) => api.get('/ponto/pendencias', { params }),
   solicitarAjuste: (dados) => api.post('/ponto/solicitacoes-ajuste', dados),
   excluir: (registroId, motivo) => api.delete(`/ponto/${registroId}`, { data: { motivo } }),

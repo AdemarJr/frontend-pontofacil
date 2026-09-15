@@ -6,16 +6,15 @@ import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
 import { IconAction, TableActions } from '../components/ui';
 
-function validarJornadaCLT(cargaHorariaDiaria, diasSemana, intervaloMinutos, { overnight = false } = {}) {
+function validarJornadaCLT(cargaHorariaDiaria, _diasSemana, intervaloMinutos, { overnight = false } = {}) {
   const carga = Number(cargaHorariaDiaria) || 8;
-  const dias = diasSemana?.length || 0;
   const maxDiaria = overnight ? 12 : 8;
   if (carga > maxDiaria) {
     return overnight
       ? 'Carga diária em turno noturno não pode exceder 12 horas.'
       : 'Carga diária não pode exceder 8 horas (CLT).';
   }
-  if (carga * dias > 44) return `Jornada semanal (${(carga * dias).toFixed(1)}h) excede 44 horas (CLT).`;
+  // Jornada semanal > 44h é permitida; o excedente vira HE no espelho/folha.
   const horas = carga;
   let minIntervalo = 0;
   if (horas > 6) minIntervalo = 60;
@@ -385,7 +384,7 @@ export default function Escalas() {
                 </div>
               </div>
               <p style={{ fontSize: 11, color: 'var(--cinza-400)', margin: 0, lineHeight: 1.45 }}>
-                Limite semanal: 44h (carga × dias selecionados). HE diária acima de 8h e semanal acima de 44h entram no espelho e na folha.
+                Escala pode passar de 44h semanais (carga × dias). O excedente diário (acima de 8h) e semanal (acima de 44h) entram como HE no espelho e na folha.
               </p>
               <div id="tour-escalas-dias">
                 <span style={{ fontSize: '12px', color: 'var(--cinza-400)', display: 'block', marginBottom: '8px' }}>
