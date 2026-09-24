@@ -251,8 +251,8 @@ export default function Colaboradores() {
     } catch (err) {
       setAvisoSistema({
         type: 'error',
-        title: 'E-mail não enviado',
-        text: err.response?.data?.error || 'Erro ao reenviar convite.',
+        title: 'Não foi possível enviar',
+        text: err.response?.data?.error || 'Tente novamente em instantes.',
       });
     }
   }
@@ -269,8 +269,8 @@ export default function Colaboradores() {
     } catch (err) {
       setAvisoSistema({
         type: 'error',
-        title: 'E-mail não enviado',
-        text: err.response?.data?.error || 'Erro ao enviar e-mail de reset.',
+        title: 'Não foi possível enviar',
+        text: err.response?.data?.error || 'Tente novamente em instantes.',
       });
     }
   }
