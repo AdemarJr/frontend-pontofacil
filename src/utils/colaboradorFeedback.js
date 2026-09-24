@@ -9,22 +9,22 @@ const EMAIL_MSGS = {
   falha_envio: {
     type: 'warning',
     title: 'Cadastro concluído',
-    text: 'Colaborador cadastrado, mas o e-mail de convite não foi enviado. O PIN do totem já vale; você pode reenviar o convite depois.',
+    text: 'Colaborador cadastrado. O convite por e-mail não saiu agora; o PIN do totem já vale. Você pode reenviar o convite depois.',
   },
   smtp_nao_configurado: {
     type: 'warning',
     title: 'Cadastro concluído',
-    text: 'Colaborador cadastrado, mas o e-mail não foi enviado (envio de e-mail não configurado no servidor). Use “Reenviar convite” quando o SMTP estiver ok.',
+    text: 'Colaborador cadastrado. O convite por e-mail não saiu agora; o PIN do totem já vale. Você pode reenviar o convite depois.',
   },
   smtp_sem_senha: {
     type: 'warning',
     title: 'Cadastro concluído',
-    text: 'Colaborador cadastrado, mas o e-mail não foi enviado (senha SMTP ausente no servidor).',
+    text: 'Colaborador cadastrado. O convite por e-mail não saiu agora; o PIN do totem já vale. Você pode reenviar o convite depois.',
   },
   envio_em_segundo_plano: {
     type: 'info',
     title: 'Cadastro concluído',
-    text: 'Colaborador cadastrado. O e-mail de convite está sendo enviado; em instantes deve chegar (verifique o spam).',
+    text: 'Colaborador cadastrado. O e-mail de convite está a caminho (verifique o spam).',
   },
   desativado_pelo_admin: {
     type: 'success',
