@@ -1,16 +1,41 @@
-# Credenciais e ambiente — nunca commitar (exceto .env.example)
+# =============================================================================
+# CREDENCIAIS E SEGREDOS — nunca versionar (exceto *.example)
 # CRA embute REACT_APP_* no build; variáveis reais ficam no Vercel/Railway.
+# =============================================================================
+
+# Ambiente
 .env
 .env.*
 .env-*
+*.env
 hom.env
 hom.env.*
 *.env.local
 !.env.example
+!.env*.example
+
+# Chaves e certificados
 *.pem
 *.key
-secrets/
+*.p12
+*.pfx
+*.p8
+id_rsa
+id_rsa.*
+*.keystore
+
+# Cloud / SaaS
 credentials.json
+**/credentials.json
+**/serviceAccount*.json
+**/firebase*.json
+**/google-services.json
+**/GoogleService-Info.plist
+.aws/
+.vercel/
+.netlify/
+secrets/
+**/secrets/
 
 # Dependências
 node_modules/
@@ -33,8 +58,6 @@ coverage/
 # SO / editor
 .DS_Store
 .idea/
+.vscode/
 *.swp
 *~
-
-# Opcional: descomente se usar TypeScript local
-# *.tsbuildinfo
