@@ -29,7 +29,18 @@ export default function Colaboradores() {
   const [locais, setLocais] = useState([]);
   /** null | 'salvar' | { tipo: 'excluir', usuario } */
   const [confirmacao, setConfirmacao] = useState(null);
+  const [confirmacaoNome, setConfirmacaoNome] = useState('');
   const [excluindo, setExcluindo] = useState(false);
+
+  function fecharConfirmacaoExclusao() {
+    setConfirmacao(null);
+    setConfirmacaoNome('');
+  }
+
+  function abrirConfirmacaoExclusao(usuario) {
+    setConfirmacaoNome('');
+    setConfirmacao({ tipo: 'excluir', usuario });
+  }
 
   useEffect(() => { carregar(); }, []);
 
@@ -201,11 +212,20 @@ export default function Colaboradores() {
   async function executarExclusao() {
     const u = confirmacao?.usuario;
     if (!u) return;
+    const nomeEsperado = String(u.nome || '').trim();
+    if (String(confirmacaoNome || '').trim() !== nomeEsperado) {
+      setAvisoSistema({
+        type: 'error',
+        title: 'Nome não confere',
+        text: 'Digite o nome completo do colaborador exatamente como aparece para confirmar a exclusão.',
+      });
+      return;
+    }
     setExcluindo(true);
     setErro('');
     try {
       await usuarioService.excluirDefinitivo(u.id);
-      setConfirmacao(null);
+      fecharConfirmacaoExclusao();
       setModal(null);
       await carregar();
       setAvisoSistema({
@@ -237,6 +257,21 @@ export default function Colaboradores() {
         text: err.response?.data?.error || err.message || 'Tente novamente.',
       });
     }
+  }
+
+  async function preferirDesativar() {
+    const u = confirmacao?.usuario;
+    if (!u) return;
+    fecharConfirmacaoExclusao();
+    if (!u.ativo) {
+      setAvisoSistema({
+        type: 'success',
+        title: 'Colaborador já desativado',
+        text: `"${u.nome}" já está desativado. O histórico foi mantido.`,
+      });
+      return;
+    }
+    await toggleAtivo(u);
   }
 
   async function reenviarConvite(u) {
@@ -414,7 +449,7 @@ export default function Colaboradores() {
                           icon="excluir"
                           label="Excluir"
                           tone="danger"
-                          onClick={() => setConfirmacao({ tipo: 'excluir', usuario: u })}
+                          onClick={() => abrirConfirmacaoExclusao(u)}
                         />
                       )}
                     </TableActions>
@@ -780,31 +815,91 @@ export default function Colaboradores() {
 
       <Modal
         open={confirmacao?.tipo === 'excluir'}
-        onClose={() => setConfirmacao(null)}
+        onClose={fecharConfirmacaoExclusao}
         title="Excluir definitivamente"
-        maxWidth={440}
+        maxWidth={480}
         zIndex={10100}
         footer={(
-          <>
-            <button type="button" className="btn btn-secondary btn-full" onClick={() => setConfirmacao(null)} disabled={excluindo}>Cancelar</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
             <button
               type="button"
               className="btn btn-full"
-              onClick={executarExclusao}
+              onClick={preferirDesativar}
               disabled={excluindo}
-              style={{ background:'var(--vermelho)', color:'#fff', border:'none' }}
+              style={{ background: 'var(--amarelo-claro)', color: '#92400e', border: '1px solid var(--amarelo)' }}
             >
-              {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
+              Preferir desativar (mantém o histórico)
             </button>
-          </>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className="btn btn-secondary btn-full" onClick={fecharConfirmacaoExclusao} disabled={excluindo}>Cancelar</button>
+              <button
+                type="button"
+                className="btn btn-full"
+                onClick={executarExclusao}
+                disabled={
+                  excluindo
+                  || String(confirmacaoNome || '').trim() !== String(confirmacao?.usuario?.nome || '').trim()
+                }
+                style={{
+                  background: 'var(--vermelho)',
+                  color: '#fff',
+                  border: 'none',
+                  opacity:
+                    String(confirmacaoNome || '').trim() !== String(confirmacao?.usuario?.nome || '').trim()
+                      ? 0.45
+                      : 1,
+                }}
+              >
+                {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
+              </button>
+            </div>
+          </div>
         )}
       >
-        <p style={{ fontSize:'14px', color:'var(--cinza-600)', lineHeight:1.55, margin: '0 0 16px' }}>
-          O colaborador <strong>{confirmacao?.usuario?.nome}</strong> será removido do sistema. Esta ação apaga também o histórico de pontos, escalas e ajustes ligados a ele no período — não dá para desfazer.
+        <div
+          style={{
+            background: 'var(--vermelho-claro)',
+            color: 'var(--vermelho)',
+            borderRadius: 8,
+            padding: '12px 14px',
+            marginBottom: 16,
+            fontSize: 13,
+            lineHeight: 1.55,
+          }}
+        >
+          <strong>Atenção — ação irreversível.</strong> Todos os dados deste colaborador serão apagados.
+          Se precisar deles para ação judicial, fiscalização ou defesa trabalhista, não haverá como recuperar.
+        </div>
+        <p style={{ fontSize: 14, color: 'var(--cinza-600)', lineHeight: 1.55, margin: '0 0 12px' }}>
+          Ao excluir <strong>{confirmacao?.usuario?.nome}</strong>, o sistema remove de forma permanente:
         </p>
-        <p style={{ fontSize:'13px', color:'var(--cinza-400)', margin: 0 }}>
-          Se quiser só impedir acesso sem apagar histórico, use <strong>Desativar</strong>.
+        <ul style={{ margin: '0 0 16px', paddingLeft: 18, fontSize: 13, color: 'var(--cinza-600)', lineHeight: 1.6 }}>
+          <li>Cadastro e acesso ao sistema</li>
+          <li>Histórico de registros de ponto</li>
+          <li>Escalas e ajustes vinculados</li>
+        </ul>
+        <p style={{ fontSize: 13, color: 'var(--cinza-500)', margin: '0 0 10px', lineHeight: 1.5 }}>
+          Para só bloquear o acesso e preservar o histórico, use <strong>Desativar</strong>.
         </p>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--cinza-700)', marginBottom: 6 }}>
+          Digite o nome completo <strong>{confirmacao?.usuario?.nome}</strong> para confirmar
+        </label>
+        <input
+          className="input"
+          value={confirmacaoNome}
+          onChange={(e) => setConfirmacaoNome(e.target.value)}
+          placeholder="Nome completo do colaborador"
+          autoComplete="off"
+          disabled={excluindo}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (String(confirmacaoNome || '').trim() === String(confirmacao?.usuario?.nome || '').trim()) {
+                executarExclusao();
+              }
+            }
+          }}
+        />
       </Modal>
     </Layout>
   );

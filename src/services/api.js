@@ -268,29 +268,35 @@ export const relatorioService = {
   inserirPontoManual: (dados) => api.post('/relatorios/inserir', dados),
   solicitacoesAjuste: (params) => api.get('/relatorios/solicitacoes-ajuste', { params }),
   decidirSolicitacaoAjuste: (id, dados) => api.post(`/relatorios/solicitacoes-ajuste/${id}/decidir`, dados),
-  /** Export pré-AFD administrativo (REP-P) */
+  /** AFD Portaria 671/2021 (REP-P) — TXT ISO-8859-1 */
   downloadPreAfd: async ({ dataInicio, dataFim }) => {
     const res = await api.get('/relatorios/afd/export', {
       params: { dataInicio, dataFim },
       responseType: 'blob',
     });
+    const cd = res.headers?.['content-disposition'] || '';
+    const match = /filename="?([^";]+)"?/i.exec(cd);
+    const filename = match?.[1] || `AFD_${dataInicio}_${dataFim}.txt`;
     const url = window.URL.createObjectURL(res.data);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `pre_afd_${dataInicio}_${dataFim}.txt`;
+    a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
   },
-  /** Export AEJ básico (jornada/extras) */
+  /** AEJ Portaria 671/2021 — TXT com delimitador | */
   downloadAej: async ({ mes, ano, usuarioId }) => {
     const res = await api.get('/relatorios/aej/export', {
       params: { mes, ano, ...(usuarioId ? { usuarioId } : {}) },
       responseType: 'blob',
     });
+    const cd = res.headers?.['content-disposition'] || '';
+    const match = /filename="?([^";]+)"?/i.exec(cd);
+    const filename = match?.[1] || `AEJ_${String(mes).padStart(2, '0')}_${ano}.txt`;
     const url = window.URL.createObjectURL(res.data);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `aej_${mes}_${ano}.csv`;
+    a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
   },

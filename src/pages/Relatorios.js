@@ -335,7 +335,7 @@ export default function Relatorios() {
     try {
       await relatorioService.downloadPreAfd({ dataInicio, dataFim });
     } catch (e) {
-      alert(e?.response?.data?.error || e?.message || 'Falha ao exportar pré-AFD.');
+      alert(e?.response?.data?.error || e?.message || 'Falha ao exportar AFD 671.');
     } finally {
       setExportFiscalLoading(false);
     }
@@ -350,7 +350,7 @@ export default function Relatorios() {
         ...(usuarioFiltro ? { usuarioId: usuarioFiltro } : {}),
       });
     } catch (e) {
-      alert(e?.response?.data?.error || e?.message || 'Falha ao exportar AEJ.');
+      alert(e?.response?.data?.error || e?.message || 'Falha ao exportar AEJ 671.');
     } finally {
       setExportFiscalLoading(false);
     }
@@ -917,16 +917,18 @@ export default function Relatorios() {
       </div>
 
       <div className="card" style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Exportação fiscal (REP-P)</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Exportação fiscal (Portaria 671/2021)</h2>
         <p style={{ fontSize: 13, color: 'var(--cinza-400)', marginBottom: 16, lineHeight: 1.5 }}>
-          Arquivos administrativos alinhados à Portaria 671/2021. Não substituem AFD certificado com ICP-Brasil.
+          AFD (REP-P) e AEJ no leiaute oficial da Portaria MTP nº 671/2021 (TXT ISO-8859-1).
+          Colaboradores sem CPF válido são omitidos. A assinatura CAdES (.p7s) com certificado ICP-Brasil
+          é arquivo à parte — sem certificado a linha de assinatura é placeholder.
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
           <button type="button" className="btn btn-secondary" disabled={exportFiscalLoading} onClick={exportarPreAfd}>
-            {exportFiscalLoading ? '…' : '⬇ Pré-AFD (TXT)'}
+            {exportFiscalLoading ? '…' : '⬇ AFD 671 (TXT)'}
           </button>
           <button type="button" className="btn btn-secondary" disabled={exportFiscalLoading} onClick={exportarAej}>
-            {exportFiscalLoading ? '…' : '⬇ AEJ (CSV)'}
+            {exportFiscalLoading ? '…' : '⬇ AEJ 671 (TXT)'}
           </button>
         </div>
 
