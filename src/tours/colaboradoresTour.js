@@ -57,7 +57,7 @@ function steps() {
       popover: {
         title: 'Editar, desativar ou excluir',
         description:
-          'Editar — altera dados, PIN, cargo, local e permissões.\n\nDesativar — suspende o acesso (app e totem) sem apagar histórico; o status fica Inativo. Use Ativar para liberar de novo.\n\nExcluir — remove o cadastro de forma definitiva (com confirmação). Não é possível excluir o próprio usuário logado.',
+          'Editar — altera dados, PIN, cargo, local e permissões.\n\nDesativar — suspende o acesso (app e totem) sem apagar histórico; o status fica Inativo. Use Ativar para liberar de novo.\n\nExcluir — remove o cadastro e o histórico de forma definitiva (exige digitar o nome para confirmar). Prefira Desativar se precisar dos dados depois. Não é possível excluir o próprio usuário logado.',
         side: 'bottom',
         align: 'end',
       },
