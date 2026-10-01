@@ -518,28 +518,28 @@ export default function Totem() {
   // Tela da câmera
   if (etapa === 'camera') {
     return (
-      <div className="totem-shell" style={{ gap: 24 }}>
+      <div className="totem-shell totem-shell--camera">
         <TotemThemeBtn />
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
           <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0 }}>Olhe para a câmera</p>
-          <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <h2 style={{ color: 'var(--pwa-title)', fontSize: 'clamp(1.125rem, 4vw, 1.375rem)', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
             <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
             {tipoInfo?.label}
           </h2>
         </div>
 
-        <div style={{ borderRadius: 16, overflow: 'hidden', border: '3px solid var(--verde)', width: '100%', maxWidth: 400, aspectRatio: '4/3' }}>
+        <div className="totem-camera-frame" aria-label="Pré-visualização da câmera">
           <Webcam
             ref={webcamRef}
             audio={false}
             screenshotFormat="image/jpeg"
             screenshotQuality={0.7}
-            videoConstraints={{ facingMode: 'user', width: 640, height: 480 }}
+            videoConstraints={{ facingMode: 'user', width: 720, height: 720 }}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: 16, width: '100%', maxWidth: 400 }}>
+        <div className="totem-camera-actions">
           <button type="button" className="btn btn-secondary btn-full btn-lg" onClick={resetar}>Cancelar</button>
           <button type="button" className="btn btn-primary btn-full btn-lg" onClick={capturarFoto} disabled={carregando}>
             {carregando ? (
@@ -594,22 +594,11 @@ export default function Totem() {
   // Tela principal do Totem: teclado numérico
   const conexaoOk = online && apiOk;
   return (
-    <div className="totem-shell" style={{ gap: 28 }}>
+    <div className="totem-shell totem-shell--pin">
       <TotemThemeBtn />
       <div
+        className="totem-status-pill"
         style={{
-          position: 'fixed',
-          top: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 20,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '6px 12px',
-          borderRadius: 999,
-          fontSize: 12,
-          fontWeight: 600,
           background: conexaoOk ? 'rgba(29,158,117,0.15)' : 'rgba(226,75,74,0.15)',
           color: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
           border: `1px solid ${conexaoOk ? 'rgba(29,158,117,0.35)' : 'rgba(226,75,74,0.35)'}`,
@@ -621,6 +610,7 @@ export default function Totem() {
             width: 8,
             height: 8,
             borderRadius: '50%',
+            flexShrink: 0,
             background: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
           }}
         />
@@ -632,92 +622,103 @@ export default function Totem() {
             ? 'Sem internet — confira o Wi‑Fi'
             : 'Servidor indisponível — aguarde'}
       </div>
-      <div style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
-        <div className="totem-brand">
-          <img
-            src={logoInternoUrl()}
-            alt="Ponto Fácil"
-            style={{ maxHeight: 110, width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
-          />
-        </div>
-        {tenantNome ? (
-          <p style={{ color: 'var(--pwa-muted)', marginTop: 10, fontSize: 14, marginBottom: 0, fontWeight: 600 }}>
-            {tenantNome}
+
+      <div className="totem-pin-stage">
+        <div className="totem-pin-stage__header">
+          <div className="totem-brand">
+            <img src={logoInternoUrl()} alt="Ponto Fácil" />
+          </div>
+          {tenantNome ? (
+            <p style={{ color: 'var(--pwa-muted)', marginTop: 8, fontSize: 13, marginBottom: 0, fontWeight: 600 }}>
+              {tenantNome}
+            </p>
+          ) : null}
+          <p style={{ color: 'var(--pwa-muted)', marginTop: tenantNome ? 4 : 10, fontSize: 13, marginBottom: 0 }}>
+            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
           </p>
-        ) : null}
-        <p style={{ color: 'var(--pwa-muted)', marginTop: tenantNome ? 6 : 16, fontSize: 15, marginBottom: 0 }}>
-          {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-        </p>
-        <p style={{ color: 'var(--verde)', fontSize: 28, fontWeight: 600, marginTop: 4, marginBottom: 0 }}>
-          {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-        </p>
-      </div>
-
-      <div className="totem-pin-display">
-        <p style={{
-          color: 'var(--pwa-subtle)', fontSize: 13, marginBottom: 12, marginTop: 0,
-          textTransform: 'uppercase', letterSpacing: '0.1em',
-        }}>
-          Digite seu PIN
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          {[...Array(Math.max(pin.length, 4))].map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                background: i < pin.length ? 'var(--verde)' : 'var(--pwa-card-border)',
-                transition: 'background 0.15s',
-              }}
-            />
-          ))}
+          <p style={{ color: 'var(--verde)', fontSize: 'clamp(1.25rem, 4dvh, 1.75rem)', fontWeight: 600, marginTop: 2, marginBottom: 0 }}>
+            {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </p>
         </div>
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 300 }}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-          <button key={n} type="button" className="totem-key" onClick={() => pressKey(String(n))}>
-            {n}
-          </button>
-        ))}
-        <button
-          type="button"
-          className="totem-key"
-          style={{ fontSize: 20, color: 'var(--vermelho)', background: 'rgba(226,75,74,0.1)' }}
-          onClick={resetar}
-        >
-          ✕
-        </button>
-        <button type="button" className="totem-key" onClick={() => pressKey('0')}>0</button>
-        <button
-          type="button"
-          className="totem-key"
-          style={{
-            fontSize: 20,
-            background: conexaoOk ? 'rgba(29,158,117,0.12)' : 'rgba(226,75,74,0.12)',
-            color: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
-          }}
-          onClick={confirmarPin}
-          disabled={pin.length < 4 || carregando || !conexaoOk}
-        >
-          {carregando ? '...' : '→'}
-        </button>
+        <div className="totem-pin-stage__footer">
+          <div className="totem-pin-display">
+            <p style={{
+              color: 'var(--pwa-subtle)', fontSize: 12, marginBottom: 10, marginTop: 0,
+              textTransform: 'uppercase', letterSpacing: '0.1em',
+            }}>
+              Digite seu PIN
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }} aria-label={`PIN: ${pin.length} dígitos`}>
+              {[...Array(Math.max(pin.length, 4))].map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    background: i < pin.length ? 'var(--verde)' : 'var(--pwa-card-border)',
+                    transition: 'background 0.15s',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="totem-keypad" role="group" aria-label="Teclado numérico do PIN">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+              <button key={n} type="button" className="totem-key" onClick={() => pressKey(String(n))}>
+                {n}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="totem-key totem-key--action"
+              style={{ color: 'var(--vermelho)', background: 'rgba(226,75,74,0.12)' }}
+              onClick={resetar}
+              aria-label="Cancelar e limpar PIN"
+            >
+              <span className="totem-key__glyph" aria-hidden>✕</span>
+              Limpar
+            </button>
+            <button type="button" className="totem-key" onClick={() => pressKey('0')}>0</button>
+            <button
+              type="button"
+              className="totem-key totem-key--action"
+              style={{
+                background: conexaoOk ? 'rgba(29,158,117,0.16)' : 'rgba(226,75,74,0.12)',
+                color: conexaoOk ? 'var(--verde)' : 'var(--vermelho)',
+              }}
+              onClick={confirmarPin}
+              disabled={pin.length < 4 || carregando || !conexaoOk}
+              aria-label="Confirmar PIN"
+            >
+              {carregando ? (
+                '...'
+              ) : (
+                <>
+                  <span className="totem-key__glyph" aria-hidden>✓</span>
+                  OK
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
       <button
         type="button"
         style={{
           position: 'fixed',
-          bottom: 16,
-          right: 16,
+          bottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
+          right: 'max(12px, env(safe-area-inset-right, 0px))',
           background: 'transparent',
           border: 'none',
           color: 'var(--pwa-subtle)',
           fontSize: 11,
           cursor: 'pointer',
           opacity: 0.55,
+          zIndex: 10,
         }}
         onClick={() => {
           setErroConfig('');
