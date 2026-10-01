@@ -604,30 +604,203 @@ input[type="radio"] {
 
 /* ---- TOTEM ---- */
 .totem-mode {
-  overflow: hidden;
-  touch-action: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .totem-key {
-  aspect-ratio: 1;
+  /* Herda --totem-key-size do .totem-keypad */
+  width: var(--totem-key-size, min(26vw, 10.5dvh, 72px));
+  height: var(--totem-key-size, min(26vw, 10.5dvh, 72px));
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   background: var(--surface, #fff);
   border-radius: var(--radius-md);
-  font-size: 32px;
+  font-size: clamp(1.125rem, calc(var(--totem-key-size, 64px) * 0.42), 2rem);
   font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: transform 0.1s, background 0.1s, box-shadow var(--transition);
   border: 1px solid var(--border, rgba(28, 28, 26, 0.06));
   color: var(--text, var(--cinza-900));
   font-family: inherit;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 .totem-key:hover { box-shadow: var(--shadow-md); }
 .totem-key:active { transform: scale(0.93); background: var(--surface-2, var(--cinza-100)); }
 .totem-key:disabled { opacity: 0.45; cursor: not-allowed; }
+.totem-key--action {
+  font-size: clamp(0.6875rem, calc(var(--totem-key-size, 64px) * 0.22), 0.8125rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.totem-key--action .totem-key__glyph {
+  font-size: clamp(1rem, calc(var(--totem-key-size, 64px) * 0.32), 1.375rem);
+  line-height: 1;
+}
+
+.totem-keypad {
+  --totem-key-size: min(26vw, 10.5dvh, 72px);
+  --totem-key-gap: clamp(6px, 1.2dvh, 12px);
+  display: grid;
+  grid-template-columns: repeat(3, var(--totem-key-size));
+  gap: var(--totem-key-gap);
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+
+.totem-pin-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 420px;
+  flex: 1;
+  min-height: 0;
+  gap: clamp(10px, 2dvh, 24px);
+  padding-top: clamp(36px, 6dvh, 52px);
+}
+
+.totem-pin-stage__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+.totem-pin-stage__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: clamp(10px, 1.8dvh, 16px);
+  flex-shrink: 0;
+}
+
+.totem-status-pill {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  max-width: calc(100vw - 96px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.totem-camera-frame {
+  width: min(92vw, 72dvh, 520px);
+  aspect-ratio: 1;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 3px solid var(--verde);
+  flex-shrink: 1;
+  min-height: 0;
+  background: #000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  position: relative;
+}
+
+.totem-camera-frame--landscape {
+  aspect-ratio: 4 / 3;
+  width: min(94vw, 78dvh, 560px);
+}
+
+.totem-camera-frame::after,
+.pwa-camera-frame::after {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.22);
+}
+
+.totem-camera-actions {
+  display: flex;
+  gap: 12px;
+  width: min(92vw, 520px);
+  flex-shrink: 0;
+}
+
+.pwa-camera-frame {
+  width: min(92vw, 68dvh, 480px);
+  aspect-ratio: 1;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 3px solid var(--verde);
+  flex-shrink: 1;
+  min-height: 0;
+  background: #000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  position: relative;
+}
+
+.pwa-camera-actions {
+  display: flex;
+  gap: 12px;
+  width: min(92vw, 480px);
+  flex-shrink: 0;
+}
+
+@media (max-height: 700px) {
+  .totem-keypad {
+    --totem-key-size: min(24vw, 9.5dvh, 64px);
+  }
+  .totem-key {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-height: 580px) {
+  .totem-keypad {
+    --totem-key-size: min(22vw, 8.5dvh, 56px);
+  }
+  .totem-key {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .totem-brand {
+    padding: 8px 12px !important;
+  }
+  .totem-brand img {
+    max-height: 48px !important;
+  }
+  .totem-pin-display {
+    padding: 12px 20px !important;
+    min-width: 0 !important;
+  }
+  .totem-key--action {
+    font-size: 0.625rem;
+  }
+}
 
 /* ---- APP COLABORADOR / PWA ---- */
 .colaborador-app,
@@ -729,11 +902,23 @@ input[type="radio"] {
   justify-content: center;
   background: var(--pwa-screen-grad);
   color: var(--pwa-fg);
-  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
-    max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-  gap: 28px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  gap: clamp(12px, 2.5dvh, 28px);
   box-sizing: border-box;
   position: relative;
+}
+
+.totem-shell--pin {
+  justify-content: stretch;
+  gap: 0;
+}
+
+.totem-shell--camera {
+  justify-content: center;
+  gap: clamp(12px, 2dvh, 20px);
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 .totem-shell__theme {
@@ -1069,6 +1254,14 @@ input[type="radio"] {
   color: var(--pwa-fg);
 }
 
+.pwa-state--camera {
+  justify-content: center;
+  gap: clamp(12px, 2dvh, 20px);
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
+
 .pwa-state--success {
   background: var(--pwa-success-screen);
   color: var(--pwa-title);
@@ -1134,21 +1327,30 @@ input[type="radio"] {
   background: var(--pwa-card);
   border: 1px solid var(--pwa-card-border);
   border-radius: var(--pwa-radius);
-  padding: 20px 36px;
-  min-width: 220px;
+  padding: clamp(12px, 2dvh, 20px) clamp(20px, 4vw, 36px);
+  min-width: min(220px, 100%);
   text-align: center;
+  flex-shrink: 0;
 }
 
 .totem-brand {
-  padding: 16px 20px;
+  padding: clamp(8px, 1.5dvh, 16px) clamp(12px, 3vw, 20px);
   border-radius: 16px;
   background: linear-gradient(135deg, #085041 0%, #1D9E75 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 400px;
+  max-width: min(360px, 100%);
   box-sizing: border-box;
+  flex-shrink: 1;
+}
+
+.totem-brand img {
+  max-height: clamp(52px, 11dvh, 96px);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 @media (min-width: 480px) {
