@@ -6,6 +6,7 @@ import { feriasService, usuarioService } from '../services/api';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { IconAction, TableActions } from '../components/ui';
+import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
 function isoHoje() {
   const d = new Date();
@@ -52,7 +53,14 @@ export default function Ferias() {
   async function carregarUsuarios() {
     try {
       const { data } = await usuarioService.listar();
-      setUsuarios((Array.isArray(data) ? data : []).filter((u) => u.role === 'COLABORADOR'));
+      const ativos = filtrarColaboradoresSelect(Array.isArray(data) ? data : []);
+      setUsuarios(ativos);
+      setUsuarioId((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
+      setForm((p) => (
+        p.usuarioId && !ativos.some((u) => u.id === p.usuarioId)
+          ? { ...p, usuarioId: '' }
+          : p
+      ));
     } catch {
       setUsuarios([]);
     }

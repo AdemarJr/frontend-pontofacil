@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/dashboard/Layout';
 import { folhaService, usuarioService } from '../services/api';
+import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
 const TIPOS = [
   { value: 'SEM_JUSTA_CAUSA', label: 'Sem justa causa' },
@@ -30,7 +31,9 @@ export default function FolhaRescisao() {
 
   useEffect(() => {
     usuarioService.listar().then(({ data }) => {
-      setColaboradores((data || []).filter((u) => u.role === 'COLABORADOR' && u.tipoContrato === 'CLT' && u.ativo));
+      setColaboradores(
+        filtrarColaboradoresSelect(data).filter((u) => u.tipoContrato === 'CLT')
+      );
     });
     folhaService.listarRescisoes().then(({ data }) => setRescisoes(data || []));
   }, []);

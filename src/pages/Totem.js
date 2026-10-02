@@ -633,15 +633,18 @@ export default function Totem() {
               {tenantNome}
             </p>
           ) : null}
-          <p style={{ color: 'var(--pwa-muted)', marginTop: tenantNome ? 4 : 10, fontSize: 13, marginBottom: 0 }}>
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-          </p>
-          <p style={{ color: 'var(--verde)', fontSize: 'clamp(1.25rem, 4dvh, 1.75rem)', fontWeight: 600, marginTop: 2, marginBottom: 0 }}>
-            {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-          </p>
         </div>
 
         <div className="totem-pin-stage__footer">
+          <div style={{ textAlign: 'center', width: '100%' }}>
+            <p style={{ color: 'var(--pwa-muted)', margin: 0, fontSize: 13 }}>
+              {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+            </p>
+            <p style={{ color: 'var(--verde)', fontSize: 'clamp(1.25rem, 4dvh, 1.75rem)', fontWeight: 600, margin: '2px 0 0' }}>
+              {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+
           <div className="totem-pin-display">
             <p style={{
               color: 'var(--pwa-subtle)', fontSize: 12, marginBottom: 10, marginTop: 0,

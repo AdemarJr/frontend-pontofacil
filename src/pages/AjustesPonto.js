@@ -10,6 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import { mensagemDuplicataDia } from '../utils/duplicataPonto';
 import { IconAction, TableActions } from '../components/ui';
 import { useTenantTimezone } from '../hooks/useTenantTimezone';
+import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
@@ -84,7 +85,11 @@ export default function AjustesPonto() {
   const [espelhoPageSize, setEspelhoPageSize] = useState(5);
 
   useEffect(() => {
-    usuarioService.listar().then(({ data }) => setUsuarios(data));
+    usuarioService.listar().then(({ data }) => {
+      const ativos = filtrarColaboradoresSelect(data);
+      setUsuarios(ativos);
+      setUsuarioFiltro((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
+    });
   }, []);
 
   // Permite abrir esta tela já filtrada via query string (atalhos vindos de Espelho/Assinaturas).
