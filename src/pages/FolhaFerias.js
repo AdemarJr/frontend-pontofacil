@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/dashboard/Layout';
 import { folhaService, usuarioService, feriasService } from '../services/api';
+import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
 function fmtBRL(v) {
   return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -23,7 +24,9 @@ export default function FolhaFerias() {
 
   useEffect(() => {
     usuarioService.listar().then(({ data }) => {
-      setColaboradores((data || []).filter((u) => u.role === 'COLABORADOR' && u.tipoContrato === 'CLT' && u.ativo));
+      setColaboradores(
+        filtrarColaboradoresSelect(data).filter((u) => u.tipoContrato === 'CLT')
+      );
     });
     folhaService.listarFeriasPagamentos().then(({ data }) => setPagamentos(data || []));
     feriasService.listar({ status: 'APROVADA' }).then(({ data }) => setFeriasAprovadas(data || []));

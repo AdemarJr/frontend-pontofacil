@@ -832,15 +832,17 @@ export default function MeuPonto() {
   if (etapa === 'camera') {
     return (
       <div className="pwa-state pwa-state--camera">
-        <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0 }}>Registro pelo app — {usuario.tenant?.nomeFantasia}</p>
-        <h2 style={{ color: 'var(--pwa-title)', fontSize: 22, margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <p style={{ color: 'var(--pwa-muted)', fontSize: 14, margin: 0, flexShrink: 0 }}>
+          Registro pelo app — {usuario.tenant?.nomeFantasia}
+        </p>
+        <h2 style={{ color: 'var(--pwa-title)', fontSize: 'clamp(1.125rem, 4vw, 1.375rem)', margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <AppIcon name={tipoInfo?.icon} size={22} color={tipoInfo?.cor} aria-hidden />
           {tipoInfo?.label}
         </h2>
-        <div style={{ borderRadius: 16, overflow: 'hidden', border: '3px solid var(--verde)', width: '100%', maxWidth: 400, aspectRatio: '4/3' }}>
+        <div className="pwa-camera-frame" aria-label="Pré-visualização da câmera">
           <MeuPontoCamera />
         </div>
-        <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 400 }}>
+        <div className="pwa-camera-actions">
           <button type="button" className="btn btn-secondary btn-full btn-lg" onClick={() => setEtapa('confirmar')}>
             Voltar
           </button>

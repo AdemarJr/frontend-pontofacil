@@ -122,7 +122,7 @@ export async function obterStreamCamera() {
   }
   cameraStream = await navigator.mediaDevices.getUserMedia({
     audio: false,
-    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+    video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } },
   });
   return cameraStream;
 }
