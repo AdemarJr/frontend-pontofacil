@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/dashboard/Layout';
-import { folhaService, usuarioService, feriasService } from '../services/api';
-import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
+import { folhaService, feriasService } from '../services/api';
+import { useUsuarios } from '../hooks/useUsuarios';
 
 function fmtBRL(v) {
   return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 export default function FolhaFerias() {
-  const [colaboradores, setColaboradores] = useState([]);
+  const { colaboradoresAtivos } = useUsuarios();
+  const colaboradores = useMemo(
+    () => colaboradoresAtivos.filter((u) => u.tipoContrato === 'CLT'),
+    [colaboradoresAtivos]
+  );
   const [feriasAprovadas, setFeriasAprovadas] = useState([]);
   const [pagamentos, setPagamentos] = useState([]);
   const [form, setForm] = useState({
@@ -23,11 +27,6 @@ export default function FolhaFerias() {
   const [detalhe, setDetalhe] = useState(null);
 
   useEffect(() => {
-    usuarioService.listar().then(({ data }) => {
-      setColaboradores(
-        filtrarColaboradoresSelect(data).filter((u) => u.tipoContrato === 'CLT')
-      );
-    });
     folhaService.listarFeriasPagamentos().then(({ data }) => setPagamentos(data || []));
     feriasService.listar({ status: 'APROVADA' }).then(({ data }) => setFeriasAprovadas(data || []));
   }, []);

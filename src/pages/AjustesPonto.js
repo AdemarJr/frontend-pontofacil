@@ -5,12 +5,12 @@ import Modal from '../components/Modal';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { comprovanteAusenciaService, pontoService, relatorioService, usuarioService } from '../services/api';
+import { comprovanteAusenciaService, pontoService, relatorioService } from '../services/api';
 import { useSearchParams } from 'react-router-dom';
 import { mensagemDuplicataDia } from '../utils/duplicataPonto';
 import { IconAction, TableActions } from '../components/ui';
 import { useTenantTimezone } from '../hooks/useTenantTimezone';
-import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
+import { useUsuarios } from '../hooks/useUsuarios';
 
 const TIPOS_LABEL = { ENTRADA: 'Entrada', SAIDA_ALMOCO: 'Saída Almoço', RETORNO_ALMOCO: 'Retorno', SAIDA: 'Saída' };
 const TIPOS_COR = { ENTRADA: 'var(--verde)', SAIDA_ALMOCO: 'var(--amarelo)', RETORNO_ALMOCO: 'var(--azul)', SAIDA: 'var(--vermelho)' };
@@ -70,7 +70,7 @@ export default function AjustesPonto() {
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [usuarioFiltro, setUsuarioFiltro] = useState('');
-  const [usuarios, setUsuarios] = useState([]);
+  const { colaboradoresAtivos: usuarios } = useUsuarios();
   const [relatorio, setRelatorio] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [erroBusca, setErroBusca] = useState('');
@@ -86,14 +86,6 @@ export default function AjustesPonto() {
   const [espelhoPage, setEspelhoPage] = useState(1);
   const [espelhoPageSize, setEspelhoPageSize] = useState(5);
 
-  useEffect(() => {
-    usuarioService.listar().then(({ data }) => {
-      const ativos = filtrarColaboradoresSelect(data);
-      setUsuarios(ativos);
-      setUsuarioFiltro((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
-    });
-  }, []);
-
   // Permite abrir esta tela já filtrada via query string (atalhos vindos de Espelho/Assinaturas).
   useEffect(() => {
     if (initFromQueryDone.current) return;
@@ -106,6 +98,15 @@ export default function AjustesPonto() {
     if (!Number.isNaN(qAno) && qAno >= 2000 && qAno <= 2100) setAno(qAno);
   }, [searchParams]);
 
+  useEffect(() => {
+    setUsuarioFiltro((atual) => {
+      if (!atual) return atual;
+      if (usuarios.some((u) => u.id === atual)) return atual;
+      // Mantém filtro da query string até a lista carregar
+      if (!usuarios.length) return atual;
+      return '';
+    });
+  }, [usuarios]);
   useEffect(() => {
     setEspelhoPage(1);
   }, [mes, ano, usuarioFiltro]);

@@ -3,14 +3,14 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
 import AppIcon from '../components/AppIcon';
-import { relatorioService, usuarioService, comprovanteAusenciaService } from '../services/api';
+import { relatorioService, comprovanteAusenciaService } from '../services/api';
 import { runRelatoriosTour } from '../tours/relatoriosTour';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTenantTimezone } from '../hooks/useTenantTimezone';
 import { formatTimeInTz, DEFAULT_TZ } from '../utils/timezone';
-import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
+import { useUsuarios } from '../hooks/useUsuarios';
 
 const TIPOS_LABEL = { ENTRADA:'Entrada', SAIDA_ALMOCO:'Saída Almoço', RETORNO_ALMOCO:'Retorno', SAIDA:'Saída' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
@@ -131,7 +131,7 @@ export default function Relatorios() {
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [usuarioFiltro, setUsuarioFiltro] = useState('');
-  const [usuarios, setUsuarios] = useState([]);
+  const { colaboradoresAtivos: usuarios } = useUsuarios();
   const [relatorio, setRelatorio] = useState([]);
   const [fusoEspelho, setFusoEspelho] = useState(null);
   const [carregando, setCarregando] = useState(false);
@@ -154,12 +154,9 @@ export default function Relatorios() {
   const [carregandoAuditoria, setCarregandoAuditoria] = useState(false);
 
   useEffect(() => {
-    usuarioService.listar().then(({ data }) => {
-      const ativos = filtrarColaboradoresSelect(data);
-      setUsuarios(ativos);
-      setUsuarioFiltro((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
-    });
-  }, []);
+    if (!usuarios.length) return;
+    setUsuarioFiltro((atual) => (atual && usuarios.some((u) => u.id === atual) ? atual : ''));
+  }, [usuarios]);
 
   useEffect(() => { buscar(); }, [mes, ano, usuarioFiltro]);
 
