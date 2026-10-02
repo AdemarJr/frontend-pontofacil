@@ -4,6 +4,7 @@ import ListPagination, { slicePaged } from '../components/ListPagination';
 import { escalaService, usuarioService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
+import Modal from '../components/Modal';
 import { IconAction, TableActions } from '../components/ui';
 import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
@@ -99,6 +100,114 @@ const PRESETS = {
   },
 };
 
+const TIPOS_ESCALA_AJUDA = [
+  {
+    id: '5x2',
+    titulo: '5x2 (segunda a sexta)',
+    ideal: 'Empresas administrativas e escritórios',
+    resumo: '5 dias de trabalho e 2 de descanso. Sábado e domingo não geram falta se não houver batida.',
+    dias: [
+      { rotulo: 'Segunda a sexta', situacao: 'Trabalho' },
+      { rotulo: 'Sábado', situacao: 'Folga' },
+      { rotulo: 'Domingo', situacao: 'DSR (descanso semanal remunerado)' },
+    ],
+  },
+  {
+    id: '6x1',
+    titulo: '6x1 (seis dias de trabalho, um de descanso)',
+    ideal: 'Comércio, restaurantes e operações que abrem no fim de semana',
+    resumo:
+      'O colaborador trabalha 6 dias e folga 1. No padrão, o DSR fica no domingo — mas a folga pode ser em outro dia. Sábado e domingo com trabalho não geram falta.',
+    dias: [
+      { rotulo: 'Segunda a sábado (padrão)', situacao: 'Trabalho' },
+      { rotulo: 'Domingo (padrão)', situacao: 'DSR' },
+    ],
+  },
+  {
+    id: 'personalizada',
+    titulo: 'Personalizada',
+    ideal: 'Quando a rotina não cabe em 5x2 nem 6x1',
+    resumo:
+      'Você define dia a dia: Trabalho (espera batida), Folga ou DSR (sem batida não é falta). Exemplos: folga na terça, trabalho no domingo, revezamento entre equipes.',
+    dias: [
+      { rotulo: 'Cada dia da semana', situacao: 'Trabalho, Folga ou DSR — você escolhe' },
+    ],
+  },
+  {
+    id: '12x36',
+    titulo: '12x36 (escala cíclica)',
+    ideal: 'Segurança patrimonial, portaria e plantões',
+    resumo:
+      'Funciona em ciclo a partir de uma data-base: 12 horas de trabalho e 36 de descanso, repetindo. Sábado e domingo podem ser dias de trabalho. Também funciona com turnos que atravessam a meia-noite (ex.: 19:00 → 07:00).',
+    dias: [
+      { rotulo: 'Data-base', situacao: 'Dia em que o ciclo começa' },
+      { rotulo: 'Trabalho (ex.: 12h)', situacao: 'Duração do plantão' },
+      { rotulo: 'Descanso (ex.: 36h)', situacao: 'Intervalo até o próximo plantão' },
+    ],
+  },
+];
+
+function AjudaTiposEscalaConteudo() {
+  return (
+    <div style={{ display: 'grid', gap: 18, fontSize: 14, lineHeight: 1.5, color: 'var(--cinza-700)' }}>
+      <p style={{ margin: 0 }}>
+        A escala define <strong>em quais dias o colaborador deve trabalhar</strong> e{' '}
+        <strong>quais dias são de descanso</strong>. O espelho de ponto, as faltas e a folha usam essa
+        programação — o sistema <strong>não assume</strong> que sábado ou domingo são folga automaticamente.
+      </p>
+
+      {TIPOS_ESCALA_AJUDA.map((tipo) => (
+        <section
+          key={tipo.id}
+          style={{
+            padding: '14px 16px',
+            borderRadius: 10,
+            border: '1px solid var(--cinza-200)',
+            background: 'rgba(148,163,184,0.06)',
+          }}
+        >
+          <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--cinza-900)' }}>
+            {tipo.titulo}
+          </h3>
+          <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--verde-escuro)', fontWeight: 600 }}>
+            Ideal para: {tipo.ideal}
+          </p>
+          <p style={{ margin: '0 0 10px' }}>{tipo.resumo}</p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--cinza-400)' }}>
+            {tipo.dias.map((d) => (
+              <li key={d.rotulo} style={{ marginBottom: 4 }}>
+                <strong style={{ color: 'var(--cinza-700)' }}>{d.rotulo}:</strong> {d.situacao}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      <section
+        style={{
+          padding: '14px 16px',
+          borderRadius: 10,
+          border: '1px solid rgba(29,158,117,0.25)',
+          background: 'var(--verde-claro)',
+        }}
+      >
+        <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--verde-escuro)' }}>
+          Dica rápida
+        </h3>
+        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--verde-escuro)' }}>
+          <li style={{ marginBottom: 4 }}>Trabalha só em dias úteis → <strong>5x2</strong></li>
+          <li style={{ marginBottom: 4 }}>Abre sábado/domingo com 1 folga na semana → <strong>6x1</strong> ou Personalizada</li>
+          <li style={{ marginBottom: 4 }}>Plantão 12h com 36h de descanso → <strong>12x36</strong></li>
+          <li style={{ marginBottom: 4 }}>Regras diferentes por dia → <strong>Personalizada</strong></li>
+        </ul>
+        <p style={{ margin: '10px 0 0', fontSize: 13, fontWeight: 600, color: 'var(--verde-escuro)' }}>
+          Regra de ouro: o dia da semana sozinho não define se o colaborador trabalha ou folga. A escala cadastrada é que define.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function programacaoPadrao5x2() {
   return { ...PRESETS['5x2'].programacao };
 }
@@ -151,6 +260,7 @@ export default function Escalas() {
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  const [ajudaTiposOpen, setAjudaTiposOpen] = useState(false);
   const [escalasPage, setEscalasPage] = useState(1);
   const [escalasPageSize, setEscalasPageSize] = useState(10);
   const [form, setForm] = useState(formInicial);
@@ -354,22 +464,40 @@ export default function Escalas() {
             vigente do colaborador — sábado e domingo só são descanso se a escala disser isso.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => runEscalasTour({ force: true })}
-          style={{
-            padding: '8px 14px',
-            fontSize: 13,
-            fontWeight: 600,
-            color: 'var(--verde-escuro)',
-            background: 'var(--verde-claro)',
-            border: '1px solid rgba(29,158,117,0.35)',
-            borderRadius: 8,
-            cursor: 'pointer',
-          }}
-        >
-          Como usar
-        </button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => setAjudaTiposOpen(true)}
+            style={{
+              padding: '8px 14px',
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'var(--cinza-700)',
+              background: 'white',
+              border: '1px solid var(--cinza-200)',
+              borderRadius: 8,
+              cursor: 'pointer',
+            }}
+          >
+            Tipos de escala
+          </button>
+          <button
+            type="button"
+            onClick={() => runEscalasTour({ force: true })}
+            style={{
+              padding: '8px 14px',
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'var(--verde-escuro)',
+              background: 'var(--verde-claro)',
+              border: '1px solid rgba(29,158,117,0.35)',
+              borderRadius: 8,
+              cursor: 'pointer',
+            }}
+          >
+            Como usar
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: '20px' }}>
@@ -461,7 +589,7 @@ export default function Escalas() {
           <div id="tour-escalas-form" className="card" style={{ marginBottom: '20px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Nova escala</h2>
             <form onSubmit={criarEscala} style={{ display: 'grid', gap: '14px', maxWidth: '640px' }}>
-              <div>
+              <div id="tour-escalas-preset">
                 <label style={{ fontSize: '12px', color: 'var(--cinza-400)' }}>Tipo / preset</label>
                 <select
                   className="input"
@@ -474,6 +602,25 @@ export default function Escalas() {
                     </option>
                   ))}
                 </select>
+                <p style={{ fontSize: 12, color: 'var(--cinza-400)', margin: '6px 0 0', lineHeight: 1.45 }}>
+                  Não sabe qual escolher?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setAjudaTiposOpen(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      color: 'var(--verde-escuro)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      fontSize: 12,
+                    }}
+                  >
+                    Ver explicação dos tipos de escala
+                  </button>
+                </p>
               </div>
 
               <div>
@@ -781,6 +928,21 @@ export default function Escalas() {
           </div>
         </>
       )}
+
+      <Modal
+        open={ajudaTiposOpen}
+        onClose={() => setAjudaTiposOpen(false)}
+        title="Tipos de escala"
+        subtitle="Escolha o preset que melhor descreve a jornada da sua equipe"
+        maxWidth={640}
+        footer={
+          <button type="button" className="btn btn-primary" onClick={() => setAjudaTiposOpen(false)}>
+            Entendi
+          </button>
+        }
+      >
+        <AjudaTiposEscalaConteudo />
+      </Modal>
     </Layout>
   );
 }
