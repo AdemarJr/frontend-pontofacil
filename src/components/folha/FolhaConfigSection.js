@@ -61,6 +61,20 @@ export default function FolhaConfigSection() {
           Hora extra domingo/feriado (%)
           <input className="input" type="number" value={config.heDomingoFeriadoPercent} onChange={(e) => setConfig((c) => ({ ...c, heDomingoFeriadoPercent: Number(e.target.value) }))} />
         </label>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <input
+            type="checkbox"
+            style={{ marginTop: 3 }}
+            checked={Boolean(config.tratarHeSabadoComoDomingo)}
+            onChange={(e) => setConfig((c) => ({ ...c, tratarHeSabadoComoDomingo: e.target.checked }))}
+          />
+          <span>
+            Tratar HE de sábado como domingo/feriado
+            <span style={{ display: 'block', fontSize: 12, color: 'var(--cinza-400)', fontWeight: 400, marginTop: 2 }}>
+              Ative quando a CCT/ACT da categoria exigir. Por padrão, sábado usa o percentual de dia útil.
+            </span>
+          </span>
+        </label>
         <label>
           Adicional noturno (%)
           <input className="input" type="number" value={config.adicionalNoturnoPercent} onChange={(e) => setConfig((c) => ({ ...c, adicionalNoturnoPercent: Number(e.target.value) }))} />

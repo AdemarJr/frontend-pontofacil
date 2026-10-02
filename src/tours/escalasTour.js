@@ -1,7 +1,7 @@
 import { startModuleTour } from './tourHelpers';
 
-/** v2: tour detalhado; passos do formulário só entram no roteiro se um colaborador estiver selecionado */
-export const STORAGE_TOUR_ESCALAS = 'pontofacil_tour_escalas_v2';
+/** v3: inclui presets 5x2/6x1/12x36 e programação Trabalho/Folga/DSR */
+export const STORAGE_TOUR_ESCALAS = 'pontofacil_tour_escalas_v3';
 
 function steps() {
   return [
@@ -10,7 +10,7 @@ function steps() {
       popover: {
         title: 'Jornadas e escalas',
         description:
-          'Aqui você define o horário esperado por colaborador: entrada, saída, intervalo de almoço e dias da semana. O espelho de ponto e o banco de horas nos Relatórios usam essas regras para comparar o que foi registrado com o que era esperado.',
+          'Aqui você define a jornada do colaborador: tipo de escala (5x2, 6x1, 12x36 ou personalizada), horários e programação por dia (Trabalho, Folga ou DSR). O espelho e a folha usam a escala vigente — sábado e domingo só são descanso se a escala disser isso. Use o botão “Tipos de escala” para ver a explicação de cada preset.',
         side: 'bottom',
         align: 'start',
       },
@@ -20,7 +20,7 @@ function steps() {
       popover: {
         title: 'Escolha o colaborador',
         description:
-          'Cada pessoa pode ter uma ou mais escalas (ex.: turno manhã e turno tarde). Selecione alguém na lista para carregar e editar as jornadas dele.',
+          'Cada pessoa pode ter uma ou mais escalas (com vigências diferentes). Selecione alguém na lista para carregar e cadastrar as jornadas dele.',
         side: 'bottom',
       },
     },
@@ -29,7 +29,7 @@ function steps() {
       popover: {
         title: 'Como funciona o fluxo',
         description:
-          '1) Selecione um colaborador.\n2) Preencha Nova escala: nome (ex.: Manhã), horários, almoço, carga horária, dias da semana e clique em Adicionar escala.\n3) Na lista abaixo, ative ou desative cada jornada ou exclua a que não for mais usada.\n\nSe ainda não escolheu ninguém, os passos seguintes aparecem depois da seleção ou ao abrir este tour com um colaborador já selecionado.',
+          '1) Selecione um colaborador.\n2) Em Nova escala: escolha o tipo (5x2, 6x1, personalizada ou 12x36), horários, programação dos dias e clique em Adicionar escala.\n3) Na lista abaixo, ative, desative ou exclua escalas.\n\nSe ainda não escolheu ninguém, os passos seguintes aparecem depois da seleção.',
         side: 'bottom',
         align: 'start',
       },
@@ -39,7 +39,17 @@ function steps() {
       popover: {
         title: 'Nova escala — identificação',
         description:
-          'Dê um nome à jornada para reconhecer no painel (ex.: Padrão, Sábado, 12x36).',
+          'Comece pelo tipo/preset e depois dê um nome à jornada (ex.: Padrão, Sábado, Plantão 12x36).',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+    {
+      element: '#tour-escalas-preset',
+      popover: {
+        title: 'Tipo / preset',
+        description:
+          '5x2: seg–sex trabalho, sáb folga, dom DSR.\n6x1: trabalha 6 dias, 1 de descanso (padrão no domingo).\nPersonalizada: você define cada dia.\n12x36: ciclo de plantão a partir de uma data-base.\n\nClique em “Ver explicação dos tipos de escala” para o guia completo.',
         side: 'bottom',
         align: 'start',
       },
@@ -49,7 +59,7 @@ function steps() {
       popover: {
         title: 'Entrada e saída',
         description:
-          'Entrada e Saída são o início e o fim do expediente esperados para essa escala nos dias marcados.',
+          'Entrada e Saída são o início e o fim do expediente esperados. Turnos noturnos (ex.: 19:00→07:00) são aceitos.',
         side: 'bottom',
       },
     },
@@ -58,7 +68,7 @@ function steps() {
       popover: {
         title: 'Intervalo de almoço (esperado)',
         description:
-          'Saída almoço e Retorno almoço são os horários esperados de intervalo. Eles entram na sequência de batidas (saída para almoço → retorno) no espelho.',
+          'Saída almoço e Retorno almoço entram na sequência de batidas no espelho. Em plantões 12x36 sem intervalo, esses campos podem ficar vazios.',
         side: 'bottom',
       },
     },
@@ -67,16 +77,16 @@ function steps() {
       popover: {
         title: 'Carga horária e intervalo mínimo',
         description:
-          'Carga horária líquida ajuda nos cálculos de resumo. Intervalo mínimo (em minutos) é o tempo mínimo considerado para o período de almoço entre saída e retorno, alinhado à sua política interna.',
+          'Carga horária líquida ajuda nos cálculos. Intervalo mínimo (em minutos) é o tempo mínimo de almoço — em turnos noturnos de vigilância pode ser 0.',
         side: 'bottom',
       },
     },
     {
       element: '#tour-escalas-dias',
       popover: {
-        title: 'Dias da semana',
+        title: 'Programação semanal',
         description:
-          'Clique nos dias em que esta escala vale (ex.: seg–sex). A escala só é considerada nesses dias; você pode criar outra escala para finais de semana ou turnos diferentes.',
+          'Para cada dia escolha Trabalho, Folga ou DSR. O sistema só gera falta em dia de Trabalho sem batida. Em 12x36 o ciclo da data-base prevalece na apuração.',
         side: 'top',
       },
     },
@@ -85,7 +95,7 @@ function steps() {
       popover: {
         title: 'Salvar a escala',
         description:
-          'Clique em Adicionar escala para gravar. Depois ela aparece na lista abaixo; você pode ter várias escalas por pessoa e ativar só a que estiver em uso.',
+          'Clique em Adicionar escala para gravar. Use vigência início/fim ao trocar de escala sem alterar o histórico.',
         side: 'top',
         align: 'center',
       },
@@ -95,7 +105,7 @@ function steps() {
       popover: {
         title: 'Escalas cadastradas',
         description:
-          'Cada item mostra nome, horários e dias. Use Desativar para parar de usar aquela jornada nos cálculos sem apagar, ou Excluir para remover. Há paginação se a lista for grande.',
+          'Cada item mostra tipo, horários, programação e vigência. Use Desativar para parar de usar nos cálculos sem apagar, ou Excluir para remover.',
         side: 'top',
         align: 'start',
       },

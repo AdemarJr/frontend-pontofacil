@@ -21,6 +21,8 @@ const STATUS_DIA_COR = {
   PARCIAL: { bg: 'rgba(245,158,11,0.16)', fg: '#92400e' },
   FALTA: { bg: 'rgba(226,75,74,0.14)', fg: 'var(--vermelho)' },
   FOLGA: { bg: 'rgba(99,102,241,0.16)', fg: '#4338ca' },
+  DSR: { bg: 'rgba(124,58,237,0.14)', fg: '#5b21b6' },
+  TRABALHO_EM_FOLGA: { bg: 'rgba(234,88,12,0.14)', fg: '#c2410c' },
   JUSTIFICADA: { bg: 'rgba(14,165,233,0.16)', fg: '#0369a1' },
   FERIAS: { bg: 'rgba(16,185,129,0.16)', fg: 'var(--verde-escuro)' },
   FERIADO: { bg: 'rgba(59,130,246,0.16)', fg: 'var(--azul)' },
