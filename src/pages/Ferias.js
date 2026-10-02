@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/dashboard/Layout';
 import Modal from '../components/Modal';
 import ListPagination, { slicePaged } from '../components/ListPagination';
-import { feriasService, usuarioService } from '../services/api';
+import { feriasService } from '../services/api';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { IconAction, TableActions } from '../components/ui';
-import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
+import { useUsuarios } from '../hooks/useUsuarios';
 
 function isoHoje() {
   const d = new Date();
@@ -32,7 +32,7 @@ function badgeStatus(s) {
 }
 
 export default function Ferias() {
-  const [usuarios, setUsuarios] = useState([]);
+  const { colaboradoresAtivos: usuarios } = useUsuarios();
   const [usuarioId, setUsuarioId] = useState('');
   const [lista, setLista] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -50,21 +50,15 @@ export default function Ferias() {
   const [decidirForm, setDecidirForm] = useState({ resposta: '' });
   const [decidindo, setDecidindo] = useState(false);
 
-  async function carregarUsuarios() {
-    try {
-      const { data } = await usuarioService.listar();
-      const ativos = filtrarColaboradoresSelect(Array.isArray(data) ? data : []);
-      setUsuarios(ativos);
-      setUsuarioId((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
-      setForm((p) => (
-        p.usuarioId && !ativos.some((u) => u.id === p.usuarioId)
-          ? { ...p, usuarioId: '' }
-          : p
-      ));
-    } catch {
-      setUsuarios([]);
-    }
-  }
+  useEffect(() => {
+    if (!usuarios.length) return;
+    setUsuarioId((atual) => (atual && usuarios.some((u) => u.id === atual) ? atual : ''));
+    setForm((p) => (
+      p.usuarioId && !usuarios.some((u) => u.id === p.usuarioId)
+        ? { ...p, usuarioId: '' }
+        : p
+    ));
+  }, [usuarios]);
 
   async function carregar() {
     setCarregando(true);
@@ -81,10 +75,6 @@ export default function Ferias() {
       setCarregando(false);
     }
   }
-
-  useEffect(() => {
-    carregarUsuarios();
-  }, []);
 
   useEffect(() => {
     setPage(1);
