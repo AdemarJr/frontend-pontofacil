@@ -666,13 +666,14 @@ input[type="radio"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   max-width: 420px;
   flex: 1;
   min-height: 0;
-  gap: clamp(10px, 2dvh, 24px);
-  padding-top: clamp(36px, 6dvh, 52px);
+  gap: clamp(6px, 1.2dvh, 12px);
+  padding-top: clamp(28px, 4dvh, 44px);
+  padding-bottom: clamp(8px, 2dvh, 16px);
 }
 
 .totem-pin-stage__header {
@@ -683,6 +684,7 @@ input[type="radio"] {
   width: 100%;
   flex-shrink: 1;
   min-height: 0;
+  gap: 0;
 }
 
 .totem-pin-stage__footer {
@@ -690,8 +692,9 @@ input[type="radio"] {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: clamp(10px, 1.8dvh, 16px);
+  gap: clamp(8px, 1.2dvh, 12px);
   flex-shrink: 0;
+  margin-top: clamp(4px, 1dvh, 8px);
 }
 
 .totem-status-pill {

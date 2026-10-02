@@ -10,6 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTenantTimezone } from '../hooks/useTenantTimezone';
 import { formatTimeInTz, DEFAULT_TZ } from '../utils/timezone';
+import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
 const TIPOS_LABEL = { ENTRADA:'Entrada', SAIDA_ALMOCO:'Saída Almoço', RETORNO_ALMOCO:'Retorno', SAIDA:'Saída' };
 const ORIGEM_LABEL = { TOTEM: 'Totem', APP_INDIVIDUAL: 'Meu ponto', ADMIN_MANUAL: 'Manual' };
@@ -151,7 +152,11 @@ export default function Relatorios() {
   const [carregandoAuditoria, setCarregandoAuditoria] = useState(false);
 
   useEffect(() => {
-    usuarioService.listar().then(({ data }) => setUsuarios(data));
+    usuarioService.listar().then(({ data }) => {
+      const ativos = filtrarColaboradoresSelect(data);
+      setUsuarios(ativos);
+      setUsuarioFiltro((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
+    });
   }, []);
 
   useEffect(() => { buscar(); }, [mes, ano, usuarioFiltro]);

@@ -5,6 +5,7 @@ import { escalaService, usuarioService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
 import { IconAction, TableActions } from '../components/ui';
+import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
 
 function validarJornadaCLT(cargaHorariaDiaria, _diasSemana, intervaloMinutos, { overnight = false } = {}) {
   const carga = Number(cargaHorariaDiaria) || 8;
@@ -61,7 +62,9 @@ export default function Escalas() {
 
   useEffect(() => {
     usuarioService.listar().then(({ data }) => {
-      setUsuarios(data.filter((u) => u.role === 'COLABORADOR'));
+      const ativos = filtrarColaboradoresSelect(data);
+      setUsuarios(ativos);
+      setUsuarioId((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
     });
   }, []);
 
