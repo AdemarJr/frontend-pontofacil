@@ -2,7 +2,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
+import { QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
+import { queryClient } from './lib/queryClient';
 import { migrateTourFlagsForExistingUsers } from './utils/authStorage';
 
 // Tours: usuários que já usavam o app não veem o guia de novo após o bug do clear()
@@ -28,9 +30,11 @@ try {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <HelmetProvider>
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    </QueryClientProvider>
   </HelmetProvider>
 );
 

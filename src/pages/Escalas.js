@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/dashboard/Layout';
 import ListPagination, { slicePaged } from '../components/ListPagination';
-import { escalaService, usuarioService } from '../services/api';
+import { escalaService } from '../services/api';
 import { runEscalasTour } from '../tours/escalasTour';
 import FolgasCalendario from '../components/FolgasCalendario';
 import Modal from '../components/Modal';
 import { IconAction, TableActions } from '../components/ui';
-import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
+import { useUsuarios } from '../hooks/useUsuarios';
+import { useEscalasResumo, useInvalidateEscalasResumo } from '../hooks/useEscalasResumo';
 
 function validarJornadaCLT(cargaHorariaDiaria, _diasSemana, intervaloMinutos, { overnight = false } = {}) {
   const carga = Number(cargaHorariaDiaria) || 8;
@@ -252,11 +253,11 @@ function formInicial() {
 }
 
 export default function Escalas() {
-  const [usuarios, setUsuarios] = useState([]);
+  const { colaboradoresAtivos: usuarios } = useUsuarios();
+  const { resumo, isLoading: carregandoResumo } = useEscalasResumo();
+  const invalidateEscalasResumo = useInvalidateEscalasResumo();
   const [usuarioId, setUsuarioId] = useState(() => localStorage.getItem('pontofacil_escalas_usuarioId') || '');
   const [escalas, setEscalas] = useState([]);
-  const [resumo, setResumo] = useState([]);
-  const [carregandoResumo, setCarregandoResumo] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
@@ -266,21 +267,9 @@ export default function Escalas() {
   const [form, setForm] = useState(formInicial);
 
   useEffect(() => {
-    usuarioService.listar().then(({ data }) => {
-      const ativos = filtrarColaboradoresSelect(data);
-      setUsuarios(ativos);
-      setUsuarioId((atual) => (atual && ativos.some((u) => u.id === atual) ? atual : ''));
-    });
-  }, []);
-
-  useEffect(() => {
-    setCarregandoResumo(true);
-    escalaService
-      .resumo()
-      .then(({ data }) => setResumo(data.escalas || []))
-      .catch(() => setResumo([]))
-      .finally(() => setCarregandoResumo(false));
-  }, []);
+    if (!usuarios.length) return;
+    setUsuarioId((atual) => (atual && usuarios.some((u) => u.id === atual) ? atual : ''));
+  }, [usuarios]);
 
   useEffect(() => {
     setEscalasPage(1);
@@ -397,10 +386,7 @@ export default function Escalas() {
       });
       const { data } = await escalaService.listar(usuarioId);
       setEscalas(data);
-      escalaService
-        .resumo()
-        .then(({ data: r }) => setResumo(r.escalas || []))
-        .catch(() => {});
+      invalidateEscalasResumo();
       setForm(formInicial());
     } catch (err) {
       setErro(err.response?.data?.error || 'Erro ao salvar escala');
@@ -416,10 +402,7 @@ export default function Escalas() {
       await escalaService.remover(id);
       const { data } = await escalaService.listar(usuarioId);
       setEscalas(data);
-      escalaService
-        .resumo()
-        .then(({ data: r }) => setResumo(r.escalas || []))
-        .catch(() => {});
+      invalidateEscalasResumo();
     } catch (err) {
       setErro(err.response?.data?.error || 'Erro ao remover escala');
     }
@@ -431,10 +414,7 @@ export default function Escalas() {
       await escalaService.atualizar(esc.id, { ativo: !esc.ativo });
       const { data } = await escalaService.listar(usuarioId);
       setEscalas(data);
-      escalaService
-        .resumo()
-        .then(({ data: r }) => setResumo(r.escalas || []))
-        .catch(() => {});
+      invalidateEscalasResumo();
     } catch (err) {
       setErro(err.response?.data?.error || 'Erro ao atualizar escala');
     }

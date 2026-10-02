@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/dashboard/Layout';
-import { folhaService, usuarioService } from '../services/api';
-import { filtrarColaboradoresSelect } from '../utils/colaboradoresSelect';
+import { folhaService } from '../services/api';
+import { useUsuarios } from '../hooks/useUsuarios';
 
 const TIPOS = [
   { value: 'SEM_JUSTA_CAUSA', label: 'Sem justa causa' },
@@ -16,7 +16,11 @@ function fmtBRL(v) {
 }
 
 export default function FolhaRescisao() {
-  const [colaboradores, setColaboradores] = useState([]);
+  const { colaboradoresAtivos } = useUsuarios();
+  const colaboradores = useMemo(
+    () => colaboradoresAtivos.filter((u) => u.tipoContrato === 'CLT'),
+    [colaboradoresAtivos]
+  );
   const [rescisoes, setRescisoes] = useState([]);
   const [form, setForm] = useState({
     usuarioId: '',
@@ -30,11 +34,6 @@ export default function FolhaRescisao() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    usuarioService.listar().then(({ data }) => {
-      setColaboradores(
-        filtrarColaboradoresSelect(data).filter((u) => u.tipoContrato === 'CLT')
-      );
-    });
     folhaService.listarRescisoes().then(({ data }) => setRescisoes(data || []));
   }, []);
 
