@@ -7,13 +7,14 @@ import ListPagination, { slicePaged } from '../components/ListPagination';
 import { usuarioService, localRegistroService } from '../services/api';
 import { runColaboradoresTour } from '../tours/colaboradoresTour';
 import { useAuth } from '../hooks/useAuth';
+import { useUsuarios } from '../hooks/useUsuarios';
 import { mensagemAposCriarColaborador, mensagemLimitePlano } from '../utils/colaboradorFeedback';
 import { IconAction, TableActions } from '../components/ui';
 
 export default function Colaboradores() {
   const { isAdmin, usuario: usuarioLogado, folhaHabilitada } = useAuth();
-  const [usuarios, setUsuarios] = useState([]);
-  const [carregando, setCarregando] = useState(true);
+  const { usuarios, isLoading: carregandoLista, refetch: refetchUsuarios } = useUsuarios();
+  const carregando = carregandoLista;
   const [modal, setModal] = useState(null); // null | 'criar' | {usuario}
   const [form, setForm] = useState({ nome:'', email:'', pin:'', cargo:'', departamento:'', role:'COLABORADOR' });
   const [salvando, setSalvando] = useState(false);
@@ -42,8 +43,6 @@ export default function Colaboradores() {
     setConfirmacao({ tipo: 'excluir', usuario });
   }
 
-  useEffect(() => { carregar(); }, []);
-
   useEffect(() => {
     setPage(1);
   }, [busca]);
@@ -52,10 +51,7 @@ export default function Colaboradores() {
   }, []);
 
   async function carregar() {
-    try {
-      const { data } = await usuarioService.listar();
-      setUsuarios(data);
-    } finally { setCarregando(false); }
+    await refetchUsuarios();
   }
 
   function gerarPinAleatorio() {

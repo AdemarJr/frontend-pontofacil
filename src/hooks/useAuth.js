@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { tenantService, authService } from '../services/api';
 import { featuresPadrao, isFolhaHabilitada } from '../utils/features';
 import { clearAuthSession } from '../utils/authStorage';
+import { queryClient } from '../lib/queryClient';
 
 const AuthContext = createContext(null);
 
@@ -108,6 +109,7 @@ export function AuthProvider({ children }) {
       // ignore — limpa sessão local mesmo se offline
     }
     clearAuthSession();
+    queryClient.clear();
     setUsuario(null);
   }, []);
 
