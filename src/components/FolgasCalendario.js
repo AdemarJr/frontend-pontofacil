@@ -7,6 +7,8 @@ const STATUS_DIA_COR = {
   PARCIAL: { bg: 'rgba(245,158,11,0.18)', fg: '#92400e', label: 'Parcial' },
   FALTA: { bg: 'rgba(226,75,74,0.16)', fg: 'var(--vermelho)', label: 'Falta' },
   FOLGA: { bg: 'rgba(99,102,241,0.18)', fg: '#4338ca', label: 'Folga' },
+  DSR: { bg: 'rgba(124,58,237,0.16)', fg: '#5b21b6', label: 'DSR' },
+  TRABALHO_EM_FOLGA: { bg: 'rgba(234,88,12,0.16)', fg: '#c2410c', label: 'Trabalho em folga' },
   JUSTIFICADA: { bg: 'rgba(14,165,233,0.18)', fg: '#0369a1', label: 'Justificada' },
   FERIAS: { bg: 'rgba(16,185,129,0.18)', fg: 'var(--verde-escuro)', label: 'Férias' },
   FERIADO: { bg: 'rgba(59,130,246,0.18)', fg: 'var(--azul)', label: 'Feriado' },
